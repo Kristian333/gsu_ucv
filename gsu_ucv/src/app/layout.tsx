@@ -1,13 +1,21 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
-import { Provider } from "@/components/ui/provider"
+import { Inter, Montserrat } from 'next/font/google'
+import { Providers } from "./providers"
 import './globals.css'
+import { Navbar } from "../components/layout/navbar";
 
 const inter = Inter({ subsets: ['latin'] })
 
+const montserrat = Montserrat({
+  subsets: ['latin'],
+  variable: '--font-montserrat',
+  weight: ['400', '500', '700'],
+  display: 'swap',
+})
+
 export const metadata: Metadata = {
-  title: 'Educacion Continua y Permanente',
-  description: 'Descripcion del modulo de educacion continua y permanente',
+  title: 'Gestion Social Universitaria',
+  description: 'Descripcion del modulo de gestion social universitaria',
 }
 
 export default function RootLayout({
@@ -16,9 +24,16 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html suppressHydrationWarning>
+    <html
+      lang="es"
+      className={`${inter.variable} ${montserrat.variable}`}
+      suppressHydrationWarning
+    >
       <body>
-        <Provider>{children}</Provider>
+        <Providers>
+          <Navbar />
+          {children}
+          </Providers>
       </body>
     </html>
   )
