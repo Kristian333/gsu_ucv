@@ -63,7 +63,7 @@ export default function CrearActividadForm() {
 
   return (
     <Box maxW="700px" mx="auto" mt={10} p={8} borderRadius="lg" bg="white" shadow="md">
-      <Heading mb={6}>Crear Actividad</Heading>
+      <Heading mb={6}>Planificar Actividad</Heading>
 
       <VStack spacing={5} align="stretch">
 

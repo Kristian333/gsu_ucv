@@ -9,11 +9,11 @@ const theme = extendTheme({
     colors: {
       // Colores principales
       background: { default: "#f7fafc", _dark: "#1a202c" },
-      primary:   { default: "#2E5796", _dark: "#0c5d56" },
-      navbar:    { default: "#2E5796", _dark: "#021716" },
+      primary:   { default: "#018F7C", _dark: "#0c5d56" },
+      navbar:    { default: "#01695bf2", _dark: "#021716" },
       rowhover:  { default: "#00000033", _dark: "#ffffff33" },
       white:     { default: "#fafafa", _dark: "#e4e4e7"},
-      secondary: { default: "#018F7C", _dark: "#173da6" }, 
+      secondary: { default: "#2E5796", _dark: "#173da6" }, 
       success:   { default: "#38a169", _dark: "#68d391" },
       warning:   { default: "#dd6b20", _dark: "#f6ad55" },
       danger:    { default: "#e53e3e", _dark: "#fc8181" },

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { VStack, Button, Text, Heading } from "@chakra-ui/react";
+import { VStack, Button, Text, Heading, Divider } from "@chakra-ui/react";
 import NextLink from "next/link";
 
 export default function DashboardPage() {
@@ -13,7 +13,7 @@ export default function DashboardPage() {
           ¡Realiza una solicitud para crear tu Grupo de Extension en el sistema!
         </Text>
         <NextLink href="/admingroup/crear_grupo" passHref>
-          <Button background="secondary" color="white" size="lg">
+          <Button background="primary" color="white" size="lg">
             Crea tu grupo de extensión!
           </Button>
         </NextLink>
@@ -47,10 +47,17 @@ export default function DashboardPage() {
           ¡Necesitas validar la información de tu Grupo de Extensión!
         </Text>
         <NextLink href="/admingroup/validar" passHref>
-          <Button background="secondary" color="white" size="lg">
+          <Button background="primary" color="white" size="lg">
             Validar información
           </Button>
         </NextLink>
+      </VStack>
+      <VStack spacing={3}>
+        <Text fontSize="xl" textAlign="center">Para mas información y para dudas contacta a:</Text>
+        <Text fontSize="xl" textAlign="center">-aaa - a@gmail.com - 04141111111</Text>
+        <Divider></Divider>
+        <Text fontSize="xl" textAlign="center">O dirigete a la Dirección de Extensión:</Text>
+        <Text fontSize="xl" textAlign="center">Caracas, UCV, Edificio de la Libreria, Piso 5</Text>
       </VStack>
     </VStack>
   );

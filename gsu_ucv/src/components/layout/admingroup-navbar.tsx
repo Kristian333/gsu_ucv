@@ -7,7 +7,7 @@ import NextLink from "next/link";
 export const AdminGroupNavbar = () => {
   const navItems = [
     { label: "Inicio", href: "/admingroup/dashboard" },
-    { label: "Crear Actividad", href: "/admingroup/crear_actividad" },
+    { label: "Planificar Actividad", href: "/admingroup/crear_actividad" },
     { label: "Nuestras Actividades", href: "/admingroup/nuestras_actividades" },
     { label: "Solicitudes", href: "/admingroup/solicitudes" },
   ];
@@ -15,7 +15,7 @@ export const AdminGroupNavbar = () => {
   return (
     <Box
       w="250px"
-      bg="secondary"
+      bg="primary"
       color="white"
       p={6}
       display="flex"

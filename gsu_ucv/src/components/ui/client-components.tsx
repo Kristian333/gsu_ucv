@@ -4,7 +4,7 @@ import { Box, VStack, SimpleGrid, Card, CardBody, Stack, Image } from "@chakra-u
 import React from 'react';
 import { Heading, Paragraph } from "@/components/ui/tipografia";
 import NextLink from 'next/link';
-import { PrimaryButton } from "@/components/ui/buttons";
+import { PrimaryButton, SecondaryButton } from "@/components/ui/buttons";
 
 interface InfoCardProps {
     title: string;
@@ -126,7 +126,7 @@ export function ClientContent({ groups }: ClientContentProps) {
                     <VStack zIndex={2} spacing={4} py={8} px={6} color={"white"}>
                         <Heading size="4xl">¿Tu grupo de extension no esta registrado?</Heading>
                         <NextLink href="/registro" passHref>
-                            <PrimaryButton fontSize="4xl" px={8} py={10} size="md" mt={10}>¡Unete!</PrimaryButton>
+                            <SecondaryButton fontSize="4xl" px={8} py={10} size="md" mt={10}>¡Unete!</SecondaryButton>
                         </NextLink>
                     </VStack>
             </Box>

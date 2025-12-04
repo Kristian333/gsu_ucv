@@ -33,7 +33,7 @@ export default function CrearGrupoForm() {
     correo: "",
     password: "",
     tipoGrupo: "",
-    facultad: "",
+    facultad: [] as string[],
     fechaFundacion: "",
     objetivo: "",
     actividades: [] as string[],
@@ -205,6 +205,35 @@ export default function CrearGrupoForm() {
                 </option>
                 ))}
             </Select>
+            </FormControl>
+        )}
+        {form.tipoGrupo.includes("MULTIDISCIPLINARIO") && (        
+            <FormControl isRequired>
+            <FormLabel>FACULTAD</FormLabel>
+            <CheckboxGroup
+            value={form.facultad}
+            onChange={(val) => setForm({ ...form, facultad: val as string[] })}
+          >
+            <VStack align="stretch">
+              {[
+                "Agronomía",
+                "Arquitectura y Urbanismo",
+                "Ciencias",
+                "Ciencias Económicas y Sociales",
+                "Farmacia",
+                "Humanidades y Educación",
+                "Ingeniería",
+                "Ciencias Jurídicas y Políticas",
+                "Medicina",
+                "Odontología",
+                "Veterinaria",
+              ].map((a) => (
+                <Checkbox key={a} value={a}>
+                  {a}
+                </Checkbox>
+              ))}
+            </VStack>
+          </CheckboxGroup>
             </FormControl>
         )}
 

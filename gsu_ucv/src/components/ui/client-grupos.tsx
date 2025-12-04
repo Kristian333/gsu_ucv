@@ -51,7 +51,7 @@ const GroupCard = ({ title, faculty, image }: Omit<GroupProps, 'id'>) => {
                             bottom: "-3px",
                             width: "0%",
                             height: "3px",
-                            bg: "secondary",
+                            bg: "primary",
                             transition: "width 0.3s ease",
                         }}
                         _groupHover={{
