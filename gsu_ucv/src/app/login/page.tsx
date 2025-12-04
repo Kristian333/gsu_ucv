@@ -1,7 +1,8 @@
 // app/login/page.tsx
 import React from 'react';
 import { Flex, Box } from "@chakra-ui/react";
-import { LoginForm } from "../../components/formularios/login-form";
+import { LoginForm } from "@/components/formularios/login-form";
+import { mockUserItems } from "@/data/userMock";
 
 export default function LoginPage() {
   return (
@@ -26,7 +27,7 @@ export default function LoginPage() {
         zIndex={1}
       />
       <Box zIndex={2}>
-        <LoginForm />
+        <LoginForm users={mockUserItems} />
       </Box>
     </Flex>
   );

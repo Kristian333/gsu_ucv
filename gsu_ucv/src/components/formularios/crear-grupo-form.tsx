@@ -8,6 +8,8 @@ import {
   FormLabel,
   Input,
   Select,
+  Radio,
+  RadioGroup,
   Checkbox,
   CheckboxGroup,
   VStack,
@@ -25,9 +27,7 @@ export default function CrearGrupoForm() {
   const router = useRouter();
   const toast = useToast();
 
-  // ---------------------------
   // ESTADOS DEL FORMULARIO
-  // ---------------------------
   const [form, setForm] = useState({
     nombre: "",
     correo: "",
@@ -48,14 +48,12 @@ export default function CrearGrupoForm() {
   const [pdfProyecto, setPdfProyecto] = useState<File | null>(null);
   const [archivoMiembros, setArchivoMiembros] = useState<File | null>(null);
 
-  // ---------------------------
   // FUNCIONES DE CAMBIO
-  // ---------------------------
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleLogo = (e) => {
+  const handleLogo = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -63,21 +61,19 @@ export default function CrearGrupoForm() {
     setLogoPreview(URL.createObjectURL(file));
   };
 
-  const handleProyecto = (e) => {
+  const handleProyecto = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setPdfProyecto(file);
   };
 
-  const handleExcel = (e) => {
+  const handleExcel = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setArchivoMiembros(file);
   };
 
-  // ---------------------------
   // SUBMIT
-  // ---------------------------
   const handleSubmit = () => {
     // Validaciones básicas
     if (!form.nombre || !form.correo || !form.tipoGrupo || !form.fechaFundacion || !form.objetivo) {
@@ -136,7 +132,6 @@ export default function CrearGrupoForm() {
       <Heading mb={6}>Crear Grupo de Extensión</Heading>
 
       <VStack spacing={6} align="stretch">
-
         {/* Nombre */}
         <FormControl isRequired>
           <FormLabel>NOMBRE DEL GRUPO DE EXTENSIÓN</FormLabel>
@@ -174,19 +169,20 @@ export default function CrearGrupoForm() {
         {/* Tipo de Grupo */}
         <FormControl isRequired>
           <FormLabel>TIPO DE GRUPO</FormLabel>
-          <Select name="tipoGrupo" value={form.tipoGrupo} onChange={handleChange}>
-            <option value="">Seleccione...</option>
-            <option value="MULTIDISCIPLINARIO">MULTIDISCIPLINARIO</option>
-            <option value="MISMA FACULTAD">PERTENECEN A UNA MISMA FACULTAD</option>
-          </Select>
+          <RadioGroup name="tipoGrupo" value={form.tipoGrupo} onChange={(val) => setForm({ ...form, tipoGrupo: val })}>
+            <VStack align="start">
+              <Radio value="MULTIDISCIPLINARIO">MULTIDISCIPLINARIO</Radio>
+              <Radio value="MISMA FACULTAD">PERTENECEN A UNA MISMA FACULTAD</Radio>
+            </VStack>
+          </RadioGroup>
         </FormControl>
 
         {/* Facultad */}
-        {form.tipoGrupo.includes("MISMA FACULTAD") && (        
+        {form.tipoGrupo === "MISMA FACULTAD" && (        
             <FormControl isRequired>
             <FormLabel>FACULTAD</FormLabel>
             <Select name="facultad" value={form.facultad} onChange={handleChange}>
-                <option value="">(Opcional)</option>
+                <option value="">Seleccione...</option>
                 {[
                 "Agronomía",
                 "Arquitectura y Urbanismo",
@@ -207,7 +203,7 @@ export default function CrearGrupoForm() {
             </Select>
             </FormControl>
         )}
-        {form.tipoGrupo.includes("MULTIDISCIPLINARIO") && (        
+        {form.tipoGrupo === "MULTIDISCIPLINARIO" && (        
             <FormControl isRequired>
             <FormLabel>FACULTAD</FormLabel>
             <CheckboxGroup
@@ -252,7 +248,6 @@ export default function CrearGrupoForm() {
         {/* Tipo(s) de actividad(es) */}
         <FormControl isRequired>
           <FormLabel>TIPO(S) DE ACTIVIDAD(ES)</FormLabel>
-
           <CheckboxGroup
             value={form.actividades}
             onChange={(val) => setForm({ ...form, actividades: val as string[] })}
@@ -319,6 +314,10 @@ export default function CrearGrupoForm() {
           <Link href="/ESTRUCTURA_ORGANIZATIVA.xlsx" download>
             <Button colorScheme="blue" mb={3}>Descargar Archivo</Button>
           </Link>
+
+          <Text fontSize="sm" color="gray.700" mb={2}>
+            El campo "Año" se refiere al año y semestre que está cursando el estudiante. No confundir con el año actual.
+          </Text>
 
           <FormControl>
             <FormLabel>Suba el archivo completado</FormLabel>

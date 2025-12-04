@@ -113,6 +113,15 @@ export default function GroupClientPage({ groupId }: { groupId: string }) {
 
         <Divider />
 
+        {/* Reconocimientos */}
+        <Box>
+          <Heading size="lg" mb={4} color="teal.600">
+            Reconocimientos
+          </Heading>
+        </Box>
+
+        <Divider />
+
         {/* Actividades Destacadas */}
         <Box>
           <Heading size="lg" mb={4} color="teal.600">

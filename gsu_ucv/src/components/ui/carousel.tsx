@@ -4,9 +4,24 @@ import { useState, useEffect } from "react";
 import { Box, Flex, IconButton, Image, Text } from "@chakra-ui/react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
 import { useRouter } from "next/navigation";
-import { mockActivityItems } from "@/data/actividadesMock";
 
-export default function Carousel() {
+interface Activity {
+  id: number;
+  title: string;
+  description: string;
+  image: string;
+  date_start: string;
+  date_end: string;
+  place: string;
+  group: string;
+  area: string;
+}
+
+interface CarouselProps {
+  activities: Activity[];
+}
+
+export default function Carousel({activities}: CarouselProps) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const router = useRouter();
@@ -26,7 +41,7 @@ export default function Carousel() {
   const today = normalizeDate(new Date());
 
   // Filtrar, ordenar y limitar los items. Solo actividades futuras
-  const upcomingOrOngoing = mockActivityItems.filter(item => {
+  const upcomingOrOngoing = activities.filter(item => {
     const start = normalizeDate(parseLocalDate(item.date_start));
     const end = normalizeDate(parseLocalDate(item.date_end));
 
@@ -54,6 +69,7 @@ export default function Carousel() {
     date_end: "",
     place: "",
     group: "",
+    area: "",
   };
 
   if (items.length === 0) {

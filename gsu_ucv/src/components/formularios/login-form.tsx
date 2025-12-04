@@ -16,7 +16,7 @@ import {
 import { useAuth } from "@/app/context/auth-context";
 import { useRouter } from "next/navigation";
 
-export const LoginForm = () => {
+export const LoginForm = ({ users }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   
@@ -26,23 +26,31 @@ export const LoginForm = () => {
   // Obtenemos el enrutador para redirigir
   const router = useRouter(); 
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = (e) => {
     e.preventDefault();
-    // Aquí iría tu lógica de autenticación real con una API
-    console.log("Email:", email);
-    console.log("Contraseña:", password);
 
-    // Si la autenticación es exitosa, llamas a login()
-    login("user-123","admin"); // <-- Pasa un ID de usuario de ejemplo
-    router.push('/');
+    const found = users.find(
+        (u) => u.correo === email && u.contraseña === password
+    );
 
-    // Y luego rediriges al usuario a la página de inicio
-    // if (role === 'admin') {
-    //     router.push('/');
-    // } else {
-    //     router.push('/');
-    // }
+    if (!found) {
+        alert("Correo o contraseña incorrectos.");
+        return;
+    }
+
+    login(found);
+
+    // Redirección según el rol
+    if (found.role === "Admin") {
+        router.push("/admin/dashboard");
+    } else if (found.role === "Invitado" || found.role === "Grupo") {
+        router.push("/admingroup/dashboard");
+    } else {
+        // Por si acaso
+        router.push("/");
+    }
   };
+
 
   const formBgColor = useColorModeValue("white", "gray.700");
   const inputBorderColor = useColorModeValue("gray.300", "gray.600");
@@ -66,9 +74,9 @@ export const LoginForm = () => {
             <FormLabel>Email</FormLabel>
             <Input
               type="email"
+              required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required
               borderColor={inputBorderColor}
             />
           </FormControl>
@@ -76,19 +84,13 @@ export const LoginForm = () => {
             <FormLabel>Contraseña</FormLabel>
             <Input
               type="password"
+              required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required
               borderColor={inputBorderColor}
             />
           </FormControl>
-          <Button
-            type="submit"
-            colorScheme="green"
-            size="lg"
-            w="full"
-            mt={4}
-          >
+          <Button type="submit" colorScheme="green" size="lg" w="full" mt={4}>
             Acceder
           </Button>
         </Stack>
