@@ -22,6 +22,10 @@ async function getGroups({ page, limit, search = "", faculty = "" }: GetGroupsPa
         filtered = filtered.filter(g => g.faculty === faculty);
     }
 
+    // ORDENAR ALFABÉTICAMENTE ANTES DE PAGINAR
+    filtered = filtered.sort((a, b) => a.title.localeCompare(b.title));
+
+    // Paginación 
     const totalGroups = filtered.length;
     const totalPages = Math.ceil(totalGroups / limit);
     const start = (page - 1) * limit;

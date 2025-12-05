@@ -14,7 +14,7 @@ interface Activity {
   date_end: string;
   place: string;
   group: string;
-  area: string;
+  area: string[];
 }
 
 interface CarouselProps {
@@ -69,7 +69,7 @@ export default function Carousel({activities}: CarouselProps) {
     date_end: "",
     place: "",
     group: "",
-    area: "",
+    area: [] as string[],
   };
 
   if (items.length === 0) {

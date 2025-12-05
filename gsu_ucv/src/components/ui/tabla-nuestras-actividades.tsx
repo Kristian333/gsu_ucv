@@ -129,7 +129,7 @@ export default function TablaNuestrasActividades({
                   )}
 
                   {isPast && (
-                    <Tooltip label="Ver reporte / editar">
+                    <Tooltip label="Hacer reporte">
                       <IconButton
                         as={NextLink}
                         href={`/admingroup/reporte/${act.id}`}

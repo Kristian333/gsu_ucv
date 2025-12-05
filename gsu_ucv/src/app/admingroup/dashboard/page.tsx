@@ -158,7 +158,7 @@ export default function DashboardPage() {
               <Text fontSize="xl" textAlign="center">
                 ¡Necesitas validar la información de tu Grupo de Extensión!
               </Text>
-              <NextLink href="/admingroup/validar" passHref>
+              <NextLink href="/admingroup/validar_grupo" passHref>
                 <Button background="primary" color="white" size="lg">
                   Validar información
                 </Button>
@@ -190,7 +190,7 @@ export default function DashboardPage() {
 
         <Text fontSize="lg">Dirección de Extensión:</Text>
         <Text fontSize="md" mt={2}>
-          Caracas, UCV, Edificio de la Librería, Piso 5
+          Caracas, UCV, Edif. Biblioteca Central, Piso 5
         </Text>
       </Box>
       

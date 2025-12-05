@@ -1,10 +1,9 @@
 // app/grupo/[groupId]/GroupClientPage.tsx
 "use client";
 
-import { Box, Flex, Heading, Text, Image, VStack, Divider } from "@chakra-ui/react";
+import { Box, Flex, Heading, Text, Image, VStack, Divider, SimpleGrid } from "@chakra-ui/react";
 import NextLink from "next/link";
-import { mockGroupItems } from "@/data/gruposMock";
-import { mockActivityItems } from "@/data/actividadesMock";
+import React, { useState } from "react";
 
 interface GroupItem {
   id: string;
@@ -15,12 +14,23 @@ interface GroupItem {
   email?: string;
   phone?: string;
   faculty?: string;
+  awards?: { awardName: string; awarddate: number }[] | string;
 }
 
-// Aseguramos el tipo:
-const groups: GroupItem[] = mockGroupItems;
+interface ActivityItem {
+  id: number;
+  title: string;
+  image: string;
+  group: string;
+}
 
-export default function GroupClientPage({ groupId }: { groupId: string }) {
+interface Props {
+  groupId: string;
+  groups: GroupItem[];
+  activities: ActivityItem[];
+}
+
+export default function GroupClientPage({ groupId, groups, activities }: Props) {
   
   // Normalizamos ambos a string
   const id = String(groupId);
@@ -37,10 +47,17 @@ export default function GroupClientPage({ groupId }: { groupId: string }) {
     );
   }
 
-  const activitiesForGroup = mockActivityItems
+  const activitiesForGroup = activities
       .filter((a) => a.group === group.title)
       .sort(() => Math.random() - 0.5)
       .slice(0, 4);
+
+  // Reconocimientos: ordenar por awarddate
+  const awards = Array.isArray(group.awards)
+    ? [...group.awards].sort((a, b) => b.awarddate - a.awarddate)
+    : [];
+  
+  const [showAllAwards, setShowAllAwards] = useState(false);
   
   {/* Pagina del Grupo */}
   return (
@@ -48,11 +65,7 @@ export default function GroupClientPage({ groupId }: { groupId: string }) {
       <VStack spacing={12} align="stretch">
 
         {/* Imagen + Info */}
-        <Flex
-          direction={{ base: "column", md: "row" }}
-          align="top"
-          gap={10}
-        >
+        <Flex direction={{ base: "column", md: "row" }} align="top" gap={10}>
           {/* Imagen */}
           <Image
             src={group.image}
@@ -68,7 +81,7 @@ export default function GroupClientPage({ groupId }: { groupId: string }) {
 
           {/* Info básica */}
           <VStack align="start" spacing={3} flex="1" alignItems="center">
-            <Heading size="2xl" color="teal.700">
+            <Heading size="2xl" color="primary" alignSelf="center" textAlign="center">
               {group.title}
             </Heading>
 
@@ -102,7 +115,7 @@ export default function GroupClientPage({ groupId }: { groupId: string }) {
 
         {/* Objetivo */}
         <Box>
-          <Heading size="lg" mb={4} color="teal.600">
+          <Heading size="lg" mb={4} color="primary">
             Objetivo
           </Heading>
 
@@ -113,18 +126,9 @@ export default function GroupClientPage({ groupId }: { groupId: string }) {
 
         <Divider />
 
-        {/* Reconocimientos */}
-        <Box>
-          <Heading size="lg" mb={4} color="teal.600">
-            Reconocimientos
-          </Heading>
-        </Box>
-
-        <Divider />
-
         {/* Actividades Destacadas */}
         <Box>
-          <Heading size="lg" mb={4} color="teal.600">
+          <Heading size="lg" mb={4} color="primary">
             Actividades Destacadas
           </Heading>
 
@@ -154,7 +158,7 @@ export default function GroupClientPage({ groupId }: { groupId: string }) {
                   }}
                 >
                   <Image
-                    src={activity.image}
+                    src={activity.image} 
                     alt={activity.title}
                     w="100%"
                     h="200px"
@@ -162,7 +166,7 @@ export default function GroupClientPage({ groupId }: { groupId: string }) {
                   />
 
                   <Box p={4}>
-                    <Heading size="md" color="teal.700" textAlign="center">
+                    <Heading size="md" color="primary" textAlign="center">
                       {activity.title}
                     </Heading>
                   </Box>
@@ -172,9 +176,70 @@ export default function GroupClientPage({ groupId }: { groupId: string }) {
           </Flex>
         </Box>
 
+        {awards.length > 0 && (
+          <>
+            <Divider />
+
+            {/* Reconocimientos */}
+            <Box>
+              <Heading size="lg" mb={4} color="primary">
+                Reconocimientos
+              </Heading>
+              <Flex gap={5} wrap="wrap">
+                {awards
+                  .slice(0, showAllAwards ? awards.length : 10)
+                  .map((award, idx) => (
+                  <Box
+                    key={idx}
+                    w="200px"
+                    rounded="xl"
+                    overflow="hidden"
+                    bg="white"
+                    p={3}
+                    textAlign="center"
+                  >
+                    <Image
+                      src="/award-medal.png"
+                      alt={award.awardName}
+                      w="120px"
+                      h="120px"
+                      mx="auto"
+                    />
+                    <Text mt={2} fontSize="md">
+                      <strong>{award.awardName}</strong>
+                    </Text>
+                    <Text mt={2} fontSize="md">
+                      {award.awarddate}
+                    </Text>
+                  </Box>
+                ))}
+              </Flex>
+              
+              {/* Botón Ver más / Ver menos */}
+              {awards.length > 10 && (
+                <Box textAlign="center" mt={4}>
+                  <button
+                    onClick={() => setShowAllAwards(!showAllAwards)}
+                    style={{
+                      padding: "10px 20px",
+                      borderRadius: "8px",
+                      color: "white",
+                      border: "1px solid #ccc",
+                      background: "#2E5796",
+                      cursor: "pointer",
+                    }}
+                  >
+                    {showAllAwards ? "↑ Ver Menos ↑" : "↓ Ver Más ↓"}
+                  </button>
+                </Box>
+              )}
+            </Box>
+          </>
+        )}
+
         {/* Galeria */}
         <Box>
-          <Heading size="lg" mb={4} color="teal.600">
+          <Heading size="lg" mb={4} color="primary">
             Galería
           </Heading>
 

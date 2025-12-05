@@ -1,13 +1,12 @@
 // app/actividad/[activityId]/ActivityClientPage.tsx
 "use client";
 
-import { Box, Flex, Heading, Text, Image, VStack, Divider, Link as ChakraLink  } from "@chakra-ui/react";
+import React from "react";
+import { Box, Flex, Heading, Text, Image, VStack, Divider, Link as ChakraLink } from "@chakra-ui/react";
 import NextLink from "next/link";
-import { mockActivityItems } from "@/data/actividadesMock";
-import { mockGroupItems } from "@/data/gruposMock";
 
 interface ActivityItem {
-  id: number; // viene como string del mock
+  id: number;
   title: string;
   image: string;
   description: string;
@@ -17,15 +16,22 @@ interface ActivityItem {
   group?: string;
 }
 
-// Aseguramos el tipo:
-const activities: ActivityItem[] = mockActivityItems;
+interface GroupItem {
+  id: string;
+  title: string;
+}
 
-export default function ActivityClientPage({ activityId }: { activityId: string }) {
-  
+interface Props {
+  activityId: string;
+  activities: ActivityItem[];
+  groups: GroupItem[];
+}
+
+export default function ActivityClientPage({ activityId, activities, groups }: Props) {
   // Normalizamos ambos a string
   const id = String(activityId);
 
-  const activity = activities.find((g) => String(g.id) === id);
+  const activity = activities.find((a) => String(a.id) === id);
 
   // Actividad no Encontrada
   if (!activity) {
@@ -37,17 +43,11 @@ export default function ActivityClientPage({ activityId }: { activityId: string 
     );
   }
 
-
-let linkedGroup = null;
-
-  if (activity.group) {
-    linkedGroup = mockGroupItems.find(
-      (g) => g.title.trim().toLowerCase() === activity.group!.trim().toLowerCase()
-    );
-  }
+  const linkedGroup = activity.group
+  ? groups.find((g) => g.title.trim().toLowerCase() === activity.group!.trim().toLowerCase())
+    : null;
 
   {/* Pagina del Actividad */}
-
   return (
     <Box maxW="6xl" mx="auto" p={8} my={8} bg="white" rounded="lg" shadow="xl">
       <VStack spacing={12} align="stretch">
@@ -62,7 +62,7 @@ let linkedGroup = null;
           <Image
             src={activity.image}
             alt={activity.title}
-            w="500px"
+            w="450px"
             h="300px"
             objectFit="cover"
             borderRadius="2xl"
@@ -71,7 +71,7 @@ let linkedGroup = null;
 
           {/* Info básica */}
           <VStack align="start" spacing={3} flex="1" alignItems="center">
-            <Heading size="2xl" color="teal.700">
+            <Heading size="2xl" color="primary" alignSelf="center" textAlign="center">
               {activity.title}
             </Heading>
 
@@ -82,8 +82,8 @@ let linkedGroup = null;
                   <ChakraLink
                     as={NextLink}
                     href={`/grupo/${linkedGroup.id}`}
-                    color="teal.500"
-                    _hover={{ textDecoration: "underline", color: "teal.600" }}
+                    color="primary"
+                    _hover={{ textDecoration: "underline", color: "primary.600" }}
                   >
                     {activity.group}
                   </ChakraLink>
@@ -113,7 +113,7 @@ let linkedGroup = null;
 
         {/* Descripción */}
         <Box>
-          <Heading size="lg" mb={4} color="teal.600">
+          <Heading size="lg" mb={4} color="primary">
             Descripción
           </Heading>
 

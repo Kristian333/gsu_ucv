@@ -78,7 +78,10 @@ export function ClientGroups({ groups, currentPage, totalPages, currentSearch = 
     const [filterMenuOpen, setFilterMenuOpen] = React.useState(false);
     
     const faculties = ["Agronomía", "Arquitectura y Urbanismo", "Ciencias", "Ciencias Económicas y Sociales", "Farmacia", "Humanidades y Educación", "Ingeniería", "Ciencias Jurídicas y Políticas", "Medicina", "Odontología", "Veterinaria", "DEU"];
-    
+
+    // Ordenar alfabeticamente por nombre
+    const sortedGroups = [...groups].sort((a, b) => a.title.localeCompare(b.title));
+
     // Actualizar URL al cambiar search o faculty
     const handleSearchChange = (value: string) => {
         setSearch(value);
@@ -95,7 +98,7 @@ export function ClientGroups({ groups, currentPage, totalPages, currentSearch = 
         <Box maxW="container.xl" mx="auto" py={10} px={6}>
             
             {/*Buscador y Filtro */}
-            <Box display="flex" gap={4} mb={8} flexWrap="wrap" justifyContent="center">
+            <Box display="flex" gap={4} mb={8} flexWrap="wrap" justifyContent="center" width="100%">
                 
                 {/* Buscador */}
                 <input
@@ -108,6 +111,7 @@ export function ClientGroups({ groups, currentPage, totalPages, currentSearch = 
                         borderRadius: "8px",
                         border: "1px solid #ccc",
                         minWidth: "260px",
+                        flex: 1
                     }}
                 />
 
@@ -118,7 +122,8 @@ export function ClientGroups({ groups, currentPage, totalPages, currentSearch = 
                             padding: "10px 15px",
                             borderRadius: "8px",
                             border: "1px solid #ccc",
-                            background: "white",
+                            background: "primary",
+                            whiteSpace: "nowrap"
                         }}
                         onClick={() => setFilterMenuOpen(!filterMenuOpen)}
                     >
@@ -163,16 +168,16 @@ export function ClientGroups({ groups, currentPage, totalPages, currentSearch = 
             </Box>
             
             {/* Mensaje cuando no hay grupos */}
-            {groups.length === 0 && (
+            {sortedGroups.length === 0 && (
                 <Box textAlign="center" py={10}>
                 <Text fontSize="xl">No se encontraron grupos.</Text>
                 </Box>
             )}
 
             {/* Grid con 4 columnas */}
-            {groups.length > 0 && (
+            {sortedGroups.length > 0 && (
                 <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={10} textAlign="center">
-                    {groups.map(group => (
+                    {sortedGroups.map(group => (
                         <NextLink href={`/grupo/${group.id}`} passHref key={group.id}>
                             <GroupCard
                                 title={group.title}
@@ -185,10 +190,9 @@ export function ClientGroups({ groups, currentPage, totalPages, currentSearch = 
             )}
             
             {/* Paginación */}
-            {groups.length > 0 && (
+            {sortedGroups.length > 0 && (
             <Pagination currentPage={currentPage} totalPages={totalPages} />
              )}
-
         </Box>
     );
 }

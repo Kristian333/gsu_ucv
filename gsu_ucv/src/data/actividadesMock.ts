@@ -2,13 +2,13 @@
 export const mockActivityItems = [
   {
     id: 1,
-    title: "Actividad 1",
+    title: "Modelo de las Naciones Unidas - 2025 - Caracas",
     image: "/Actividades/background-1.jpg",
     description: "Descripción 1 con un texto más largo para probar el límite de caracteres.",
     date_start: "2025-11-30",
-    date_end: "2025-12-03",
+    date_end: "2025-12-05",
     place: "Caracas, Venezuela",
-    area: "",
+    area: [""],
     group: "LAMUN"
   },
   {
@@ -19,7 +19,7 @@ export const mockActivityItems = [
     date_start: "2025-03-10",
     date_end: "2025-04-22",
     place: "Madrid, España",
-    area: "",
+    area: [""],
     group: "SPECTRUM"
   },
   {
@@ -30,7 +30,7 @@ export const mockActivityItems = [
     date_start: "2026-06-22",
     date_end: "2026-06-22",
     place: "Buenos Aires, Argentina",
-    area: "",
+    area: [""],
     group: "JAM UCV"
   },
   {
@@ -41,7 +41,7 @@ export const mockActivityItems = [
     date_start: "2026-04-22",
     date_end: "2026-04-22",
     place: "Buenos Aires, Argentina",
-    area: "",
+    area: [""],
     group: "Cecobio"
   },
   {
@@ -52,7 +52,7 @@ export const mockActivityItems = [
     date_start: "2026-03-12",
     date_end: "2026-03-12",
     place: "Buenos Aires, Argentina",
-    area: "",
+    area: [""],
     group: "CUÁSAR"
   },
   {
@@ -63,7 +63,7 @@ export const mockActivityItems = [
     date_start: "2025-04-22",
     date_end: "2025-04-22",
     place: "Buenos Aires, Argentina",
-    area: "",
+    area: [""],
     group: "CORAL FACULTAD DE CIENCIAS"
   },
   {
@@ -74,7 +74,7 @@ export const mockActivityItems = [
     date_start: "2026-01-22",
     date_end: "2026-01-24",
     place: "Buenos Aires, Argentina",
-    area: "",
+    area: [""],
     group: "GRUPO E.R.A."
   },
   {
@@ -85,7 +85,7 @@ export const mockActivityItems = [
     date_start: "2025-04-22",
     date_end: "2025-04-22",
     place: "Buenos Aires, Argentina",
-    area: "",
+    area: ["CULTURAL","DEBATE"],
     group: "LAMUN"
   },
   {
@@ -96,7 +96,7 @@ export const mockActivityItems = [
     date_start: "2025-04-22",
     date_end: "2025-04-22",
     place: "Buenos Aires, Argentina",
-    area: "",
+    area: [""],
     group: "SPECTRUM"
   },
   {
@@ -107,7 +107,7 @@ export const mockActivityItems = [
     date_start: "2025-12-10",
     date_end: "2025-12-10",
     place: "Buenos Aires, Argentina",
-    area: "",
+    area: [""],
     group: "GRUPO E.R.A."
   },
   {
@@ -118,7 +118,7 @@ export const mockActivityItems = [
     date_start: "2025-12-22",
     date_end: "2025-12-23",
     place: "Buenos Aires, Argentina",
-    area: "",
+    area: [""],
     group: "CUÁSAR"
   },
   {
@@ -129,7 +129,7 @@ export const mockActivityItems = [
     date_start: "2026-12-22",
     date_end: "2026-12-23",
     place: "Buenos Aires, Argentina",
-    area: "",
+    area: [""],
     group: "LAMUN"
   },
   {
@@ -140,7 +140,18 @@ export const mockActivityItems = [
     date_start: "2025-12-03",
     date_end: "2025-12-03",
     place: "Buenos Aires, Argentina",
-    area: "",
+    area: [""],
     group: "LAMUN"
+  },
+  {
+    id: 14,
+    title: "Actividad 14",
+    image: "/Actividades/background-1.jpg",
+    description: "Descripción 3 ejemplo.",
+    date_start: "2025-12-03",
+    date_end: "2025-12-03",
+    place: "Buenos Aires, Argentina",
+    area: [""],
+    group: "Asociación Geoquímica Ciencias UCV"
   }
 ];

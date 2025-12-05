@@ -95,15 +95,18 @@ export const Navbar = () => {
                                             src={user.avatar}
                                             alt="Avatar"
                                             borderRadius="full"
-                                            width="32px"
-                                            height="32px"
+                                            width="50px"
+                                            height="50px"
                                             objectFit="cover"
+                                            border="3px solid"
+                                            borderColor="secondary"
                                         />
                                     ) : (
                                         <FaUserCircle size="28px" />
                                     )
                                 } 
                                 variant="ghost"
+                                borderRadius="full"
                                 color={menuButtonColor}
                             />
                                 <MenuList>

@@ -4,6 +4,36 @@ import { Box, Text } from '@chakra-ui/react';
 import { ClientActivities } from '@/components/ui/client-actividades';
 import { mockActivityItems } from "@/data/actividadesMock";
 
+function getUniqueGroups() {
+    const groups = mockActivityItems.map(a => a.group).filter(Boolean);
+    return Array.from(new Set(groups));
+}
+
+function filterActivities(data: any[], search: string, group: string, status: string) {
+    const today = new Date().toISOString().split("T")[0];
+
+    return data.filter(act => {
+        const matchesSearch =
+            search.trim() === "" ||
+            act.title.toLowerCase().includes(search.toLowerCase()) ||
+            act.description.toLowerCase().includes(search.toLowerCase());
+
+        const matchesGroup =
+            group === "" || act.group === group;
+
+        let matchesStatus = true;
+        if (status === "futura") {
+            matchesStatus = act.date_start > today;
+        } else if (status === "curso") {
+            matchesStatus = act.date_start <= today && act.date_end >= today;
+        } else if (status === "finalizada") {
+            matchesStatus = act.date_end < today;
+        }
+
+        return matchesSearch && matchesGroup && matchesStatus;
+    });
+}
+
 function sortActivities(data: any[]) {
     const today = new Date().toISOString().split("T")[0];
 
@@ -37,8 +67,22 @@ function sortActivities(data: any[]) {
 }
 
 // Esta función aplica la paginación después de ordenar
-async function getActivities({ page, limit }: { page: number; limit: number }) {
-    const sorted = sortActivities(mockActivityItems);
+async function getActivities({
+    page,
+    limit,
+    search,
+    group,
+    status
+}: {
+    page: number;
+    limit: number;
+    search: string;
+    group: string;
+    status: string;
+}) {
+    const filtered = filterActivities(mockActivityItems, search, group, status);
+
+    const sorted = sortActivities(filtered);
 
     const start = (page - 1) * limit;
     const end = start + limit;
@@ -51,24 +95,40 @@ async function getActivities({ page, limit }: { page: number; limit: number }) {
 }
 
 interface ActividadesPageProps {
-    searchParams: { page: string };
+    searchParams: {
+        page?: string;
+        search?: string;
+        group?: string;
+        status?: string;
+    };
 }
 
 export default async function ActividadesPage({ searchParams }: ActividadesPageProps) {
     const page = Number(searchParams.page) || 1;
+    const search = searchParams.search || "";
+    const group = searchParams.group || "";
+    const status = searchParams.status || "";
     const limit = 6; // Cantidad de actividades por página
 
-    const { activities, totalPages } = await getActivities({ page, limit });
+    const uniqueGroups = getUniqueGroups();
+
+    const { activities, totalPages } = await getActivities({
+        page,
+        limit,
+        search,
+        group,
+        status,
+    });
 
     return (
-        <>
-            {activities.length === 0 ? (
-                <Box maxW="container.xl" mx="auto" py={10} px={6} textAlign="center">
-                    <Text fontSize="xl">No se encontraron actividades.</Text>
-                </Box>
-            ) : (
-                <ClientActivities activities={activities} currentPage={page} totalPages={totalPages} />
-            )}
-        </>
+        <ClientActivities
+            activities={activities}
+            allGroups={uniqueGroups}
+            currentPage={page}
+            totalPages={totalPages}
+            currentSearch={search}
+            currentGroup={group}
+            currentStatus={status}
+        />
     );
 }
