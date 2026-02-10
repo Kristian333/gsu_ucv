@@ -9,7 +9,11 @@ export const mockActivityItems = [
     date_end: "2025-12-05",
     place: "Caracas, Venezuela",
     area: [""],
-    group: "LAMUN"
+    group: "LAMUN",
+    numero_participantes: "",
+    aliados: "",
+    numero_a_beneficiar: "",
+    numero_beneficiados: ""
   },
   {
     id: 2,
@@ -20,7 +24,11 @@ export const mockActivityItems = [
     date_end: "2025-04-22",
     place: "Madrid, España",
     area: [""],
-    group: "SPECTRUM"
+    group: "SPECTRUM",
+    numero_participantes: "",
+    aliados: "",
+    numero_a_beneficiar: "",
+    numero_beneficiados: ""
   },
   {
     id: 3,
@@ -31,7 +39,11 @@ export const mockActivityItems = [
     date_end: "2026-06-22",
     place: "Buenos Aires, Argentina",
     area: [""],
-    group: "JAM UCV"
+    group: "JAM UCV",
+    numero_participantes: "",
+    aliados: "",
+    numero_a_beneficiar: "",
+    numero_beneficiados: ""
   },
   {
     id: 4,
@@ -42,7 +54,11 @@ export const mockActivityItems = [
     date_end: "2026-04-22",
     place: "Buenos Aires, Argentina",
     area: [""],
-    group: "Cecobio"
+    group: "Cecobio",
+    numero_participantes: "",
+    aliados: "",
+    numero_a_beneficiar: "",
+    numero_beneficiados: ""
   },
   {
     id: 5,
@@ -53,7 +69,11 @@ export const mockActivityItems = [
     date_end: "2026-03-12",
     place: "Buenos Aires, Argentina",
     area: [""],
-    group: "CUÁSAR"
+    group: "CUÁSAR",
+    numero_participantes: "",
+    aliados: "",
+    numero_a_beneficiar: "",
+    numero_beneficiados: ""
   },
   {
     id: 6,
@@ -64,7 +84,11 @@ export const mockActivityItems = [
     date_end: "2025-04-22",
     place: "Buenos Aires, Argentina",
     area: [""],
-    group: "CORAL FACULTAD DE CIENCIAS"
+    group: "CORAL FACULTAD DE CIENCIAS",
+    numero_participantes: "",
+    aliados: "",
+    numero_a_beneficiar: "",
+    numero_beneficiados: ""
   },
   {
     id: 7,
@@ -75,7 +99,11 @@ export const mockActivityItems = [
     date_end: "2026-01-24",
     place: "Buenos Aires, Argentina",
     area: [""],
-    group: "GRUPO E.R.A."
+    group: "GRUPO E.R.A.",
+    numero_participantes: "",
+    aliados: "",
+    numero_a_beneficiar: "",
+    numero_beneficiados: ""
   },
   {
     id: 8,
@@ -86,7 +114,11 @@ export const mockActivityItems = [
     date_end: "2025-04-22",
     place: "Buenos Aires, Argentina",
     area: ["CULTURAL","DEBATE"],
-    group: "LAMUN"
+    group: "LAMUN",
+    numero_participantes: "",
+    aliados: "",
+    numero_a_beneficiar: "",
+    numero_beneficiados: ""
   },
   {
     id: 9,
@@ -97,7 +129,11 @@ export const mockActivityItems = [
     date_end: "2025-04-22",
     place: "Buenos Aires, Argentina",
     area: [""],
-    group: "SPECTRUM"
+    group: "SPECTRUM",
+    numero_participantes: "",
+    aliados: "",
+    numero_a_beneficiar: "",
+    numero_beneficiados: ""
   },
   {
     id: 10,
@@ -108,7 +144,11 @@ export const mockActivityItems = [
     date_end: "2025-12-10",
     place: "Buenos Aires, Argentina",
     area: [""],
-    group: "GRUPO E.R.A."
+    group: "GRUPO E.R.A.",
+    numero_participantes: "",
+    aliados: "",
+    numero_a_beneficiar: "",
+    numero_beneficiados: ""
   },
   {
     id: 11,
@@ -119,7 +159,11 @@ export const mockActivityItems = [
     date_end: "2025-12-23",
     place: "Buenos Aires, Argentina",
     area: [""],
-    group: "CUÁSAR"
+    group: "CUÁSAR",
+    numero_participantes: "",
+    aliados: "",
+    numero_a_beneficiar: "",
+    numero_beneficiados: ""
   },
   {
     id: 12,
@@ -130,7 +174,11 @@ export const mockActivityItems = [
     date_end: "2026-12-23",
     place: "Buenos Aires, Argentina",
     area: [""],
-    group: "LAMUN"
+    group: "LAMUN",
+    numero_participantes: "",
+    aliados: "",
+    numero_a_beneficiar: "",
+    numero_beneficiados: ""
   },
   {
     id: 13,
@@ -141,7 +189,11 @@ export const mockActivityItems = [
     date_end: "2025-12-03",
     place: "Buenos Aires, Argentina",
     area: [""],
-    group: "LAMUN"
+    group: "LAMUN",
+    numero_participantes: "",
+    aliados: "",
+    numero_a_beneficiar: "",
+    numero_beneficiados: ""
   },
   {
     id: 14,
@@ -152,6 +204,10 @@ export const mockActivityItems = [
     date_end: "2025-12-03",
     place: "Buenos Aires, Argentina",
     area: [""],
-    group: "Asociación Geoquímica Ciencias UCV"
+    group: "Asociación Geoquímica Ciencias UCV",
+    numero_participantes: "",
+    aliados: "",
+    numero_a_beneficiar: "",
+    numero_beneficiados: ""
   }
 ];

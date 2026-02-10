@@ -37,6 +37,7 @@ export const Navbar = () => {
     
     const showAdminPanel = userRole === "Admin";
     const showGroupPanel = userRole === "Invitado" || userRole === "Grupo";
+    const showFacultyPanel = userRole === "Facultad";
 
     const router = useRouter();
     const pathname = usePathname();
@@ -118,6 +119,11 @@ export const Navbar = () => {
                                     {showGroupPanel && (
                                         <MenuItem as={NextLink} href="/admingroup">
                                             Panel de Grupos
+                                        </MenuItem>
+                                    )}
+                                    {showFacultyPanel && (
+                                        <MenuItem as={NextLink} href="/adminfacultad">
+                                            Panel de Facultad
                                         </MenuItem>
                                     )}
                                     <MenuItem onClick={handleLogout}>

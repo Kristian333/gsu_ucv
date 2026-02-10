@@ -4,7 +4,12 @@ import { Box, VStack, SimpleGrid, Card, CardBody, Stack, Image } from "@chakra-u
 import React from 'react';
 import { Heading, Paragraph } from "@/components/ui/tipografia";
 import NextLink from 'next/link';
+import dynamic from "next/dynamic";
 import { PrimaryButton, SecondaryButton } from "@/components/ui/buttons";
+
+const Carousel = dynamic(() => import("@/components/ui/carousel"), {
+  ssr: false,
+});
 
 interface InfoCardProps {
     title: string;
@@ -63,9 +68,10 @@ const GroupCard = ({ id, title, image }: GroupProps) => {
 
 interface ClientContentProps {
     groups: GroupProps[];
+    activities: any[];
 }
 
-export function ClientContent({ groups }: ClientContentProps) {
+export function ClientContent({ groups, activities }: ClientContentProps) {
     return (
         <Box width="100%" py={0} px={0}>
             <Box maxW="container.xl" mx="auto" textAlign="center"  as="section" id="our-groups" mt={6} mb={20} px={6}>
@@ -88,6 +94,9 @@ export function ClientContent({ groups }: ClientContentProps) {
                     </NextLink>
                 </Stack>
             </Box>
+
+            <Carousel activities={activities} />
+
             <Box 
                 as="section" 
                 id="join-us" 
@@ -124,7 +133,7 @@ export function ClientContent({ groups }: ClientContentProps) {
                         zIndex={1}
                     />
                     <VStack zIndex={2} spacing={4} py={8} px={6} color={"white"}>
-                        <Heading size="4xl">¿Tu grupo de extension no esta registrado?</Heading>
+                        <Heading size="4xl">¿Sabes como registrar un Grupo de Extensión?</Heading>
                         <NextLink href="/registro" passHref>
                             <SecondaryButton fontSize="4xl" px={8} py={10} size="md" mt={10}>¡Unete!</SecondaryButton>
                         </NextLink>

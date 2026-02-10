@@ -16,7 +16,7 @@ async function getEducacionContinuaSolicitudes() {
 // Simulación: Obtener solicitudes de Grupo de Extensión
 async function getGrupoExtensionSolicitudes() {
   const data = [
-    { id: 'sol-101', tipo: 'Solicitud de Evento', fecha: '2023-10-23', estado: 'Pendiente', nombre: 'Grupo de Extensión X' },
+    { id: 'sol-101', tipo: 'Solicitud de Creacion de Grupo', fecha: '2023-10-23', estado: 'Pendiente', nombre: 'Grupo de Extensión X' },
     { id: 'sol-102', tipo: 'Solicitud de Recurso', fecha: '2023-10-22', estado: 'Pendiente', nombre: 'Grupo de Extensión Y' },
   ];
   return data;

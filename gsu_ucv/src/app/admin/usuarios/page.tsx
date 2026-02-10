@@ -18,9 +18,9 @@ async function getEducacionContinuaUsers() {
 // Simulación: Obtener lista de usuarios de Grupos de Extensión
 async function getGrupoExtensionUsers() {
   const data = [
-    { id: 'ge-user-001', nombre: 'Juan Hernández', organismo: 'Facultad de Arquitectura y Urbanismo', rol: 'coordinador' },
-    { id: 'ge-user-002', nombre: 'Luis Vargas', organismo: 'Facultad de Farmacia', rol: 'proveedor' },
-    { id: 'ge-user-003', nombre: 'Elena Sosa', organismo: 'Facultad de Veterinaria', rol: 'visitante' },
+    { id: 'ge-user-001', nombre: 'LAMUN', organismo: '', rol: 'Grupo de Extension' },
+    { id: 'ge-user-002', nombre: 'FarmBalia', organismo: 'Facultad de Farmacia', rol: 'Grupo de Extension' },
+    { id: 'ge-user-003', nombre: 'Anifriend', organismo: 'Facultad de Veterinaria', rol: 'Grupo de Extension' },
   ];
   return data;
 }

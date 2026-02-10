@@ -22,6 +22,18 @@ import {
 } from "@chakra-ui/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Grid } from "@chakra-ui/react";
+
+interface Miembro {
+  nombre: string;
+  cedula: string;
+  telefono: string;
+  correo: string;
+  coordinacion: string;
+  anio: string;
+  facultad: string;
+  escuela: string;
+}
 
 export default function CrearGrupoForm() {
   const router = useRouter();
@@ -41,6 +53,19 @@ export default function CrearGrupoForm() {
     tipoIntegrantes: [] as string[],
     observaciones: "",
   });
+
+  const [miembros, setMiembros] = useState<Miembro[]>([
+    {
+      nombre: "",
+      cedula: "",
+      telefono: "",
+      correo: "",
+      coordinacion: "",
+      anio: "",
+      facultad: "",
+      escuela: "",
+    },
+  ]);
 
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -71,6 +96,37 @@ export default function CrearGrupoForm() {
     const file = e.target.files?.[0];
     if (!file) return;
     setArchivoMiembros(file);
+  };
+
+  const handleMiembroChange = (
+    index: number,
+    field: keyof Miembro,
+    value: string
+  ) => {
+    const updated = [...miembros];
+    updated[index][field] = value;
+    setMiembros(updated);
+  };
+
+  const addMiembro = () => {
+    setMiembros([
+      ...miembros,
+      {
+        nombre: "",
+        cedula: "",
+        telefono: "",
+        correo: "",
+        coordinacion: "",
+        anio: "",
+        facultad: "",
+        escuela: "",
+      },
+    ]);
+  };
+
+  const removeMiembro = (index: number) => {
+    if (miembros.length === 1) return;
+    setMiembros(miembros.filter((_, i) => i !== index));
   };
 
   // SUBMIT
@@ -112,6 +168,15 @@ export default function CrearGrupoForm() {
       });
     }
 
+    if (miembros.some(m => !m.nombre || !m.cedula || !m.correo)) {
+      return toast({
+        title: "Datos incompletos",
+        description: "Todos los miembros deben tener al menos nombre, cédula y correo.",
+        status: "error",
+        duration: 2000,
+      });
+    }
+
     console.log("DATOS DEL GRUPO (mock)", form);
     console.log("Logo:", logoFile);
     console.log("Proyecto PDF:", pdfProyecto);
@@ -128,7 +193,7 @@ export default function CrearGrupoForm() {
   };
 
   return (
-    <Box maxW="800px" mx="auto" mt={10} p={8} borderRadius="lg" bg="white" shadow="md">
+    <Box maxW="95%" mx="auto" mt={10} p={8} borderRadius="lg" bg="white" shadow="md">
       <Heading mb={6}>Crear Grupo de Extensión</Heading>
 
       <VStack spacing={6} align="stretch">
@@ -306,24 +371,126 @@ export default function CrearGrupoForm() {
           </CheckboxGroup>
         </FormControl>
 
-        {/* Descargar + subir archivo Excel */}
-        <Box>
-          <Text mb={2}>
-            Descargue el archivo <b>"Miembros de la Organización"</b> y rellénelo:
-          </Text>
-          <Link href="/ESTRUCTURA_ORGANIZATIVA.xlsx" download>
-            <Button colorScheme="blue" mb={3}>Descargar Archivo</Button>
-          </Link>
+        {/* Miembros */}
+        <FormControl isRequired>
+          <FormLabel>MIEMBROS DEL GRUPO</FormLabel>
 
-          <Text fontSize="sm" color="gray.700" mb={2}>
-            El campo "Año" se refiere al año y semestre que está cursando el estudiante. No confundir con el año actual.
-          </Text>
+          <Box overflowX="auto">
+            <Text fontSize="sm" color="gray.700" mb={2}>
+              <b>*El campo "Año" se refiere al año y semestre que está cursando el estudiante. No confundir con el año actual.</b>
+            </Text>
 
-          <FormControl>
-            <FormLabel>Suba el archivo completado</FormLabel>
-            <Input type="file" accept=".xlsx" onChange={handleExcel} />
-          </FormControl>
-        </Box>
+            <VStack spacing={4} align="stretch" minW="200px">
+
+              {/* ENCABEZADOS */}
+              <Grid
+                templateColumns="2fr 1fr 1fr 2fr 1.5fr 1fr 1.5fr 1.5fr 50px"
+                gap={3}
+                fontWeight="bold"
+                fontSize="sm"
+                color="gray.600"
+                px={2}
+              >
+                <Text>Nombre</Text>
+                <Text>Cédula</Text>
+                <Text>Teléfono</Text>
+                <Text>Correo</Text>
+                <Text>Coordinación</Text>
+                <Text>Año</Text>
+                <Text>Facultad</Text>
+                <Text>Escuela</Text>
+                <Text></Text>
+              </Grid>
+
+              {/* FILAS */}
+              {miembros.map((miembro, index) => (
+                <Grid
+                  key={index}
+                  templateColumns="2fr 1fr 1fr 2fr 1.5fr 1fr 1.5fr 1.5fr 50px"
+                  gap={3}
+                  alignItems="center"
+                >
+                  <Input
+                    placeholder="Nombre"
+                    value={miembro.nombre}
+                    onChange={(e) =>
+                      handleMiembroChange(index, "nombre", e.target.value)
+                    }
+                  />
+                  <Input
+                    placeholder="Cédula"
+                    value={miembro.cedula}
+                    onChange={(e) =>
+                      handleMiembroChange(index, "cedula", e.target.value)
+                    }
+                  />
+                  <Input
+                    placeholder="Teléfono"
+                    value={miembro.telefono}
+                    onChange={(e) =>
+                      handleMiembroChange(index, "telefono", e.target.value)
+                    }
+                  />
+                  <Input
+                    placeholder="Correo"
+                    type="email"
+                    value={miembro.correo}
+                    onChange={(e) =>
+                      handleMiembroChange(index, "correo", e.target.value)
+                    }
+                  />
+                  <Input
+                    placeholder="Coordinación"
+                    value={miembro.coordinacion}
+                    onChange={(e) =>
+                      handleMiembroChange(index, "coordinacion", e.target.value)
+                    }
+                  />
+                  <Input
+                    placeholder="Año"
+                    value={miembro.anio}
+                    onChange={(e) =>
+                      handleMiembroChange(index, "anio", e.target.value)
+                    }
+                  />
+                  <Input
+                    placeholder="Facultad"
+                    value={miembro.facultad}
+                    onChange={(e) =>
+                      handleMiembroChange(index, "facultad", e.target.value)
+                    }
+                  />
+                  <Input
+                    placeholder="Escuela"
+                    value={miembro.escuela}
+                    onChange={(e) =>
+                      handleMiembroChange(index, "escuela", e.target.value)
+                    }
+                  />
+
+                  {/* BOTÓN ELIMINAR */}
+                  <Button
+                    colorScheme="red"
+                    variant="ghost"
+                    onClick={() => removeMiembro(index)}
+                    isDisabled={miembros.length === 1}
+                  >
+                    ✕
+                  </Button>
+                </Grid>
+              ))}
+
+              <Button
+                alignSelf="flex-start"
+                colorScheme="green"
+                variant="outline"
+                onClick={addMiembro}
+              >
+                ➕ Agregar miembro
+              </Button>
+            </VStack>
+          </Box>
+        </FormControl>
 
         {/* Observaciones */}
         <FormControl>

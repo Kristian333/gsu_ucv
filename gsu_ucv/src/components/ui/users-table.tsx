@@ -53,7 +53,7 @@ const getRoleColorScheme = (rol: string) => {
   }
 };
 
-const allRoles = ['Todos', 'admin', 'coordinador', 'proveedor', 'visitante'];
+const allRoles = ['Todos', 'admin', 'coordinador', 'proveedor', 'visitante', 'Grupo de Extension'];
 const editableRoles = ['admin', 'coordinador', 'proveedor', 'visitante'];
 
 export function UsersTable({ educacionContinuaUsers, grupoExtensionUsers }: UsersTableProps) {

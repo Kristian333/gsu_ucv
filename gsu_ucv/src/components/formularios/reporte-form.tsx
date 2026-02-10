@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Flex,
@@ -17,16 +17,19 @@ import {
   CheckboxGroup,
   Stack,
   FormHelperText,
+  Image,
+  useToast,
 } from "@chakra-ui/react";
+import { useRouter } from "next/navigation";
 
 interface ActivityItem {
   id: number;
   title: string;
-  group?: string;
-  date_start?: string;
-  date_end?: string;
-  place?: string;
-  description?: string;
+  image: string;
+  date_start: string;
+  date_end: string;
+  place: string;
+  description: string;
   area?: string[];
 }
 
@@ -44,6 +47,17 @@ export default function ReporteClientPage({ activity }: Props) {
     );
   }
 
+  const router = useRouter();
+  const toast = useToast();
+
+  const [form, setForm] = useState({
+    title: "",
+    place: "",
+    date_start: "",
+    date_end: "",
+    description: "",
+  });
+
   // Estados para campos editables
   const [numMembers, setNumMembers] = useState<number | "">("");
   const [allies, setAllies] = useState<string>("");
@@ -52,6 +66,35 @@ export default function ReporteClientPage({ activity }: Props) {
   const [photoFiles, setPhotoFiles] = useState<FileList | null>(null);
   const [attendeeFile, setAttendeeFile] = useState<File | null>(null);
   const [observations, setObservations] = useState<string>("");
+
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+
+  useEffect(() => {
+    if (!activity) return;
+
+    setForm({
+      title: activity.title,
+      place: activity.place,
+      date_start: activity.date_start,
+      date_end: activity.date_end,
+      description: activity.description,
+    });
+
+    setPreviewImage(activity.image);
+  }, [activity]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImageFile(file);
+    setPreviewImage(URL.createObjectURL(file));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,10 +121,6 @@ export default function ReporteClientPage({ activity }: Props) {
         <VStack spacing={6} align="stretch">
 
           {/* Información Protegida */}
-          <FormControl>
-            <FormLabel>Nombre del Grupo</FormLabel>
-            <Input value={activity.group || ""} isReadOnly />
-          </FormControl>
 
           <FormControl>
             <FormLabel>Nombre de la Actividad Realizada</FormLabel>
@@ -98,14 +137,21 @@ export default function ReporteClientPage({ activity }: Props) {
             <Input value={activity.date_end || ""} isReadOnly />
           </FormControl>
 
-          <FormControl>
-            <FormLabel>Lugar de la Ejecución de la Actividad</FormLabel>
-            <Input value={activity.place || ""} isReadOnly />
-          </FormControl>
-
-          <FormControl>
-            <FormLabel>Breve Descripción de la Actividad</FormLabel>
-            <Textarea value={activity.description || ""} isReadOnly />
+          <FormControl isRequired>
+            <FormLabel>Imagen de la Actividad</FormLabel>
+  
+            {previewImage && (
+              <Image
+                src={previewImage}
+                alt="Preview"
+                borderRadius="md"
+                maxH="250px"
+                objectFit="cover"
+                mb={3}
+              />
+            )}
+  
+            <Input type="file" accept="image/*" onChange={handleImageChange} />
           </FormControl>
 
           {/* Campos Editables */}
@@ -120,30 +166,6 @@ export default function ReporteClientPage({ activity }: Props) {
               Indique el número de integrantes del grupo que participaron en la ejecución de la actividad
             </FormHelperText>
           </FormControl>
-
-          <FormControl>
-            <FormLabel>Área de Conocimiento de la Actividad</FormLabel>
-            <CheckboxGroup value={activity.area || []} isDisabled>
-                <Stack spacing={2}>
-                {[
-                    "SALUD",
-                    "ACCIÓN SOCIAL",
-                    "CULTURAL",
-                    "DEPORTIVA",
-                    "AMBIENTE / CONSERVACIÓN",
-                    "INVESTIGACIÓN",
-                    "RECREACIÓN",
-                    "DEBATE",
-                    "OTROS",
-                ].map((areaOption) => (
-                    <Checkbox key={areaOption} value={areaOption}>
-                    {areaOption}
-                    </Checkbox>
-                ))}
-                </Stack>
-            </CheckboxGroup>
-            </FormControl>
-
 
           <FormControl>
             <FormLabel>Si la actividad fue realizada con algún(os) aliado(s)</FormLabel>

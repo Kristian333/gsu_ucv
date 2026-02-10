@@ -59,6 +59,7 @@ export const AdminGroupNavbar = () => {
     { label: "Planificar Actividad", href: "/admingroup/crear_actividad" },
     { label: "Nuestras Actividades", href: "/admingroup/nuestras_actividades" },
     { label: "Solicitudes", href: "/admingroup/solicitudes" },
+    { label: "Estadisticas", href: "/admingroup/estadisticas" },
   ];
 
   // Invitado: solo Inicio
