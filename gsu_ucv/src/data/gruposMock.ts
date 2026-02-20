@@ -23,6 +23,41 @@ export const mockGroupItems = [
         awardName: "Mejor Grupo",
         awarddate: 2025
       }
+    ],
+    members: [
+      {
+        name: "Pedro Pascal",
+        ci: "12545623",
+        phone: "55555",
+        mail: "a@b.com",
+        coordination: "E",
+        year: "5",
+        faculty: "",
+        school: "",
+        doc: ""
+      },
+      {
+        name: "",
+        ci: "",
+        phone: "",
+        mail: "",
+        coordination: "",
+        year: "5",
+        faculty: "",
+        school: "",
+        doc: ""
+      },
+      {
+        name: "",
+        ci: "",
+        phone: "",
+        mail: "",
+        coordination: "",
+        year: "5",
+        faculty: "",
+        school: "",
+        doc: ""
+      }
     ]
   },
   {

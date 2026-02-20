@@ -18,11 +18,19 @@ import {
   Textarea,
   useToast,
   Link,
-  Image
+  Image,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  ModalCloseButton,
+  useDisclosure,
+  Grid
 } from "@chakra-ui/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Grid } from "@chakra-ui/react";
 
 interface Miembro {
   nombre: string;
@@ -33,11 +41,15 @@ interface Miembro {
   anio: string;
   facultad: string;
   escuela: string;
+  documento?: File | null;
+  documentoPreview?: string | null;
 }
 
 export default function CrearGrupoForm() {
   const router = useRouter();
   const toast = useToast();
+
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   // ESTADOS DEL FORMULARIO
   const [form, setForm] = useState({
@@ -54,18 +66,96 @@ export default function CrearGrupoForm() {
     observaciones: "",
   });
 
-  const [miembros, setMiembros] = useState<Miembro[]>([
-    {
-      nombre: "",
-      cedula: "",
-      telefono: "",
-      correo: "",
-      coordinacion: "",
-      anio: "",
-      facultad: "",
-      escuela: "",
-    },
-  ]);
+  const miembroVacio = (): Miembro => ({
+    nombre: "",
+    cedula: "",
+    telefono: "",
+    correo: "",
+    coordinacion: "",
+    anio: "",
+    facultad: "",
+    escuela: "",
+  });
+
+  const [miembros, setMiembros] = useState<Miembro[]>(
+    Array.from({ length: 5 }, miembroVacio)
+  );
+
+  const [miembrosGuardados, setMiembrosGuardados] = useState<Miembro[]>([]);
+
+  const FACULTADES = [
+    "Agronomía",
+    "Arquitectura y Urbanismo",
+    "Ciencias",
+    "Ciencias Económicas y Sociales",
+    "Farmacia",
+    "Humanidades y Educación",
+    "Ingeniería",
+    "Ciencias Jurídicas y Políticas",
+    "Medicina",
+    "Odontología",
+    "Veterinaria",
+  ];
+
+  const ESCUELAS_POR_FACULTAD: Record<string, string[]> = {
+    Agronomía: ["Agronomía"],
+    "Arquitectura y Urbanismo": ["Arquitectura"],
+    Ciencias: [
+      "Computación",
+      "Biología",
+      "Matemática",
+      "Física",
+      "Química",
+      "Geoquímica",
+    ],
+    "Ciencias Económicas y Sociales": [
+      "Administración y Contaduría",
+      "Antropología",
+      "Estadística y Ciencias Actuariales",
+      "Economía",
+      "Estudios Internacionales",
+      "Sociología",
+      "Trabajo Social"
+    ],
+    Farmacia: ["Farmacia"],
+    "Humanidades y Educación": [
+      "Artes",
+      "Bibliotecología y Archivología",
+      "Comunicación Social",
+      "Educación",
+      "Filosofía",
+      "Geografía",
+      "Historia",
+      "Idiomas Modernos",
+      "Letras",
+      "Psicología"
+    ],
+    Ingeniería: [
+      "Ciclo Básico de Ingeniería",
+      "Ingeniería Civil",
+      "Ingeniería Eléctrica",
+      "Ingeniería Geológica, Minas y Geofísica",
+      "Ingeniería Mecánica",
+      "Ingeniería Metalúrgica y Ciencias de los Materiales",
+      "Ingeniería Química",
+      "Ingeniería de Petróleo",
+      "Ingeniería de Procesos Industriales"
+    ],
+    "Ciencias Jurídicas y Políticas": [
+      "Derecho",
+      "Estudios Políticos y Administrativos"
+    ],
+    Medicina: [
+      "Bioanálisis",
+      "Enfermería",
+      "Medicina Dr. Luis Razetti",
+      "Medicina Dr. José María Vargas",
+      "Nutrición y Dietética",
+      "Salud Pública"
+    ],
+    Odontología: ["Odontología"],
+    Veterinaria: ["Medicina Veterinaria"],
+  };
 
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -108,6 +198,24 @@ export default function CrearGrupoForm() {
     setMiembros(updated);
   };
 
+  const handleDocumentoChange = (
+    index: number,
+    file?: File
+  ) => {
+    if (!file) return;
+
+    const updated = [...miembros];
+    updated[index].documento = file;
+
+    if (file.type === "application/pdf") {
+      updated[index].documentoPreview = null;
+    } else {
+      updated[index].documentoPreview = URL.createObjectURL(file);
+    }
+
+    setMiembros(updated);
+  };
+
   const addMiembro = () => {
     setMiembros([
       ...miembros,
@@ -125,8 +233,30 @@ export default function CrearGrupoForm() {
   };
 
   const removeMiembro = (index: number) => {
-    if (miembros.length === 1) return;
+    if (miembros.length <= 5) return;
     setMiembros(miembros.filter((_, i) => i !== index));
+  };
+
+  const validarMiembros = () => {
+    for (let i = 0; i < miembros.length; i++) {
+      const m = miembros[i];
+
+      if (
+        !m.nombre ||
+        !m.cedula ||
+        !m.telefono ||
+        !m.correo ||
+        !m.coordinacion ||
+        !m.anio ||
+        !m.facultad ||
+        !m.escuela ||
+        !m.documento
+      ) {
+        return `El miembro #${i + 1} tiene campos incompletos.`;
+      }
+    }
+
+    return null;
   };
 
   // SUBMIT
@@ -193,7 +323,7 @@ export default function CrearGrupoForm() {
   };
 
   return (
-    <Box maxW="95%" mx="auto" mt={10} p={8} borderRadius="lg" bg="white" shadow="md">
+    <Box maxW="1800px" mx="auto" mt={10} p={8} borderRadius="lg" bg="white" shadow="md">
       <Heading mb={6}>Crear Grupo de Extensión</Heading>
 
       <VStack spacing={6} align="stretch">
@@ -375,122 +505,225 @@ export default function CrearGrupoForm() {
         <FormControl isRequired>
           <FormLabel>MIEMBROS DEL GRUPO</FormLabel>
 
-          <Box overflowX="auto">
-            <Text fontSize="sm" color="gray.700" mb={2}>
-              <b>*El campo "Año" se refiere al año y semestre que está cursando el estudiante. No confundir con el año actual.</b>
-            </Text>
+          <Button colorScheme="blue" onClick={onOpen}>
+            Gestionar miembros
+          </Button>
 
-            <VStack spacing={4} align="stretch" minW="200px">
+          <Text fontSize="sm" color="gray.600" mt={2}>
+            Miembros agregados: {miembrosGuardados.length}
+          </Text>
 
-              {/* ENCABEZADOS */}
-              <Grid
-                templateColumns="2fr 1fr 1fr 2fr 1.5fr 1fr 1.5fr 1.5fr 50px"
-                gap={3}
-                fontWeight="bold"
-                fontSize="sm"
-                color="gray.600"
-                px={2}
-              >
-                <Text>Nombre</Text>
-                <Text>Cédula</Text>
-                <Text>Teléfono</Text>
-                <Text>Correo</Text>
-                <Text>Coordinación</Text>
-                <Text>Año</Text>
-                <Text>Facultad</Text>
-                <Text>Escuela</Text>
-                <Text></Text>
-              </Grid>
-
-              {/* FILAS */}
-              {miembros.map((miembro, index) => (
-                <Grid
-                  key={index}
-                  templateColumns="2fr 1fr 1fr 2fr 1.5fr 1fr 1.5fr 1.5fr 50px"
-                  gap={3}
-                  alignItems="center"
-                >
-                  <Input
-                    placeholder="Nombre"
-                    value={miembro.nombre}
-                    onChange={(e) =>
-                      handleMiembroChange(index, "nombre", e.target.value)
-                    }
-                  />
-                  <Input
-                    placeholder="Cédula"
-                    value={miembro.cedula}
-                    onChange={(e) =>
-                      handleMiembroChange(index, "cedula", e.target.value)
-                    }
-                  />
-                  <Input
-                    placeholder="Teléfono"
-                    value={miembro.telefono}
-                    onChange={(e) =>
-                      handleMiembroChange(index, "telefono", e.target.value)
-                    }
-                  />
-                  <Input
-                    placeholder="Correo"
-                    type="email"
-                    value={miembro.correo}
-                    onChange={(e) =>
-                      handleMiembroChange(index, "correo", e.target.value)
-                    }
-                  />
-                  <Input
-                    placeholder="Coordinación"
-                    value={miembro.coordinacion}
-                    onChange={(e) =>
-                      handleMiembroChange(index, "coordinacion", e.target.value)
-                    }
-                  />
-                  <Input
-                    placeholder="Año"
-                    value={miembro.anio}
-                    onChange={(e) =>
-                      handleMiembroChange(index, "anio", e.target.value)
-                    }
-                  />
-                  <Input
-                    placeholder="Facultad"
-                    value={miembro.facultad}
-                    onChange={(e) =>
-                      handleMiembroChange(index, "facultad", e.target.value)
-                    }
-                  />
-                  <Input
-                    placeholder="Escuela"
-                    value={miembro.escuela}
-                    onChange={(e) =>
-                      handleMiembroChange(index, "escuela", e.target.value)
-                    }
-                  />
-
-                  {/* BOTÓN ELIMINAR */}
-                  <Button
-                    colorScheme="red"
-                    variant="ghost"
-                    onClick={() => removeMiembro(index)}
-                    isDisabled={miembros.length === 1}
-                  >
-                    ✕
-                  </Button>
-                </Grid>
-              ))}
-
-              <Button
-                alignSelf="flex-start"
-                colorScheme="green"
-                variant="outline"
-                onClick={addMiembro}
-              >
-                ➕ Agregar miembro
-              </Button>
-            </VStack>
-          </Box>
+          
         </FormControl>
+        <Modal isOpen={isOpen} onClose={onClose} size="full">
+          <ModalOverlay />
+          <ModalContent maxW="95vw" maxH="90vh"  mx="auto" overflowY="auto">
+            <ModalHeader>Miembros del Grupo</ModalHeader>
+            <ModalCloseButton />
+
+            <ModalBody>
+              <Box overflowX="auto">
+                <Text fontSize="sm" color="gray.700" mb={2}>
+                  <b>*El campo "Año" se refiere al año y semestre que está cursando el estudiante. No confundir con el año actual.</b>
+                </Text>
+
+                <VStack spacing={4} align="stretch" minW="200px">
+
+                  {/* ENCABEZADOS */}
+                  <Grid
+                    templateColumns="30px 1.8fr 1fr 1.3fr 1.3fr 1.5fr 1fr 1.5fr 1.5fr 2fr 50px"
+                    gap={0}
+                    fontWeight="bold"
+                    fontSize="sm"
+                    bg="gray.50"
+                    border="1px solid"
+                    borderColor="gray.200"
+                  >
+                    <Text p={2} borderRight="1px solid" borderColor="gray.200">#</Text>
+                    <Text p={2} borderRight="1px solid" borderColor="gray.200">Nombre</Text>
+                    <Text p={2} borderRight="1px solid" borderColor="gray.200">Cédula</Text>
+                    <Text p={2} borderRight="1px solid" borderColor="gray.200">Teléfono</Text>
+                    <Text p={2} borderRight="1px solid" borderColor="gray.200">Correo</Text>
+                    <Text p={2} borderRight="1px solid" borderColor="gray.200">Coordinación</Text>
+                    <Text p={2} borderRight="1px solid" borderColor="gray.200">Año</Text>
+                    <Text p={2} borderRight="1px solid" borderColor="gray.200">Facultad</Text>
+                    <Text p={2} borderRight="1px solid" borderColor="gray.200">Escuela</Text>
+                    <Text p={2} borderColor="gray.200">Documento</Text>
+                    <Text p={2} borderColor="gray.200"></Text>
+                  </Grid>
+
+                  {/* FILAS */}
+                  {miembros.map((miembro, index) => (
+                    <Grid
+                      key={index}
+                      templateColumns="30px 1.8fr 1fr 1.3fr 1.3fr 1.5fr 1fr 1.5fr 1.5fr 2fr 50px"
+                      gap={0}
+                      alignItems="center"
+                      borderBottom="1px solid"
+                      borderColor="gray.200"
+                    >
+                      <Box
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="center"
+                        fontWeight="bold"
+                      >
+                        {index + 1}
+                      </Box>
+                      <Input
+                        placeholder="Nombre"
+                        value={miembro.nombre}
+                        onChange={(e) =>
+                          handleMiembroChange(index, "nombre", e.target.value)
+                        }
+                      />
+                      <Input
+                        placeholder="Cédula"
+                        value={miembro.cedula}
+                        onChange={(e) =>
+                          handleMiembroChange(index, "cedula", e.target.value)
+                        }
+                      />
+                      <Input
+                        placeholder="Teléfono"
+                        value={miembro.telefono}
+                        onChange={(e) =>
+                          handleMiembroChange(index, "telefono", e.target.value)
+                        }
+                      />
+                      <Input
+                        placeholder="Correo"
+                        type="email"
+                        value={miembro.correo}
+                        onChange={(e) =>
+                          handleMiembroChange(index, "correo", e.target.value)
+                        }
+                      />
+                      <Input
+                        placeholder="Coordinación"
+                        value={miembro.coordinacion}
+                        onChange={(e) =>
+                          handleMiembroChange(index, "coordinacion", e.target.value)
+                        }
+                      />
+                      <Input
+                        placeholder="Año"
+                        value={miembro.anio}
+                        onChange={(e) =>
+                          handleMiembroChange(index, "anio", e.target.value)
+                        }
+                      />
+                      <Select
+                        placeholder="Facultad"
+                        value={miembro.facultad}
+                        onChange={(e) =>{
+                          handleMiembroChange(index, "facultad", e.target.value);
+                          handleMiembroChange(index, "escuela", "");
+                        }}
+                      >
+                        {FACULTADES.map((f) => (
+                          <option key={f} value={f}>
+                            {f}
+                          </option>
+                        ))}
+                      </Select>
+                      {!miembro.facultad ? (
+                        <Select isDisabled placeholder="Seleccione una facultad primero" />
+                      ) : (
+                        <Select
+                          placeholder="Escuela"
+                          value={miembro.escuela}
+                          onChange={(e) =>
+                            handleMiembroChange(index, "escuela", e.target.value)
+                          }
+                        >
+                          {(ESCUELAS_POR_FACULTAD[miembro.facultad] ?? []).map((esc) => (
+                            <option key={esc} value={esc}>
+                              {esc}
+                            </option>
+                          ))}
+                        </Select>
+                      )}
+                      <Box>
+                        {miembro.documento && (
+                          miembro.documento.type === "application/pdf" ? (
+                            <Link
+                              href={URL.createObjectURL(miembro.documento)}
+                              isExternal
+                              fontSize="sm"
+                              color="blue.500"
+                            >
+                              Ver PDF
+                            </Link>
+                          ) : (
+                            <Image
+                              src={miembro.documentoPreview ?? ""}
+                              alt="Preview"
+                              maxH="150px"
+                              objectFit="contain"
+                              mb={1}
+                            />
+                          )
+                        )}
+
+                        <Input
+                          type="file"
+                          accept="image/jpeg,application/pdf"
+                          size="sm"
+                          onChange={(e) =>
+                            handleDocumentoChange(index, e.target.files?.[0])
+                          }
+                        />
+                      </Box>
+
+                      {/* BOTÓN ELIMINAR */}
+                      <Button
+                        colorScheme="red"
+                        variant="ghost"
+                        onClick={() => removeMiembro(index)}
+                        isDisabled={miembros.length === 1}
+                      >
+                        ✕
+                      </Button>
+                    </Grid>
+                  ))}
+
+                  <Button
+                    alignSelf="flex-start"
+                    colorScheme="green"
+                    variant="outline"
+                    onClick={addMiembro}
+                  >
+                    ➕ Agregar miembro
+                  </Button>
+                </VStack>
+              </Box>
+            </ModalBody>
+
+            <ModalFooter>
+              <Button
+                colorScheme="green"
+                onClick={() => {
+                  const error = validarMiembros();
+                  if (error) {
+                    toast({
+                      title: "Datos incompletos",
+                      description: error,
+                      status: "error",
+                      duration: 2500,
+                    });
+                    return;
+                  }
+
+                  setMiembrosGuardados([...miembros]);
+                  onClose();
+                }}
+              >
+                Guardar y volver
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
 
         {/* Observaciones */}
         <FormControl>

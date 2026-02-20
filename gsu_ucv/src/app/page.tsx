@@ -44,7 +44,7 @@ export default async function HomePage() {
                             Impulsa el impacto de tu conocimiento más allá del aula.
                         </Paragraph>
                         <Paragraph fontSize="lg" maxW="600px" mx="auto" mb={6}>
-                            Nuestra plataforma te permite registrar, validar y respaldar grupos de extensión a través de la Universidad Central de Venezuela. Ya seas estudiante, docente o coordinador, puedes formalizar tus proyectos, darles reconocimiento académico y conectar tu trabajo con la sociedad.
+                            Nuestra plataforma te permite registrar, validar y respaldar grupos de extensión. Ya seas estudiante, docente o coordinador, puedes formalizar tus proyectos, darles reconocimiento académico y conectar tu trabajo con la sociedad.
                         </Paragraph>
                     </Box>
             </Box>
