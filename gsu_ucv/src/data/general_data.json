@@ -1,0 +1,54 @@
+{
+    "director": {
+        "director_extension": "Profa. MERCY OSPINA",
+        "director_genero": "Femenino"
+    },
+    "info": "Edif. Biblioteca Central, Piso 05, Ciudad Universitaria de Caracas, Venezuela, correo electrónico deu.depgsu@gmail.com, Teléfonos: 0412.5502096 / 0212 605 3929",
+    "pie_pagina": "“Ciudad Universitaria de Caracas, Patrimonio de la Humanidad: 2025, vigésimo quinto aniversario de la Declaración de la UNESCO”",
+    "coordinadores": [
+        {
+            "coordinador": "Ara",
+            "facultad": "Agronomía"
+        },
+        {
+            "coordinador": "Jon",
+            "facultad": "Arquitectura y Urbanismo"
+        },
+        {
+            "coordinador": "Pepi",
+            "facultad": "Ciencias"
+        },
+        {
+            "coordinador": "Mari",
+            "facultad": "Ciencias Económicas y Sociales"
+        },
+        {
+            "coordinador": "Mia",
+            "facultad": "Farmacia"
+        },
+        {
+            "coordinador": "Bowser",
+            "facultad": "Humanidades y Educación"
+        },
+        {
+            "coordinador": "Napoleon",
+            "facultad": "Ingeniería"
+        },
+        {
+            "coordinador": "Dracula",
+            "facultad": "Ciencias Jurídicas y Políticas"
+        },
+        {
+            "coordinador": "Florence",
+            "facultad": "Medicina"
+        },
+        {
+            "coordinador": "EE",
+            "facultad": "Odontología"
+        },
+        {
+            "coordinador": "Therian",
+            "facultad": "Veterinaria"
+        }
+    ]
+}

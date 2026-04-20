@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Box, Flex, IconButton, Image, Text } from "@chakra-ui/react";
+import { Box, Flex, IconButton, Image, Text, VStack, Container } from "@chakra-ui/react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
 import { useRouter } from "next/navigation";
 
@@ -34,8 +34,8 @@ export default function Carousel({activities}: CarouselProps) {
   }
 
   function parseLocalDate(dateStr: string) {
-    const [y, m, d] = dateStr.split("-").map(Number);
-    return new Date(y, m - 1, d); // <-- esto es local siempre
+    const [d, m, y] = dateStr.split("/").map(Number);
+    return new Date(y, m - 1, d); 
   }
 
   const today = normalizeDate(new Date());
@@ -72,9 +72,7 @@ export default function Carousel({activities}: CarouselProps) {
     area: [] as string[],
   };
 
-  if (items.length === 0) {
-    items = [placeholder];
-  }
+  if (items.length === 0) items = [placeholder];
 
   const length = items.length;
 
@@ -95,9 +93,7 @@ export default function Carousel({activities}: CarouselProps) {
     setTilt({ x: rotateX, y: rotateY });
   };
 
-  const resetTilt = () => {
-    setTilt({ x: 10, y: -18 });
-  };
+  const resetTilt = () => setTilt({ x: 10, y: -18 });
 
   // Auto-slide cada 4 segundos
   useEffect(() => {
@@ -113,80 +109,87 @@ export default function Carousel({activities}: CarouselProps) {
       position="relative"
       w="100%"
       overflow="hidden"
-      h="500px"
+      h={{ base: "auto", md: "600px" }}
+      bg="transparent"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
       {/* Contenedor de slides */}
       <Flex
         w={`${length * 100}%`}
+        h="100%"
         transform={`translateX(-${index * (100 / length)}%)`}
-        transition="transform 0.6s ease-in-out"
+        transition="transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)"
       >
         {items.map((item) => (
-          <Box key={item.id} w={`${100 / length}%`} px={12}>
+          <Box key={item.id} w={`${100 / length}%`} h="100%" px={{ base: 6, md: 32 }}>
             <Flex
-              h="500px"
+              h="100%"
               align="center"
               justify="space-between"
+              direction={{ base: "column", md: "row" }}
               onMouseMove={handleMouseMove}
               onMouseLeave={resetTilt}
             >
               {/* TEXTO */}
-              <Box maxW="45%" marginLeft="25px" color="black">
-                <Text fontSize="3xl" fontWeight="bold" mb={4}>
+              <Box 
+                maxW={{ base: "100%", md: "45%" }} 
+                textAlign="left" 
+                p={8}
+                bg="white"
+                backdropFilter="blur(10px)"
+                borderRadius="2xl"
+                boxShadow="xl"
+                border="1px solid"
+                borderColor="whiteAlpha.400"
+              >
+                <Text fontSize="3xl" fontWeight="black" mb={2} lineHeight="1.1" color="gray.800">
                   {item.title}
                 </Text>
 
                 {item.id !== -1 && (
-                  <Text fontSize="lg" opacity={0.85} mb={4}>
-                    {item.date_start === item.date_end
-                      ? `📅 ${item.date_start} — 📍 ${item.place}`
-                      : `📅 ${item.date_start} al ${item.date_end} — 📍 ${item.place}`}
+                  <Text fontSize="sm" fontWeight="bold" color="primary" mb={4} textTransform="uppercase">
+                    📅 {item.date_start === item.date_end ? item.date_start : `${item.date_start} al ${item.date_end}`} — 📍 {item.place}
                   </Text>
                 )}
 
-                {item.description && (
-                  <Text fontSize="lg" lineHeight="1.6">
-                    {item.description.length > 200
-                      ? item.description.slice(0, 200) + "..."
-                      : item.description}
-                  </Text>
+                <Text fontSize="lg" color="gray.700" mb={6} noOfLines={3}>
+                  {item.description}
+                </Text>
+                
+                {item.id !== -1 && (
+                    <Box 
+                        as="button" 
+                        onClick={() => router.push(`/actividad/${item.id}`)}
+                        bg="primary" 
+                        color="white" 
+                        px={8} 
+                        py={3} 
+                        borderRadius="full" 
+                        fontWeight="bold"
+                        _hover={{ transform: "translateY(-2px)", boxShadow: "0 10px 20px rgba(0,0,0,0.3)" }}
+                        transition="all 0.2s"
+                    >
+                        Ver detalles
+                    </Box>
                 )}
               </Box>
 
               {/* IMAGEN */}
               <Box
                 position="relative"
-                w="45%"
-                perspective="1000px"
+                w={{ base: "80%", md: "45%" }}
+                perspective="1200px"
               >
-                <Box
-                  position="absolute"
-                  inset="0"
-                  bg="black"
-                  filter="blur(40px)"
-                  opacity={0.25}
-                  transform="translateY(40px)"
-                  zIndex={0}
-                />
                 <Image
-                  zIndex={1}
-                  position="relative"
                   src={item.image}
                   alt={item.title}
-                  borderRadius="2xl"
-                  boxShadow="2xl"
-                  transform={`
-                    rotateX(${tilt.x}deg)
-                    rotateY(${tilt.y}deg)
-                    rotateZ(-6deg)
-                  `}
-                  transition="transform 0.15s ease-out"
-                  cursor={item.id !== -1 ? "pointer" : "default"}
-                  onClick={() =>
-                    item.id !== -1 && router.push(`/actividad/${item.id}`)
-                  }
+                  borderRadius="3xl"
+                  boxShadow="0 25px 50px -12px rgba(0, 0, 0, 0.4)"
+                  transform={`rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) rotateZ(-3deg)`}
+                  transition="transform 0.2s ease-out"
+                  cursor="pointer"
+                  onClick={() => item.id !== -1 && router.push(`/actividad/${item.id}`)}
                 />
               </Box>
             </Flex>
@@ -198,50 +201,49 @@ export default function Carousel({activities}: CarouselProps) {
     
       <IconButton
         aria-label="Prev"
-        icon={<ChevronLeftIcon boxSize={8} />}
+        icon={<ChevronLeftIcon boxSize={10} />}
         position="absolute"
         top="50%"
-        left="24px"
-        transform="translateY(-50%)"
+        left="20px"
         onClick={prev}
-        bg="whiteAlpha.800"
-        color="black"
-        borderRadius="full"
-        boxShadow="lg"
-        _hover={{ bg: "white" }}
+        variant="ghost"
+        color="secondary"
+        bg= "whiteAlpha.800"
+        _hover={{ bg: "whiteAlpha.800", transform: "translateY(0%) scale(1.15)" }}
+        zIndex={10}
       />
 
       <IconButton
         aria-label="Next"
-        icon={<ChevronRightIcon boxSize={8} />}
+        icon={<ChevronRightIcon boxSize={10} />}
         position="absolute"
         top="50%"
-        right="24px"
-        transform="translateY(-50%)"
+        right="20px"
         onClick={next}
-        bg="whiteAlpha.800"
-        color="black"
-        borderRadius="full"
-        boxShadow="lg"
-        _hover={{ bg: "white" }}
+        variant="ghost"
+        color="secondary"
+        bg= "whiteAlpha.800"
+        _hover={{ bg: "whiteAlpha.800", transform: "translateY(0%) scale(1.15)" }}
+        zIndex={10}
       />
       
 
       {/* Dots */}
       <Flex
         position="absolute"
-        bottom="10px"
+        bottom="30px"
         width="100%"
         justifyContent="center"
-        gap={2}
+        gap={3}
       >
         {items.map((_, i) => (
           <Box
             key={i}
-            w="10px"
-            h="10px"
+            w={i === index ? "30px" : "10px"}
+            h="6px"
             borderRadius="full"
-            bg={i === index ? "secondary" : "blackAlpha.600"}
+            bg={i === index ? "secondary" : "whiteAlpha.700"}
+            transition="all 0.3s ease"
             cursor="pointer"
             onClick={() => setIndex(i)}
           />

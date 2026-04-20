@@ -73,7 +73,7 @@ export default function CrearActividadForm() {
             name="title"
             value={form.title}
             onChange={handleChange}
-            placeholder="Simulación ONU Junior"
+            placeholder="Nombre de Actividad"
           />
         </FormControl>
 
