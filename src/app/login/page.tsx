@@ -26,7 +26,7 @@ export default function LoginPage() {
   const router = useRouter();
   const toast = useToast();
 
-  // Limpiar cualquier sesión anterior al cargar para evitar el error de "undefined"
+  
   useEffect(() => { 
     localStorage.clear(); 
   }, []);
@@ -36,7 +36,7 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // 1. Petición real al Backend (Puerto 8081)
+      
       const data = await apiRequest("auth/login", {
         method: "POST",
         body: JSON.stringify({ 
@@ -45,12 +45,12 @@ export default function LoginPage() {
         }),
       });
 
-      // 2. Guardar Token JWT (en la raíz del JSON según Postman)
+      
       if (data.token) {
         localStorage.setItem("token", data.token);
       }
 
-      // 3. Extraer el objeto 'usuario' (donde están tus roles: ["group_admin", ...])
+      
       const infoUsuario = data.usuario;
 
       if (!infoUsuario) {
@@ -60,7 +60,7 @@ export default function LoginPage() {
       // 4. Guardar en el Contexto de Autenticación
       login(infoUsuario);
 
-      // 5. Lógica de Redirección Multi-Rol (Mantiene tus carpetas actuales)
+      
       const roles = (infoUsuario.roles || []).map((r: string) => r.toLowerCase().trim());
 
       toast({ 
@@ -69,7 +69,7 @@ export default function LoginPage() {
         duration: 2000 
       });
 
-      // Redirección según la prioridad de roles establecida
+      
       if (roles.includes("root") || roles.includes("deu_admin")) {
         router.push("/admin/dashboard");
       } 
@@ -81,7 +81,7 @@ export default function LoginPage() {
         router.push("/admingroup/dashboard");
       } 
       else {
-        router.push("/dashboard"); // Para invitados o roles no administrativos
+        router.push("/dashboard");
       }
 
     } catch (error: any) {
@@ -106,7 +106,7 @@ export default function LoginPage() {
       backgroundSize="cover"
       position="relative"
     >
-      {/* Capa de diseño: Desenfoque de fondo y oscurecimiento suave */}
+      
       <Box
         position="absolute"
         top={0}
