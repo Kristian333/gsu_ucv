@@ -26,7 +26,6 @@ export default function LoginPage() {
   const router = useRouter();
   const toast = useToast();
 
-  
   useEffect(() => { 
     localStorage.clear(); 
   }, []);
@@ -36,7 +35,6 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      
       const data = await apiRequest("auth/login", {
         method: "POST",
         body: JSON.stringify({ 
@@ -45,22 +43,17 @@ export default function LoginPage() {
         }),
       });
 
-      
       if (data.token) {
         localStorage.setItem("token", data.token);
       }
-
-      
       const infoUsuario = data.usuario;
 
       if (!infoUsuario) {
         throw new Error("No se recibieron datos del perfil del usuario.");
       }
 
-      // 4. Guardar en el Contexto de Autenticación
       login(infoUsuario);
 
-      
       const roles = (infoUsuario.roles || []).map((r: string) => r.toLowerCase().trim());
 
       toast({ 
@@ -69,7 +62,6 @@ export default function LoginPage() {
         duration: 2000 
       });
 
-      
       if (roles.includes("root") || roles.includes("deu_admin")) {
         router.push("/admin/dashboard");
       } 
@@ -77,12 +69,11 @@ export default function LoginPage() {
         router.push("/adminfacultad/dashboard");
       } 
       else if (roles.includes("group_admin") || roles.includes("group_helper")) {
-        
         router.push("/admingroup/dashboard");
       } 
       else {
-        router.push("/dashboard");
-      }
+        router.push("/dashboard"); 
+      } // <--- Se agregó esta llave que cerraba el else
 
     } catch (error: any) {
       toast({ 
@@ -106,7 +97,6 @@ export default function LoginPage() {
       backgroundSize="cover"
       position="relative"
     >
-      
       <Box
         position="absolute"
         top={0}
@@ -118,7 +108,6 @@ export default function LoginPage() {
         zIndex={1}
       />
 
-      {/* Contenedor del Formulario  */}
       <Box 
         zIndex={2} 
         p={10} 
@@ -186,4 +175,4 @@ export default function LoginPage() {
       </Box>
     </Flex>
   );
-}
+} 
