@@ -15,6 +15,7 @@ export function AdminNavbar() {
     { name: 'Dashboard', href: '/admin/dashboard' },
     { name: 'Solicitudes', href: '/admin/solicitudes' },
     { name: 'Usuarios', href: '/admin/usuarios' },
+    { name: 'Estadisticas', href: '/admin/estadisticas' },
   ];
 
   return (

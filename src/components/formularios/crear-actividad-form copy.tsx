@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, ChangeEvent } from "react";
+import React, { useState } from "react";
 import {
   Box,
   Button,
@@ -16,32 +16,29 @@ import {
   useToast
 } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
-import { apiRequest } from "@/components/formularios/api";
 
 export default function CrearActividadForm() {
   const router = useRouter();
   const toast = useToast();
-  const [loading, setLoading] = useState(false);
 
-  
   const [form, setForm] = useState({
-    name: "",           
-    location: "",       
-    date: "",           
+    title: "",
+    place: "",
+    date_start: "",
+    date_end: "",
     description: "",
-    financing: "",      
-    financing_org: ""   
+    financiamiento: "",
+    organizacionFinanvia: ""
   });
 
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
 
-  // Tipado para TypeScript
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -50,23 +47,12 @@ export default function CrearActividadForm() {
   };
 
   const handleCreate = async () => {
-    setLoading(true);
     const formData = new FormData();
-    
-    
-    Object.keys(form).forEach(key => {
-      const value = form[key as keyof typeof form];
-      // Si el campo está vacío, NO lo agregamos al FormData.
-      // Así, el backend lo recibe como undefined/null y la BD lo guarda como NULL.
-      if (value !== "" && value !== null) {
-        formData.append(key, value);
-      }
-    });
-
+    Object.keys(form).forEach(key => formData.append(key, form[key as keyof typeof form]));
     if (imageFile) formData.append("image", imageFile);
 
     try {
-      await apiRequest('activities', { 
+      await apiRequest('/actividades', {
         method: 'POST',
         body: formData
       });
@@ -79,8 +65,6 @@ export default function CrearActividadForm() {
       router.push("/admingroup/nuestras_actividades");
     } catch (error: any) {
       toast({ title: "Error", description: error.message, status: "error" });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -93,8 +77,8 @@ export default function CrearActividadForm() {
         <FormControl isRequired>
           <FormLabel>Título de la Actividad</FormLabel>
           <Input
-            name="name"
-            value={form.name}
+            name="title"
+            value={form.title}
             onChange={handleChange}
             placeholder="Simulación ONU Junior"
           />
@@ -120,40 +104,50 @@ export default function CrearActividadForm() {
         <FormControl isRequired>
           <FormLabel>Lugar</FormLabel>
           <Input
-            name="location"
-            value={form.location}
+            name="place"
+            value={form.place}
             onChange={handleChange}
             placeholder="Ej: Aula Magna"
           />
         </FormControl>
 
         <FormControl isRequired>
-          <FormLabel>Fecha</FormLabel>
+          <FormLabel>Fecha Inicio</FormLabel>
           <Input
             type="date"
-            name="date"
-            value={form.date}
+            name="date_start"
+            value={form.date_start}
+            onChange={handleChange}
+          />
+        </FormControl>
+
+        <FormControl isRequired>
+          <FormLabel>Fecha Fin</FormLabel>
+          <Input
+            type="date"
+            name="date_end"
+            value={form.date_end}
             onChange={handleChange}
           />
         </FormControl>
 
         <FormControl isRequired>
           <FormLabel>Financiamiento</FormLabel>
-          <Select name="financing" value={form.financing} onChange={handleChange}>
+          <Select name="financiamiento" value={form.financiamiento} onChange={handleChange}>
             <option value="">Seleccione...</option>
             <option value="SI">SI</option>
             <option value="NO">NO</option>
         </Select>
         </FormControl>
 
-        {form.financing === "SI" && (
+        {form.financiamiento.includes("SI") && (
             <FormControl isRequired>
             <FormLabel>Organización Financiadora</FormLabel>
             <Input
-                name="financing_org"
-                value={form.financing_org}
+                name="otrosActividad"
+                value={form.organizacionFinanvia}
                 onChange={handleChange}
-                placeholder="Nombre de la organización"
+                placeholder="Organización"
             />
             </FormControl>
         )}
@@ -174,12 +168,7 @@ export default function CrearActividadForm() {
             Cancelar
           </Button>
 
-          <Button 
-            colorScheme="green" 
-            onClick={handleCreate} 
-            isLoading={loading}
-            loadingText="Creando..."
-          >
+          <Button colorScheme="green" onClick={handleCreate}>
             Crear Actividad
           </Button>
         </Flex>

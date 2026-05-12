@@ -50,7 +50,7 @@ export default function DashboardAdmin() {
             key={id}
             onClick={() => setGraficaActiva(Number(id))}
             variant={graficaActiva === Number(id) ? "solid" : "outline"}
-            colorScheme="red" // Color distinto para diferenciar de la vista de usuario
+            colorScheme="red" 
             borderRadius="full"
             size="sm"
           >

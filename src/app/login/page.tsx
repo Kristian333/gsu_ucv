@@ -77,7 +77,7 @@ export default function LoginPage() {
         router.push("/adminfacultad/dashboard");
       } 
       else if (roles.includes("group_admin") || roles.includes("group_helper")) {
-        // Redirige a la carpeta que contiene tu nuevo Layout de Grupo
+        
         router.push("/admingroup/dashboard");
       } 
       else {
@@ -118,7 +118,7 @@ export default function LoginPage() {
         zIndex={1}
       />
 
-      {/* Contenedor del Formulario (Respeta tu diseño anterior al 100%) */}
+      {/* Contenedor del Formulario  */}
       <Box 
         zIndex={2} 
         p={10} 
@@ -161,7 +161,7 @@ export default function LoginPage() {
 
             <Button 
               type="submit" 
-              bg="#38A169" // El color verde de tu imagen original
+              bg="#38A169" 
               color="white"
               _hover={{ bg: "#2F855A" }}
               width="full" 
