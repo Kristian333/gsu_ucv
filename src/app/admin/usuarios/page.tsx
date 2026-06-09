@@ -3,24 +3,12 @@ import { Box, Heading, Text } from '@chakra-ui/react';
 import { redirect } from 'next/navigation';
 import { UsersTable } from '@/components/ui/users-table';
 
-// Simulación: Obtener lista de usuarios de Educación Continua
-async function getEducacionContinuaUsers() {
-  const data = [
-    { id: 'ec-user-001', nombre: 'Carlos Rodríguez', organismo: 'Facultad de Ingeniería', rol: 'coordinador' },
-    { id: 'ec-user-002', nombre: 'Ana Pérez', organismo: 'DEU', rol: 'admin' },
-    { id: 'ec-user-003', nombre: 'María García', organismo: 'Facultad de Ciencias Económicas y Sociales', rol: 'proveedor' },
-    { id: 'ec-user-004', nombre: 'José López', organismo: 'Facultad de Odontología', rol: 'proveedor' },
-    { id: 'ec-user-005', nombre: 'Sofía Martínez', organismo: 'Facultad de Medicina', rol: 'visitante' },
-  ];
-  return data;
-}
-
 // Simulación: Obtener lista de usuarios de Grupos de Extensión
 async function getGrupoExtensionUsers() {
   const data = [
-    { id: 'ge-user-001', nombre: 'LAMUN', organismo: '', rol: 'Grupo de Extension' },
-    { id: 'ge-user-002', nombre: 'FarmBalia', organismo: 'Facultad de Farmacia', rol: 'Grupo de Extension' },
-    { id: 'ge-user-003', nombre: 'Anifriend', organismo: 'Facultad de Veterinaria', rol: 'Grupo de Extension' },
+    { id: '1', nombre: 'LAMUN', organismo: '', rol: 'Grupo de Extension' },
+    { id: '2', nombre: 'FarmBalia', organismo: 'Facultad de Farmacia', rol: 'Grupo de Extension' },
+    { id: '3', nombre: 'Anifriend', organismo: 'Facultad de Veterinaria', rol: 'Grupo de Extension' },
   ];
   return data;
 }
@@ -36,7 +24,6 @@ async function checkAdminRole() {
 export default async function UsuariosPage() {
   await checkAdminRole();
 
-  const educacionContinuaUsers = await getEducacionContinuaUsers();
   const grupoExtensionUsers = await getGrupoExtensionUsers();
 
   return (
@@ -47,7 +34,6 @@ export default async function UsuariosPage() {
       </Text>
       
       <UsersTable 
-        educacionContinuaUsers={educacionContinuaUsers}
         grupoExtensionUsers={grupoExtensionUsers}
       />
     </Box>

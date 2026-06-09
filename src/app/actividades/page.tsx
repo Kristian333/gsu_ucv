@@ -41,7 +41,12 @@ function sortActivities(data: any[]) {
     const past = [];
 
     for (const act of data) {
-       
+        /*
+            Clasificación:
+            - Futuro: date_start > hoy
+            - En curso: date_start <= hoy <= date_end
+            - Pasado: date_end < hoy
+        */
         if (act.date_start > today) {
             upcomingOrOngoing.push(act);
         } else if (act.date_start <= today && act.date_end >= today) {
@@ -51,16 +56,17 @@ function sortActivities(data: any[]) {
         }
     }
 
+    // Ordenar futuros/actuales ascendente por fecha de inicio
     upcomingOrOngoing.sort((a, b) => (a.date_start > b.date_start ? 1 : -1));
 
-
+    // Ordenar pasados por fecha de finalización descendente
     past.sort((a, b) => (a.date_end < b.date_end ? 1 : -1));
 
     // Concatenar ambos grupos
     return [...upcomingOrOngoing, ...past];
 }
 
-
+// Esta función aplica la paginación después de ordenar
 async function getActivities({
     page,
     limit,

@@ -1,37 +1,36 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
 import { VStack, Box, Link as ChakraLink } from "@chakra-ui/react";
 import NextLink from "next/link";
 import { useAuth } from "@/app/context/auth-context";
 import { testLog } from "@/data/testLog";
 
-// Función que lee el test.log simulado
+// Función temporal que lee el test.log simulado
 function obtenerEstadoDesdeLog(userId, role) {
+  // Simulación temporal:
+  // En producción esto vendrá de backend.
   const eventos = testLog.filter((l) => l.id === userId);
   if (eventos.length === 0) return null;
 
-  // Si es un rol de grupo, buscamos su última validación de info
+  const ultimo = eventos[eventos.length - 1];
+
   if (role === "Grupo") {
     const info = eventos.filter((e) => e.evento === "GrupoInfoValida").pop();
     return info || null;
   }
-  return eventos[eventos.length - 1];
+
+  return ultimo;
 }
 
 export const AdminGroupNavbar = () => {
   const { user } = useAuth();
   const [estado, setEstado] = useState(null);
 
-
-  const rolesArray = (user?.roles || []).map(r => r.toLowerCase().trim());
+  const role = user?.role || null;
   const userId = user?.id || null;
 
-  let role = "Invitado"; 
-  if (rolesArray.includes('group_admin') || rolesArray.includes('group_helper')) {
-    role = "Grupo";
-  }
-  // ---------------------------------------
-
-  let infoAlDia = false;
+  var infoAlDia
   const GroupDash = role === "Grupo";
 
   useEffect(() => {
@@ -40,45 +39,54 @@ export const AdminGroupNavbar = () => {
     setEstado(data);
   }, [userId, role]);
 
-
-  if (GroupDash && estado?.date) {
-    const fecha = new Date(estado.date);
+  // Por ahora: los grupos siempre tienen "info al día"
+  if (GroupDash) {
+    const fecha = new Date(estado?.date);
     const limite = new Date(fecha);
     limite.setFullYear(limite.getFullYear() + 1);
 
     if (new Date() <= limite) {
-      infoAlDia = true;
+      infoAlDia = true
+    } else {
+      infoAlDia = false
     }
   }
+  ;
 
- 
+  // Items disponibles para grupos
   const fullNavItems = [
     { label: "Inicio", href: "/admingroup/dashboard" },
     { label: "Planificar Actividad", href: "/admingroup/crear_actividad" },
     { label: "Nuestras Actividades", href: "/admingroup/nuestras_actividades" },
     { label: "Solicitudes", href: "/admingroup/solicitudes" },
-    { label: "Estadísticas", href: "/admingroup/estadisticas" },
+    { label: "Estadisticas", href: "/admingroup/estadisticas" },
   ];
 
-
+  // Invitado: solo Inicio
   const invitadoNavItems = [
     { label: "Inicio", href: "/admingroup/dashboard" },
   ];
 
-  // Selección de items
-  let navItems = (role === "Grupo" && infoAlDia) ? fullNavItems : invitadoNavItems;
+  // Elección según rol
+  let navItems = [];
+
+  if (role === "Invitado") {
+    navItems = invitadoNavItems;
+  } else if (role === "Grupo") {
+    navItems = infoAlDia ? fullNavItems : invitadoNavItems;
+  }
 
   return (
     <Box
       w="250px"
-      bg="primary" 
+      bg="primary"
       color="white"
       p={6}
       display="flex"
       flexDirection="column"
-      minH="100vh"
+      justifyContent="flex-start"
     >
-      <VStack align="start" spacing={0} w="full">
+      <VStack align="start" spacing={0}>
         {navItems.map((item) => (
           <Box key={item.href} w="full">
             <ChakraLink
@@ -92,7 +100,11 @@ export const AdminGroupNavbar = () => {
             >
               {item.label}
             </ChakraLink>
-            <Box borderBottom="1px solid rgba(255,255,255,0.4)" />
+
+            {/* Borde de separación excepto en el último */}
+            
+            <Box borderBottom="1px solid rgba(255,255,255,0.4)"/>
+            
           </Box>
         ))}
       </VStack>

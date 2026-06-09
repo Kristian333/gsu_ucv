@@ -31,7 +31,6 @@ import {
 } from "@chakra-ui/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { apiRequest } from "@/utils/api";
 
 interface Miembro {
   nombre: string;
@@ -44,6 +43,7 @@ interface Miembro {
   escuela: string;
   documento?: File | null;
   documentoPreview?: string | null;
+  isVerified?: boolean;
 }
 
 export default function CrearGrupoForm() {
@@ -76,7 +76,43 @@ export default function CrearGrupoForm() {
     anio: "",
     facultad: "",
     escuela: "",
+    isVerified: false,
   });
+
+  const comprobarCedula = (index: number) => {
+    const cedulaAChequear = miembros[index].cedula.trim();
+
+    if (!cedulaAChequear) {
+      return toast({
+        title: "Cédula vacía",
+        status: "warning",
+        duration: 2000,
+      });
+    }
+
+    // Verificar si existe en otros índices que no sean el actual
+    const existe = miembros.some((m, i) => m.cedula === cedulaAChequear && i !== index);
+
+    if (existe) {
+      return toast({
+        title: "Cédula duplicada",
+        description: "Este miembro ya ha sido agregado a la lista.",
+        status: "error",
+        duration: 3000,
+      });
+    }
+
+    // Si todo está bien, "abrimos" los demás campos
+    const updated = [...miembros];
+    updated[index].isVerified = true;
+    setMiembros(updated);
+    
+    toast({
+      title: "Cédula válida",
+      status: "success",
+      duration: 1000,
+    });
+  };
 
   const [miembros, setMiembros] = useState<Miembro[]>(
     Array.from({ length: 5 }, miembroVacio)
@@ -261,7 +297,7 @@ export default function CrearGrupoForm() {
   };
 
   // SUBMIT
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     // Validaciones básicas
     if (!form.nombre || !form.correo || !form.tipoGrupo || !form.fechaFundacion || !form.objetivo) {
       return toast({
@@ -541,8 +577,8 @@ export default function CrearGrupoForm() {
                     borderColor="gray.200"
                   >
                     <Text p={2} borderRight="1px solid" borderColor="gray.200">#</Text>
-                    <Text p={2} borderRight="1px solid" borderColor="gray.200">Nombre</Text>
                     <Text p={2} borderRight="1px solid" borderColor="gray.200">Cédula</Text>
+                    <Text p={2} borderRight="1px solid" borderColor="gray.200">Nombre</Text>
                     <Text p={2} borderRight="1px solid" borderColor="gray.200">Teléfono</Text>
                     <Text p={2} borderRight="1px solid" borderColor="gray.200">Correo</Text>
                     <Text p={2} borderRight="1px solid" borderColor="gray.200">Coordinación</Text>
@@ -555,138 +591,168 @@ export default function CrearGrupoForm() {
 
                   {/* FILAS */}
                   {miembros.map((miembro, index) => (
-                    <Grid
-                      key={index}
-                      templateColumns="30px 1.8fr 1fr 1.3fr 1.3fr 1.5fr 1fr 1.5fr 1.5fr 2fr 50px"
-                      gap={0}
-                      alignItems="center"
-                      borderBottom="1px solid"
-                      borderColor="gray.200"
-                    >
-                      <Box
-                        display="flex"
-                        alignItems="center"
-                        justifyContent="center"
-                        fontWeight="bold"
-                      >
-                        {index + 1}
-                      </Box>
-                      <Input
-                        placeholder="Nombre"
-                        value={miembro.nombre}
-                        onChange={(e) =>
-                          handleMiembroChange(index, "nombre", e.target.value)
-                        }
-                      />
-                      <Input
-                        placeholder="Cédula"
-                        value={miembro.cedula}
-                        onChange={(e) =>
-                          handleMiembroChange(index, "cedula", e.target.value)
-                        }
-                      />
-                      <Input
-                        placeholder="Teléfono"
-                        value={miembro.telefono}
-                        onChange={(e) =>
-                          handleMiembroChange(index, "telefono", e.target.value)
-                        }
-                      />
-                      <Input
-                        placeholder="Correo"
-                        type="email"
-                        value={miembro.correo}
-                        onChange={(e) =>
-                          handleMiembroChange(index, "correo", e.target.value)
-                        }
-                      />
-                      <Input
-                        placeholder="Coordinación"
-                        value={miembro.coordinacion}
-                        onChange={(e) =>
-                          handleMiembroChange(index, "coordinacion", e.target.value)
-                        }
-                      />
-                      <Input
-                        placeholder="Año"
-                        value={miembro.anio}
-                        onChange={(e) =>
-                          handleMiembroChange(index, "anio", e.target.value)
-                        }
-                      />
-                      <Select
-                        placeholder="Facultad"
-                        value={miembro.facultad}
-                        onChange={(e) =>{
-                          handleMiembroChange(index, "facultad", e.target.value);
-                          handleMiembroChange(index, "escuela", "");
-                        }}
-                      >
-                        {FACULTADES.map((f) => (
-                          <option key={f} value={f}>
-                            {f}
-                          </option>
-                        ))}
-                      </Select>
-                      {!miembro.facultad ? (
-                        <Select isDisabled placeholder="Seleccione una facultad primero" />
-                      ) : (
-                        <Select
-                          placeholder="Escuela"
-                          value={miembro.escuela}
-                          onChange={(e) =>
-                            handleMiembroChange(index, "escuela", e.target.value)
-                          }
-                        >
-                          {(ESCUELAS_POR_FACULTAD[miembro.facultad] ?? []).map((esc) => (
-                            <option key={esc} value={esc}>
-                              {esc}
-                            </option>
-                          ))}
-                        </Select>
-                      )}
-                      <Box>
-                        {miembro.documento && (
-                          miembro.documento.type === "application/pdf" ? (
-                            <Link
-                              href={URL.createObjectURL(miembro.documento)}
-                              isExternal
-                              fontSize="sm"
-                              color="blue.500"
-                            >
-                              Ver PDF
-                            </Link>
-                          ) : (
-                            <Image
-                              src={miembro.documentoPreview ?? ""}
-                              alt="Preview"
-                              maxH="150px"
-                              objectFit="contain"
-                              mb={1}
+                    <Box key={index} borderBottom="1px solid" borderColor="gray.200" py={2}>
+                      {!miembro.isVerified ? (
+                        /* VISTA INICIAL: SOLO CÉDULA */
+                        <Flex gap={4} align="center" bg="blue.50" p={2} borderRadius="md">
+                          <Box
+                            display="flex"
+                            alignItems="center"
+                            justifyContent="center"
+                            fontWeight="bold"
+                          >
+                            {index + 1}
+                          </Box>
+                          <FormControl>
+                            <Input
+                              bg="white"
+                              placeholder="Ingrese Cédula para comenzar"
+                              value={miembro.cedula}
+                              onChange={(e) => handleMiembroChange(index, "cedula", e.target.value)}
                             />
-                          )
-                        )}
+                          </FormControl>
+                          <Button colorScheme="blue" onClick={() => comprobarCedula(index)}>
+                            Comprobar
+                          </Button>
+                          <Button colorScheme="red" variant="ghost" onClick={() => removeMiembro(index)}>
+                            ✕
+                          </Button>
+                        </Flex>
+                      ) : (
+                        <Grid
+                          key={index}
+                          templateColumns="30px 1.8fr 1fr 1.3fr 1.3fr 1.5fr 1fr 1.5fr 1.5fr 2fr 50px"
+                          gap={0}
+                          alignItems="center"
+                          borderBottom="1px solid"
+                          borderColor="gray.200"
+                        >
+                          <Box
+                            display="flex"
+                            alignItems="center"
+                            justifyContent="center"
+                            fontWeight="bold"
+                          >
+                            {index + 1}
+                          </Box>
+                          <Input
+                            placeholder="Cédula"
+                            value={miembro.cedula}
+                            onChange={(e) =>
+                              handleMiembroChange(index, "cedula", e.target.value)
+                            }
+                          />
+                          <Input
+                            placeholder="Nombre"
+                            value={miembro.nombre}
+                            onChange={(e) =>
+                              handleMiembroChange(index, "nombre", e.target.value)
+                            }
+                          />
+                          <Input
+                            placeholder="Teléfono"
+                            value={miembro.telefono}
+                            onChange={(e) =>
+                              handleMiembroChange(index, "telefono", e.target.value)
+                            }
+                          />
+                          <Input
+                            placeholder="Correo"
+                            type="email"
+                            value={miembro.correo}
+                            onChange={(e) =>
+                              handleMiembroChange(index, "correo", e.target.value)
+                            }
+                          />
+                          <Input
+                            placeholder="Coordinación"
+                            value={miembro.coordinacion}
+                            onChange={(e) =>
+                              handleMiembroChange(index, "coordinacion", e.target.value)
+                            }
+                          />
+                          <Input
+                            placeholder="Año"
+                            value={miembro.anio}
+                            onChange={(e) =>
+                              handleMiembroChange(index, "anio", e.target.value)
+                            }
+                          />
+                          <Select
+                            placeholder="Facultad"
+                            value={miembro.facultad}
+                            onChange={(e) =>{
+                              handleMiembroChange(index, "facultad", e.target.value);
+                              handleMiembroChange(index, "escuela", "");
+                            }}
+                          >
+                            {FACULTADES.map((f) => (
+                              <option key={f} value={f}>
+                                {f}
+                              </option>
+                            ))}
+                          </Select>
+                          {!miembro.facultad ? (
+                            <Select isDisabled placeholder="Seleccione una facultad primero" />
+                          ) : (
+                            <Select
+                              placeholder="Escuela"
+                              value={miembro.escuela}
+                              onChange={(e) =>
+                                handleMiembroChange(index, "escuela", e.target.value)
+                              }
+                            >
+                              {(ESCUELAS_POR_FACULTAD[miembro.facultad] ?? []).map((esc) => (
+                                <option key={esc} value={esc}>
+                                  {esc}
+                                </option>
+                              ))}
+                            </Select>
+                          )}
+                          <Box>
+                            {miembro.documento && (
+                              miembro.documento.type === "application/pdf" ? (
+                                <Link
+                                  href={URL.createObjectURL(miembro.documento)}
+                                  isExternal
+                                  fontSize="sm"
+                                  color="blue.500"
+                                >
+                                  Ver PDF
+                                </Link>
+                              ) : (
+                                <Image
+                                  src={miembro.documentoPreview ?? ""}
+                                  alt="Preview"
+                                  maxH="150px"
+                                  objectFit="contain"
+                                  mb={1}
+                                />
+                              )
+                            )}
 
-                        <Input
-                          type="file"
-                          accept="image/jpeg,application/pdf"
-                          size="sm"
-                          onChange={(e) =>
-                            handleDocumentoChange(index, e.target.files?.[0])
-                          }
-                        />
-                      </Box>
+                            <Input
+                              type="file"
+                              accept="image/jpeg,application/pdf"
+                              size="sm"
+                              onChange={(e) =>
+                                handleDocumentoChange(index, e.target.files?.[0])
+                              }
+                            />
+                          </Box>
 
-                      {/* BOTÓN ELIMINAR */}
-                      <Button
-                        colorScheme="red"
-                        variant="ghost"
-                        onClick={() => removeMiembro(index)}
-                        isDisabled={miembros.length === 1}
-                      >
-                        ✕
-                      </Button>
-                    </Grid>
+                          {/* BOTÓN ELIMINAR */}
+                          <Button
+                            colorScheme="red"
+                            variant="ghost"
+                            onClick={() => removeMiembro(index)}
+                            isDisabled={miembros.length === 1}
+                          >
+                            ✕
+                          </Button>
+                        </Grid>
+                      )}
+                    </Box>
                   ))}
 
                   <Button

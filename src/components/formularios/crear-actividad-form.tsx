@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, ChangeEvent } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -13,35 +13,52 @@ import {
   Image,
   Heading,
   VStack,
-  useToast
+  useToast,
+  SimpleGrid,
 } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
-import { apiRequest } from "@/components/formularios/api";
 
 export default function CrearActividadForm() {
   const router = useRouter();
   const toast = useToast();
-  const [loading, setLoading] = useState(false);
 
-  
   const [form, setForm] = useState({
-    name: "",           
-    location: "",       
-    date: "",           
+    title: "",
+    place: "",
+    date_start: "",
+    date_end: "",
     description: "",
-    financing: "",      
-    financing_org: ""   
+    financiamiento: "",
+    organizacionFinanvia: ""
+  });
+
+  // Estado local para las partes de la ubicación
+  const [location, setLocation] = useState({
+    pais: "",
+    estado: "",
+    municipio: "",
+    detalle: ""
   });
 
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
 
-  // Tipado para TypeScript
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  // Actualizar el campo 'place' cada vez que cambie alguna parte de la ubicación
+  useEffect(() => {
+    const { pais, estado, municipio, detalle } = location;
+    const fullAddress = `${pais}, ${estado}, ${municipio}, ${detalle}`;
+    setForm(prev => ({ ...prev, place: fullAddress }));
+  }, [location]);
+
+  const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleLocationChange = (e) => {
+    setLocation({ ...location, [e.target.name]: e.target.value });
+  };
+
+  const handleImageChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -50,38 +67,17 @@ export default function CrearActividadForm() {
   };
 
   const handleCreate = async () => {
-    setLoading(true);
-    const formData = new FormData();
-    
-    
-    Object.keys(form).forEach(key => {
-      const value = form[key as keyof typeof form];
-      // Si el campo está vacío, NO lo agregamos al FormData.
-      // Así, el backend lo recibe como undefined/null y la BD lo guarda como NULL.
-      if (value !== "" && value !== null) {
-        formData.append(key, value);
-      }
+    // Aquí se haría el POST real hacia una API
+    console.log("Creando actividad:", form);
+
+    toast({
+      title: "Actividad creada (mock)",
+      description: "Esto solo simula la creación de la actividad.",
+      status: "success",
+      duration: 3000,
     });
 
-    if (imageFile) formData.append("image", imageFile);
-
-    try {
-      await apiRequest('activities', { 
-        method: 'POST',
-        body: formData
-      });
-
-      toast({
-        title: "Actividad creada",
-        description: "La actividad ha sido publicada exitosamente.",
-        status: "success",
-      });
-      router.push("/admingroup/nuestras_actividades");
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message, status: "error" });
-    } finally {
-      setLoading(false);
-    }
+    router.push("/admingroup/nuestras_actividades");
   };
 
   return (
@@ -93,10 +89,10 @@ export default function CrearActividadForm() {
         <FormControl isRequired>
           <FormLabel>Título de la Actividad</FormLabel>
           <Input
-            name="name"
-            value={form.name}
+            name="title"
+            value={form.title}
             onChange={handleChange}
-            placeholder="Simulación ONU Junior"
+            placeholder="Nombre de Actividad"
           />
         </FormControl>
 
@@ -117,41 +113,110 @@ export default function CrearActividadForm() {
           <Input type="file" accept="image/*" onChange={handleImageChange} />
         </FormControl>
 
-        <FormControl isRequired>
-          <FormLabel>Lugar</FormLabel>
-          <Input
-            name="location"
-            value={form.location}
-            onChange={handleChange}
-            placeholder="Ej: Aula Magna"
-          />
-        </FormControl>
+        <Box border="1px" borderColor="gray.100" p={4} borderRadius="md" bg="gray.50">
+          <Heading size="sm" mb={4} >Ubicación de la Actividad*</Heading>
+          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+            <FormControl isRequired>
+              <FormLabel fontSize="sm">País</FormLabel>
+              <Input 
+                name="pais" 
+                bg="white"
+                value={location.pais} 
+                onChange={handleLocationChange} 
+                placeholder="Ej: Venezuela" 
+              />
+            </FormControl>
+            
+            <FormControl isRequired>
+              <FormLabel fontSize="sm">Estado</FormLabel>
+              <Input 
+                name="estado" 
+                bg="white"
+                value={location.estado} 
+                onChange={handleLocationChange} 
+                placeholder="Ej: Carabobo" 
+              />
+            </FormControl>
 
-        <FormControl isRequired>
-          <FormLabel>Fecha</FormLabel>
-          <Input
-            type="date"
-            name="date"
-            value={form.date}
-            onChange={handleChange}
-          />
-        </FormControl>
+            <FormControl isRequired>
+              <FormLabel fontSize="sm">Municipio</FormLabel>
+              <Input 
+                name="municipio" 
+                bg="white"
+                value={location.municipio} 
+                onChange={handleLocationChange} 
+                placeholder="Ej: Valencia" 
+              />
+            </FormControl>
+
+            <FormControl isRequired>
+              <FormLabel fontSize="sm">Dirección Específica</FormLabel>
+              <Input 
+                name="detalle" 
+                bg="white"
+                value={location.detalle} 
+                onChange={handleLocationChange} 
+                placeholder="Ej: Av. Bolívar, Edif. X" 
+              />
+            </FormControl>
+          </SimpleGrid>
+        </Box>
+
+        <Box 
+            width="100%" 
+            height="1px" 
+            bg="primary" 
+            mx="auto" 
+            my={0} 
+            borderRadius="full" 
+        />
+
+        <SimpleGrid columns={2} spacing={4}>
+          <FormControl isRequired>
+            <FormLabel>Fecha Inicio</FormLabel>
+            <Input
+              type="date"
+              name="date_start"
+              value={form.date_start}
+              onChange={handleChange}
+            />
+          </FormControl>
+
+          <FormControl isRequired>
+            <FormLabel>Fecha Fin</FormLabel>
+            <Input
+              type="date"
+              name="date_end"
+              value={form.date_end}
+              onChange={handleChange}
+            />
+          </FormControl>
+        </SimpleGrid>
+
+        <Box 
+            width="100%" 
+            height="1px" 
+            bg="primary" 
+            mx="auto" 
+            my={0} 
+            borderRadius="full" 
+        />
 
         <FormControl isRequired>
           <FormLabel>Financiamiento</FormLabel>
-          <Select name="financing" value={form.financing} onChange={handleChange}>
+          <Select name="financiamiento" value={form.financiamiento} onChange={handleChange}>
             <option value="">Seleccione...</option>
             <option value="SI">SI</option>
             <option value="NO">NO</option>
         </Select>
         </FormControl>
 
-        {form.financing === "SI" && (
+        {form.financiamiento === "SI" && (
             <FormControl isRequired>
             <FormLabel>Organización Financiadora</FormLabel>
             <Input
-                name="financing_org"
-                value={form.financing_org}
+                name="organizacionFinanvia"
+                value={form.organizacionFinanvia}
                 onChange={handleChange}
                 placeholder="Nombre de la organización"
             />
@@ -170,20 +235,14 @@ export default function CrearActividadForm() {
         </FormControl>
 
         <Flex justify="space-between" mt={7}>
-          <Button colorScheme="gray" onClick={() => router.back()}>
+          <Button variant="ghost" onClick={() => router.back()}>
             Cancelar
           </Button>
 
-          <Button 
-            colorScheme="green" 
-            onClick={handleCreate} 
-            isLoading={loading}
-            loadingText="Creando..."
-          >
+          <Button colorScheme="teal" onClick={handleCreate}>
             Crear Actividad
           </Button>
         </Flex>
-
       </VStack>
     </Box>
   );

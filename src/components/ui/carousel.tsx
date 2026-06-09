@@ -1,18 +1,10 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { Box, Flex, IconButton, Image, Text, Heading } from "@chakra-ui/react";
+import { useState, useEffect } from "react";
+import { Box, Flex, IconButton, Image, Text, VStack, Container } from "@chakra-ui/react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
 import { useRouter } from "next/navigation";
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 
-// --- Envolturas Motion para Chakra ---
-const MotionBox = motion(Box);
-const MotionFlex = motion(Flex);
-const MotionHeading = motion(Heading);
-const MotionText = motion(Text);
-
-// --- Tipos ---
 interface Activity {
   id: number;
   title: string;
@@ -21,245 +13,237 @@ interface Activity {
   date_start: string;
   date_end: string;
   place: string;
+  group: string;
+  area: string[];
 }
 
 interface CarouselProps {
   activities: Activity[];
 }
 
-// --- Subcomponente Slide ---
-const Slide = ({ item, router, isActive }: { item: Activity; router: any; isActive: boolean }) => {
-  // Valores de movimiento para el Tilt (no causan re-renders de React)
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-
-  // Suavizado físico
-  const mouseX = useSpring(x, { stiffness: 150, damping: 20 });
-  const mouseY = useSpring(y, { stiffness: 150, damping: 20 });
-
-  // Mapeo de posición a rotación
-  const rotateX = useTransform(mouseY, [-0.5, 0.5], [15, -15]);
-  const rotateY = useTransform(mouseX, [-0.5, 0.5], [-15, 15]);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    x.set((e.clientX - rect.left) / rect.width - 0.5);
-    y.set((e.clientY - rect.top) / rect.height - 0.5);
-  };
-
-  const resetTilt = () => {
-    x.set(0);
-    y.set(0);
-  };
-
-  return (
-    <Flex minW="100%" h="500px" align="center" justify="space-around" px={{ base: 10, md: 20 }}>
-      {/* BLOQUE DE TEXTO */}
-      <MotionBox 
-        maxW="40%" 
-        p={10} 
-        borderRadius="3xl" 
-        zIndex={2}
-        initial={{ opacity: 0, x: -50 }}
-        animate={isActive ? { opacity: 1, x: 0 } : { opacity: 0, x: -50 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-      >
-        <MotionHeading as="h2" size="xl" mb={4} color="green.800">
-          {item.title}
-        </MotionHeading>
-
-        {item.id !== -1 && (
-          <MotionText fontSize="md" fontWeight="bold" color="green.600" mb={4}>
-            📅 {item.date_start === item.date_end ? item.date_start : `${item.date_start} al ${item.date_end}`} 
-            <br /> 📍 {item.place}
-          </MotionText>
-        )}
-
-        <Text fontSize="lg" color="gray.600" noOfLines={4} lineHeight="1.6">
-          {item.description}
-        </Text>
-      </MotionBox>
-
-      {/* IMAGEN CON PERSPECTIVA 3D */}
-      <Box 
-        w="45%" 
-        style={{ perspective: 1200 }}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={resetTilt}
-        zIndex={2}
-      >
-        <MotionBox
-          style={{ rotateX, rotateY, rotateZ: -6 }}
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={isActive ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          whileHover={{ scale: 1.02 }}
-        >
-          {/* Sombra dinámica */}
-          <Box
-            position="absolute"
-            inset="5"
-            bg="blackAlpha.300"
-            filter="blur(40px)"
-            transform="translateY(20px)"
-            zIndex={-1}
-          />
-          <Image
-            src={item.image}
-            alt={item.title}
-            borderRadius="3xl"
-            boxShadow="2xl"
-            cursor={item.id !== -1 ? "pointer" : "default"}
-            onClick={() => item.id !== -1 && router.push(`/actividad/${item.id}`)}
-            objectFit="cover"
-            maxH="400px"
-            w="100%"
-          />
-        </MotionBox>
-      </Box>
-    </Flex>
-  );
-};
-
-// --- Componente Principal ---
-export default function Carousel({ activities }: CarouselProps) {
+export default function Carousel({activities}: CarouselProps) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const router = useRouter();
 
-  const items = useMemo(() => {
-    if (!activities || activities.length === 0) {
-      return [{
-        id: -1,
-        title: "Bienvenido a Gestión Social",
-        description: "Descubre nuestros grupos de extensión y sus actividades.",
-        image: "https://unsplash.com",
-        date_start: "", date_end: "", place: "",
-      }];
-    }
-    const today = new Date().toISOString().split('T')[0];
-    return [...activities]
-      .filter((a) => a.date_end >= today)
-      .sort((a, b) => a.date_start.localeCompare(b.date_start))
-      .slice(0, 5);
-  }, [activities]);
 
-  const next = () => setIndex((i) => (i + 1) % items.length);
-  const prev = () => setIndex((i) => (i - 1 + items.length) % items.length);
+  function normalizeDate(date: Date) {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
 
+  function parseLocalDate(dateStr: string) {
+    const [d, m, y] = dateStr.split("/").map(Number);
+    return new Date(y, m - 1, d); 
+  }
+
+  const today = normalizeDate(new Date());
+
+  // Filtrar, ordenar y limitar los items. Solo actividades futuras
+  const upcomingOrOngoing = activities.filter(item => {
+    const start = normalizeDate(parseLocalDate(item.date_start));
+    const end = normalizeDate(parseLocalDate(item.date_end));
+
+    /*
+        - Futuro: start > hoy
+        - En curso: start <= hoy <= end
+        - Pasado: end < hoy (se excluye)
+    */
+    return start > today || (start <= today && end >= today);
+  });
+
+  // Ordenar en curso + futuros por fecha de inicio ASC (más próximo primero)
+  upcomingOrOngoing.sort((a, b) => (a.date_start > b.date_start ? 1 : -1));
+
+  // Limitar a 5 elementos
+  let items = upcomingOrOngoing.slice(0, 5);
+
+  // Placeholder si no hay actividades futuras
+  const placeholder = {
+    id: -1,
+    title: "Bienvenido a la Gestión Social Universitaria",
+    description: "Descubre nuestros grupos de extensión y sus próximas actividades",
+    image: "https://placehold.co/1200x500/01695b/ffffff/png?text=Gestión+Social+Universitaria",
+    date_start: "",
+    date_end: "",
+    place: "",
+    group: "",
+    area: [] as string[],
+  };
+
+  if (items.length === 0) items = [placeholder];
+
+  const length = items.length;
+
+  // Prev / Next
+  const prev = () => setIndex((i) => (i - 1 + length) % length);
+  const next = () => setIndex((i) => (i + 1) % length);
+
+  const [tilt, setTilt] = useState({ x: 10, y: -18 });
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const rotateY = ((x / rect.width) - 0.5) * 35;
+    const rotateX = -((y / rect.height) - 0.5) * 35;
+
+    setTilt({ x: rotateX, y: rotateY });
+  };
+
+  const resetTilt = () => setTilt({ x: 10, y: -18 });
+
+  // Auto-slide cada 4 segundos
   useEffect(() => {
-    if (paused || items.length <= 1) return;
-    const interval = setInterval(next, 6000);
+    if (paused) return;
+    const interval = setInterval(next, 4000);
     return () => clearInterval(interval);
-  }, [paused, items.length, index]);
+  }, [paused, index]);
+
+  if (!items || items.length === 0) return null;
 
   return (
     <Box
       position="relative"
       w="100%"
-      maxW="1400px"
-      mx="auto"
-      h="500px"
       overflow="hidden"
-      bgGradient="linear(to-br, gray.50, green.100)"
+      h={{ base: "auto", md: "600px" }}
+      bg="transparent"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      {/* FONDO: NUBE 1 */}
-      <MotionBox
-        position="absolute"
-        top="-10%"
-        left="-5%"
-        w="60%"
-        h="80%"
-        bg="radial-gradient(circle, white 0%, rgba(255,255,255,0) 70%)"
-        filter="blur(60px)"
-        opacity={0.7}
-        zIndex={0}
-        animate={{ x: [-20, 20], y: [0, 30] }}
-        transition={{ duration: 8, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
-      />
-
-      {/* FONDO: NUBE 2 */}
-      <MotionBox
-        position="absolute"
-        bottom="-15%"
-        right="-5%"
-        w="50%"
-        h="70%"
-        bg="radial-gradient(circle, white 0%, rgba(255,255,255,0) 70%)"
-        filter="blur(80px)"
-        opacity={0.6}
-        zIndex={0}
-        animate={{ x: [20, -20], y: [0, -40] }}
-        transition={{ duration: 10, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
-      />
-
-      {/* TRACK DE SLIDES (Con soporte Drag/Swipe) */}
-      <MotionFlex
-        position="relative"
-        zIndex={1}
-        display="flex"
-        cursor="grab"
-        _active={{ cursor: "grabbing" }}
-        drag="x"
-        dragConstraints={{ left: 0, right: 0 }}
-        onDragEnd={(_, info) => {
-          if (info.offset.x < -100) next();
-          else if (info.offset.x > 100) prev();
-        }}
-        animate={{ x: `-${index * 100}%` }}
-        transition={{ type: "spring", stiffness: 200, damping: 25 }}
+      {/* Contenedor de slides */}
+      <Flex
+        w={`${length * 100}%`}
+        h="100%"
+        transform={`translateX(-${index * (100 / length)}%)`}
+        transition="transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)"
       >
-        {items.map((item, i) => (
-          <Slide key={i} item={item} router={router} isActive={index === i} />
+        {items.map((item) => (
+          <Box key={item.id} w={`${100 / length}%`} h="100%" px={{ base: 6, md: 32 }}>
+            <Flex
+              h="100%"
+              align="center"
+              justify="space-between"
+              direction={{ base: "column", md: "row" }}
+              onMouseMove={handleMouseMove}
+              onMouseLeave={resetTilt}
+            >
+              {/* TEXTO */}
+              <Box 
+                maxW={{ base: "100%", md: "45%" }} 
+                textAlign="left" 
+                p={8}
+                bg="white"
+                backdropFilter="blur(10px)"
+                borderRadius="2xl"
+                boxShadow="xl"
+                border="1px solid"
+                borderColor="whiteAlpha.400"
+              >
+                <Text fontSize="3xl" fontWeight="black" mb={2} lineHeight="1.1" color="gray.800">
+                  {item.title}
+                </Text>
+
+                {item.id !== -1 && (
+                  <Text fontSize="sm" fontWeight="bold" color="primary" mb={4} textTransform="uppercase">
+                    📅 {item.date_start === item.date_end ? item.date_start : `${item.date_start} al ${item.date_end}`} — 📍 {item.place}
+                  </Text>
+                )}
+
+                <Text fontSize="lg" color="gray.700" mb={6} noOfLines={3}>
+                  {item.description}
+                </Text>
+                
+                {item.id !== -1 && (
+                    <Box 
+                        as="button" 
+                        onClick={() => router.push(`/actividad/${item.id}`)}
+                        bg="primary" 
+                        color="white" 
+                        px={8} 
+                        py={3} 
+                        borderRadius="full" 
+                        fontWeight="bold"
+                        _hover={{ transform: "translateY(-2px)", boxShadow: "0 10px 20px rgba(0,0,0,0.3)" }}
+                        transition="all 0.2s"
+                    >
+                        Ver detalles
+                    </Box>
+                )}
+              </Box>
+
+              {/* IMAGEN */}
+              <Box
+                position="relative"
+                w={{ base: "80%", md: "45%" }}
+                perspective="1200px"
+              >
+                <Image
+                  src={item.image}
+                  alt={item.title}
+                  borderRadius="3xl"
+                  boxShadow="0 25px 50px -12px rgba(0, 0, 0, 0.4)"
+                  transform={`rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) rotateZ(-3deg)`}
+                  transition="transform 0.2s ease-out"
+                  cursor="pointer"
+                  onClick={() => item.id !== -1 && router.push(`/actividad/${item.id}`)}
+                />
+              </Box>
+            </Flex>
+          </Box>
         ))}
-      </MotionFlex>
+      </Flex>
 
-      {/* CONTROLES */}
-      {items.length > 1 && (
-        <>
-          <IconButton
-            aria-label="Anterior"
-            icon={<ChevronLeftIcon boxSize={8} />}
-            position="absolute"
-            left="4"
-            top="50%"
-            transform="translateY(-50%)"
-            onClick={prev}
-            variant="ghost"
-            colorScheme="green"
-            rounded="full"
-            zIndex={10}
-            _hover={{ bg: "whiteAlpha.800" }}
-          />
-          <IconButton
-            aria-label="Siguiente"
-            icon={<ChevronRightIcon boxSize={8} />}
-            position="absolute"
-            right="4"
-            top="50%"
-            transform="translateY(-50%)"
-            onClick={next}
-            variant="ghost"
-            colorScheme="green"
-            rounded="full"
-            zIndex={10}
-            _hover={{ bg: "whiteAlpha.800" }}
-          />
-        </>
-      )}
+      {/* Flechas */}
+    
+      <IconButton
+        aria-label="Prev"
+        icon={<ChevronLeftIcon boxSize={10} />}
+        position="absolute"
+        top="50%"
+        left="20px"
+        onClick={prev}
+        variant="ghost"
+        color="secondary"
+        bg= "whiteAlpha.800"
+        _hover={{ bg: "whiteAlpha.800", transform: "translateY(0%) scale(1.15)" }}
+        zIndex={10}
+      />
 
-      {/* INDICADORES (DOTS) */}
-      <Flex position="absolute" bottom="8" w="100%" justify="center" gap={2} zIndex={10}>
+      <IconButton
+        aria-label="Next"
+        icon={<ChevronRightIcon boxSize={10} />}
+        position="absolute"
+        top="50%"
+        right="20px"
+        onClick={next}
+        variant="ghost"
+        color="secondary"
+        bg= "whiteAlpha.800"
+        _hover={{ bg: "whiteAlpha.800", transform: "translateY(0%) scale(1.15)" }}
+        zIndex={10}
+      />
+      
+
+      {/* Dots */}
+      <Flex
+        position="absolute"
+        bottom="30px"
+        width="100%"
+        justifyContent="center"
+        gap={3}
+      >
         {items.map((_, i) => (
           <Box
             key={i}
-            w={i === index ? "40px" : "12px"}
+            w={i === index ? "30px" : "10px"}
             h="6px"
             borderRadius="full"
-            bg={i === index ? "green.500" : "green.200"}
-            transition="all 0.4s ease"
+            bg={i === index ? "secondary" : "whiteAlpha.700"}
+            transition="all 0.3s ease"
             cursor="pointer"
             onClick={() => setIndex(i)}
           />

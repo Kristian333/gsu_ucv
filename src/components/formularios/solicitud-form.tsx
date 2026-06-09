@@ -19,13 +19,12 @@ import {
 import { useAuth } from "@/app/context/auth-context";
 import { useGlobalData } from "@/app/context/global-data-context";
 import { useRouter } from "next/navigation";
-import { apiRequest } from "@/utils/api";
 
+// Se ha eliminado la propiedad isRequired del componente para que no la aplique.
 const FileUploadControl = ({ id, label }: { id: string, label: string }) => (
   <FormControl id={id}>
     <FormLabel>{label}</FormLabel>
-    {/* Agregamos el name para identificarlo en el backend */}
-    <Input type="file" name={id} p={1} />
+    <Input type="file" p={1} />
   </FormControl>
 );
 

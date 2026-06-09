@@ -1,3 +1,4 @@
+// /src/data/userMock.ts
 export const mockUserItems = [
     {
         id: "1",
@@ -5,8 +6,7 @@ export const mockUserItems = [
         avatar: "/logo.png",
         role: "Admin",
         correo: "admin@ucv.com",
-        contraseña: "123",
-        group: "ADMIN" // O el que prefieras
+        contraseña: "123"
     },
     {
         id: "2",
@@ -14,8 +14,7 @@ export const mockUserItems = [
         avatar: "",
         role: "Invitado",
         correo: "juan@hotg.com",
-        contraseña: "222",
-        group: "GENERAL"
+        contraseña: "222"
     },
     {
         id: "3",
@@ -23,8 +22,7 @@ export const mockUserItems = [
         avatar: "/LAMUN.webp",
         role: "Grupo",
         correo: "lamun@ucvmail.com",
-        contraseña: "999",
-        group: "LAMUN" // <--- Agrega esto (Debe coincidir con tus datos de actividades)
+        contraseña: "999"
     },
     {
         id: "4",
@@ -32,7 +30,6 @@ export const mockUserItems = [
         avatar: "/ciencias.jpg",
         role: "Facultad",
         correo: "ciencias@cienciasucv.com",
-        contraseña: "100",
-        group: "CIENCIAS"
+        contraseña: "100"
     }
 ]

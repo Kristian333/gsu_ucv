@@ -31,7 +31,7 @@ export default function DashboardPage() {
   const userRole = user?.role || null;
   const userId = user?.id || null;
 
-  const GroupDash = userRole === "group_admin" || userRole === "group_helper";
+  const GroupDash = userRole === "Grupo";
   const InvitadoDash = userRole === "Invitado";
 
   useEffect(() => {
@@ -40,7 +40,7 @@ export default function DashboardPage() {
     setEstado(data);
   }, [userId, userRole]);
 
-
+  // Determinar qué sección mostrar
   const mostrar = {
     crearGrupo: false,
     sinValidar: false,
@@ -143,7 +143,7 @@ export default function DashboardPage() {
       {/* Grupos */}
       {GroupDash && (
         <>
-          
+          {/* Mensaje Bienvenida al Grupo */}
           {mostrar.bienvenidaGrupo && (
             <>
               <Heading size="2xl" textAlign="center">
@@ -152,6 +152,7 @@ export default function DashboardPage() {
             </>
           )}
 
+          {/* Mensaje Validación */}
           {mostrar.validarGrupo && (
             <VStack spacing={4}>
               <Text fontSize="xl" textAlign="center">
@@ -167,7 +168,7 @@ export default function DashboardPage() {
         </>
       )}
       
- 
+      {/* Sección Contacto mejorada */}
       <Box
         mt={12}
         w="100%"
@@ -178,7 +179,9 @@ export default function DashboardPage() {
         boxShadow="md"
         textAlign="center"
       >
-        
+        {/*<Heading size="lg" mb={4} color="primary">
+          Información de Contacto
+        </Heading>*/}
         <Text fontSize="lg">Para más información:</Text>
         <Text fontSize="md" mt={2}>📧 a@gmail.com</Text>
         <Text fontSize="md">📱 0414-1111111</Text>
