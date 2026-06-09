@@ -1,44 +1,35 @@
-// /app/admin/dashboard/page.tsx
-import { Box, Heading, Text, Flex, SimpleGrid } from '@chakra-ui/react';
-import { redirect } from 'next/navigation';
+"use client";
+import React, { useEffect, useState } from "react";
+import { Box, Heading, Text, SimpleGrid, Spinner, Center } from '@chakra-ui/react';
+import { useAuth } from "@/app/context/auth-context";
+import { apiRequest } from "@/components/formularios/api";
 import { DashboardCard } from '@/components/ui/dashboard-card';
 
-// Simulación: Obtener datos de solicitudes desde el servidor
-async function getPendingRequests() {
-  const pendingCount = 5; 
-  return pendingCount;
-}
+export default function AdminDashboardPage() {
+  const { user, isHydrated } = useAuth();
+  const [stats, setStats] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-// NUEVA FUNCIÓN: Obtener datos de cuentas no verificadas
-async function getUnverifiedAccounts() {
-  const unverifiedCount = 3; // Valor simulado
-  return unverifiedCount;
-}
+  useEffect(() => {
+    if (!isHydrated || !user?.id) return;
+    apiRequest(`usuarios/${user.id}/dashboard`)
+      .then(res => setStats(res))
+      .catch(err => console.error(err))
+      .finally(() => setLoading(false));
+  }, [user?.id, isHydrated]);
 
-// Simulación: Función de verificación de rol
-async function checkAdminRole() {
-  const user = { role: 'admin' };
-  if (user.role !== 'admin') {
-    redirect('/login?error=unauthorized');
-  }
-}
-
-export default async function AdminDashboardPage() {
-  await checkAdminRole();
-
-  const pendingRequests = await getPendingRequests();
-  const unverifiedAccounts = await getUnverifiedAccounts(); // Llamada a la nueva función
+  if (!isHydrated || loading) return <Center h="60vh"><Spinner size="xl" color="blue.500" /></Center>;
 
   return (
     <Box maxW="container.xl" mx="auto" py={10} px={6}>
-      <Heading as="h1" size="xl">Panel de Administración</Heading>
-      <Text mt={4}>Bienvenido, aquí tienes un resumen de las tareas pendientes.</Text>
+      <Heading as="h1" size="xl" color="gray.700">Panel de Administración</Heading>
+      <Text mt={4} color="gray.600">Bienvenido, <b>{user?.name}</b>. Aquí tienes un resumen.</Text>
 
       <SimpleGrid columns={{ base: 1, md: 2 }} spacing={10} mt={10}>
         <DashboardCard
           title="Gestión de Solicitudes"
           description="Revisa las solicitudes de organizaciones pendientes."
-          count={pendingRequests}
+          count={stats?.solicitudes || 0} 
           countLabel="pendientes"
           link="/admin/solicitudes"
           linkText="Ir a Solicitudes"
@@ -46,12 +37,16 @@ export default async function AdminDashboardPage() {
         <DashboardCard
           title="Gestión de Usuarios"
           description="Administra los usuarios y sus roles en la plataforma."
-          count={unverifiedAccounts} // Pasamos el nuevo conteo aquí
-          countLabel="por verificar" // Nueva etiqueta
+          count={stats?.verificaciones || 0}
+          countLabel="por verificar"
           link="/admin/usuarios"
           linkText="Ir a Usuarios"
         />
       </SimpleGrid>
+      
+      <Box mt={12} p={5} bg="white" borderRadius="lg" border="1px solid" borderColor="gray.200" shadow="sm">
+        <Text fontSize="sm" color="gray.500">Último evento: {stats?.evento || "Sin actividad"}</Text>
+      </Box>
     </Box>
   );
 }

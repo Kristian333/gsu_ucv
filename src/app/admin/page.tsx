@@ -2,5 +2,5 @@
 import { redirect } from 'next/navigation';
 
 export default function AdminRedirectPage() {
-  redirect('/admin/dashboard');
+  redirect('/admin/dashboard')
 }

@@ -12,9 +12,11 @@ import {
   Link,
   useColorModeValue,
   Text,
+  useToast,
 } from "@chakra-ui/react";
 import { useAuth } from "@/app/context/auth-context";
 import { useRouter } from "next/navigation";
+import { apiRequest } from "@/utils/api";
 
 export const RegisterForm = () => {
   const [step, setStep] = useState(1);
@@ -26,6 +28,8 @@ export const RegisterForm = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const toast = useToast();
 
   // Obtenemos la función login del contexto
   const { login } = useAuth(); 
@@ -38,29 +42,50 @@ export const RegisterForm = () => {
   const handleNext = () => setStep(step + 1);
   const handleBack = () => setStep(step - 1);
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirmPassword) {
       setError("Las contraseñas no coinciden.");
       return;
     }
     setError('');
+    setIsLoading(true);
 
-    // Aquí iría la lógica de registro real (ej. llamada a una API)
-    console.log("Nombre:", firstName);
-    console.log("Apellido:", lastName);
-    console.log("Cédula:", cedula);
-    console.log("Email:", email);
-    console.log("Contraseña:", password);
+    try {
+      const data = await apiRequest('/registro', {
+        method: 'POST',
+        body: JSON.stringify({
+          nombre: firstName,
+          apellido: lastName,
+          cedula,
+          telefono,
+          correo: email,
+          contraseña: password
+        }),
+      });
 
-    // Simulación de registro exitoso
-    login("user-123",'admin'); // <-- Pasa un ID de usuario de ejemplo
-    
-    // Redirecciona al usuario a la página de inicio o a su perfil
-    router.push("/");
+      toast({
+        title: "Registro exitoso",
+        description: "Tu cuenta ha sido creada.",
+        status: "success",
+        duration: 3000,
+      });
+
+      // Si el registro hace login automático:
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+        login(data.user);
+        router.push("/");
+      } else {
+        router.push("/login");
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  
   return (
     <Box
       bg={formBgColor}
@@ -176,6 +201,7 @@ export const RegisterForm = () => {
             size="lg"
             mt={4}
             w="full"
+            isLoading={isLoading}
           >
             Registrarse
           </Button>

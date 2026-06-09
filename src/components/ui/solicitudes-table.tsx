@@ -33,6 +33,7 @@ interface Solicitud {
 }
 
 interface SolicitudesTableProps {
+  educacionContinua: Solicitud[];
   grupoExtension: Solicitud[];
 }
 
@@ -58,10 +59,10 @@ const getBadgeColorScheme = (estado: string) => {
   }
 };
 
-export function SolicitudesTable({ grupoExtension }: SolicitudesTableProps) {
+export function SolicitudesTable({ educacionContinua, grupoExtension }: SolicitudesTableProps) {
   const [filter, setFilter] = useState('Todos');
 
-  
+  const educacionContinuaTypes = useMemo(() => ['Todos', ...new Set(educacionContinua.map(sol => sol.tipo))], [educacionContinua]);
   const grupoExtensionTypes = useMemo(() => ['Todos', ...new Set(grupoExtension.map(sol => sol.tipo))], [grupoExtension]);
 
   const renderTable = (solicitudes: Solicitud[]) => {
@@ -132,9 +133,17 @@ export function SolicitudesTable({ grupoExtension }: SolicitudesTableProps) {
   return (
     <Tabs variant="enclosed">
       <TabList>
+        <Tab>Educación Continua ({educacionContinua.length})</Tab>
         <Tab>Grupo de Extensión ({grupoExtension.length})</Tab>
       </TabList>
       <TabPanels>
+        <TabPanel>
+          <Box mb={6}>
+            <Text mb={2} fontWeight="bold">Filtrar por tipo de solicitud:</Text>
+            {renderFilters(educacionContinuaTypes)}
+          </Box>
+          {renderTable(educacionContinua)}
+        </TabPanel>
         <TabPanel>
           <Box mb={6}>
             <Text mb={2} fontWeight="bold">Filtrar por tipo de solicitud:</Text>

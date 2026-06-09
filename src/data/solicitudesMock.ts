@@ -1,7 +1,6 @@
 // /src/data/solicitudesMock.ts
 export const mockRequestItems = [
   {
-    "id": "1",
     "status": "PENDIENTE",
     "grupo": {
       "nombre": "Red Universitaria de Innovación Social",
@@ -58,7 +57,6 @@ export const mockRequestItems = [
     ]
   },
   {
-    "id": "2",
     "status": "EN REVISION",
     "grupo": {
       "nombre": "Brigada Ambiental Ingeniería Verde",
@@ -120,7 +118,6 @@ export const mockRequestItems = [
     ]
   },
   {
-    "id": "3",
     "status": "APROBADO",
     "grupo": {
       "nombre": "Movimiento Cultural Letras Vivas",
