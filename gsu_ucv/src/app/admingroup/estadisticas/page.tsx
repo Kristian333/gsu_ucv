@@ -8,7 +8,5 @@ export default function EstadisticasPage() {
   const actividadesGrupo = mockActivityItems.filter(
     (a) => a.group.toLowerCase() === grupoActual
   );
-
-  
 }
 
