@@ -34,7 +34,7 @@ export const mockActivityItems = [
     id: 3,
     title: "Actividad 3",
     image: "/Actividades/background-1.jpg",
-    description: "Descripción 3 ejemplo.",
+    description: "Descripción 3 ejemplo. ajsjasdajsdasjdlkasnjaksdaskjdhaskjdhfdsfsdfsdfsdfsdfsdfsdfsdfsdfdsfaskdhaskdhaskdhasdkjasdkasjhdkashdkashdkj",
     date_start: "22/06/2026",
     date_end: "22/06/2026",
     place: "Buenos Aires, Argentina",

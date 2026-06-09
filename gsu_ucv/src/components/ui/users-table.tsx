@@ -34,7 +34,6 @@ interface User {
 }
 
 interface UsersTableProps {
-  educacionContinuaUsers: User[];
   grupoExtensionUsers: User[];
 }
 
@@ -53,24 +52,20 @@ const getRoleColorScheme = (rol: string) => {
   }
 };
 
-const allRoles = ['Todos', 'admin', 'coordinador', 'proveedor', 'visitante', 'Grupo de Extension'];
-const editableRoles = ['admin', 'coordinador', 'proveedor', 'visitante'];
+const allRoles = ['Todos', 'admin', 'Grupo de Extension'];
+const editableRoles = ['admin', 'Grupo de Extension'];
 
-export function UsersTable({ educacionContinuaUsers, grupoExtensionUsers }: UsersTableProps) {
+export function UsersTable({ grupoExtensionUsers }: UsersTableProps) {
   const toast = useToast();
   const [filter, setFilter] = useState('Todos');
-  const [currentUsers, setCurrentUsers] = useState(educacionContinuaUsers);
+  const [currentUsers, setCurrentUsers] = useState(grupoExtensionUsers);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState('');
 
   const handleTabChange = (index: number) => {
     setFilter('Todos');
     setEditingUserId(null);
-    if (index === 0) {
-      setCurrentUsers(educacionContinuaUsers);
-    } else {
-      setCurrentUsers(grupoExtensionUsers);
-    }
+    setCurrentUsers(grupoExtensionUsers);
   };
 
   const handleSaveRole = (userId: string) => {
@@ -180,17 +175,9 @@ export function UsersTable({ educacionContinuaUsers, grupoExtensionUsers }: User
   return (
     <Tabs variant="enclosed" onChange={handleTabChange}>
       <TabList>
-        <Tab>Educación Continua ({educacionContinuaUsers.length})</Tab>
         <Tab>Grupo de Extensión ({grupoExtensionUsers.length})</Tab>
       </TabList>
       <TabPanels>
-        <TabPanel>
-          <Box mb={6}>
-            <Text mb={2} fontWeight="bold">Filtrar por rol:</Text>
-            {renderFilters(allRoles)}
-          </Box>
-          {renderTable(filteredUsers)}
-        </TabPanel>
         <TabPanel>
           <Box mb={6}>
             <Text mb={2} fontWeight="bold">Filtrar por rol:</Text>

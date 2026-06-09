@@ -2,17 +2,6 @@ import { Box, Heading, Text } from '@chakra-ui/react';
 import { redirect } from 'next/navigation';
 import { SolicitudesTable } from '@/components/ui/solicitudes-table';
 
-// Simulación: Obtener solicitudes de Educación Continua
-async function getEducacionContinuaSolicitudes() {
-  const data = [
-    { id: 'sol-001', tipo: 'Código de Proveedor', fecha: '2023-10-26', estado: 'Pendiente', nombre: 'Organización A' },
-    { id: 'sol-002', tipo: 'Formulación de Curso - Directa', fecha: '2023-10-25', estado: 'Aprobada', nombre: 'Organización B' },
-    { id: 'sol-003', tipo: 'Formulación de Curso - Indirecta', fecha: '2023-10-24', estado: 'Pendiente', nombre: 'Organización C' },
-    { id: 'sol-004', tipo: 'Actualización de Curso', fecha: '2023-10-23', estado: 'Pendiente', nombre: 'Organización D' },
-  ];
-  return data;
-}
-
 // Simulación: Obtener solicitudes de Grupo de Extensión
 async function getGrupoExtensionSolicitudes() {
   const data = [
@@ -33,7 +22,6 @@ async function checkAdminRole() {
 export default async function SolicitudesPage() {
   await checkAdminRole();
 
-  const educacionContinua = await getEducacionContinuaSolicitudes();
   const grupoExtension = await getGrupoExtensionSolicitudes();
 
   return (
@@ -44,7 +32,6 @@ export default async function SolicitudesPage() {
       </Text>
       
       <SolicitudesTable 
-        educacionContinua={educacionContinua}
         grupoExtension={grupoExtension}
       />
     </Box>
