@@ -483,7 +483,7 @@ export default function CrearGrupoForm() {
 
         {/* Proyecto PDF */}
         <FormControl isRequired>
-          <FormLabel>PROYECTO DEL GRUPO (PDF)</FormLabel>
+          <FormLabel>PROYECTO DEL GRUPO (.PDF)</FormLabel>
           <Input type="file" accept="application/pdf" onChange={handleProyecto} />
         </FormControl>
 
