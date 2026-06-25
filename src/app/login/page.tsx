@@ -52,6 +52,10 @@ export default function LoginPage() {
         throw new Error("No se recibieron datos del perfil del usuario.");
       }
 
+      if (infoUsuario.group_id){
+        localStorage.setItem("group_id", String(infoUsuario.group_id));
+      }
+
       login(infoUsuario);
 
       const roles = (infoUsuario.roles || []).map((r: string) => r.toLowerCase().trim());
