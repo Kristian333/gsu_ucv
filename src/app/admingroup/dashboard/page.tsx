@@ -1,93 +1,103 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { VStack, Button, Text, Heading, Divider, Box } from "@chakra-ui/react";
+import { VStack, Button, Text, Heading, Divider, Box, Spinner } from "@chakra-ui/react";
 import NextLink from "next/link";
 import { useAuth } from "@/app/context/auth-context";
-import { testLog } from "@/data/testLog";
+import { apiRequest } from "@/components/formularios/api";
 
-
-// Función temporal que lee el test.log simulado
-function obtenerEstadoDesdeLog(userId, role) {
-  // Simulación temporal:
-  // En producción esto vendrá de backend.
-  const eventos = testLog.filter((l) => l.id === userId);
-  if (eventos.length === 0) return null;
-
-  const ultimo = eventos[eventos.length - 1];
-
-  if (role === "Grupo") {
-    const info = eventos.filter((e) => e.evento === "GrupoInfoValida").pop();
-    return info || null;
-  }
-
-  return ultimo;
+interface GroupData {
+  id: any;
+  nombre: string;
+  descripcion: string;
+  propietario: {
+    id: any;
+  };
+  ubicacion: string;
+  activo: boolean;
+  creado_en: string;
+  actualizado_en: string;
+  // Añade aquí campos adicionales si tu backend maneja estados de solicitud (ej: status_solicitud: string)
 }
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const [estado, setEstado] = useState(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  const userRole = user?.role || null;
-  const userId = user?.id || null;
+  const [miGrupo, setMiGrupo] = useState<GroupData | null>(null);
+  const [infoAlDia, setInfoAlDia] = useState<boolean>(false);
 
-  const GroupDash = userRole === "group_admin" || userRole === "group_helper";
-  const InvitadoDash = userRole === "Invitado";
+  const rolesArray = (user?.roles || []).map(r => r.toLowerCase().trim());
+  const userIdStr = user?.id || null;
+
+  const GroupDash = rolesArray.includes("group_admin") || rolesArray.includes("group_helper");
+  const VisitanteDash = rolesArray.includes("visitante");
 
   useEffect(() => {
-    if (!userId) return;
-    const data = obtenerEstadoDesdeLog(userId, userRole);
-    setEstado(data);
-  }, [userId, userRole]);
+    if (!userIdStr || (!GroupDash && !VisitanteDash)) {
+      setLoading(false);
+      return;
+    }
 
+    async function cargarEstadoDashboard() {
+      try {
+        // Consultamos el listado de grupos usando el apiRequest de tu compañero
+        const data = await apiRequest("groups?per_page=50", { method: "GET" });
+        const listaGrupos: GroupData[] = data.grupos || [];
 
+        // Buscamos si este usuario es dueño de algún grupo
+        const grupoEncontrado = listaGrupos.find(
+          g => g.propietario && String(g.propietario.id).trim() === String(userIdStr).trim()
+        );
+
+        if (grupoEncontrado) {
+          setMiGrupo(grupoEncontrado);
+
+          // Verificación de vigencia de 1 año (Misma lógica del Navbar)
+          if (grupoEncontrado.actualizado_en) {
+            const fechaActualizacion = new Date(grupoEncontrado.actualizado_en);
+            const fechaLimite = new Date(fechaActualizacion);
+            fechaLimite.setFullYear(fechaLimite.getFullYear() + 1);
+
+            const hoy = new Date();
+            setInfoAlDia(hoy < fechaLimite);
+          }
+        }
+      } catch (error) {
+        console.error("Error al cargar la información del dashboard:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    cargarEstadoDashboard();
+  }, [userIdStr, GroupDash, VisitanteDash]);
+
+  // Pantalla de carga limpia mientras consulta la API de Go
+  if (loading) {
+    return (
+      <VStack spacing={4} align="center" justify="center" minH="80vh">
+        <Spinner size="xl" color="green.500" thickness="4px" />
+        <Text fontSize="lg" color="gray.500">Cargando tu panel de control...</Text>
+      </VStack>
+    );
+  }
+
+  // Lógica de banderas visuales en base a la data real del backend
   const mostrar = {
-    crearGrupo: false,
-    sinValidar: false,
-    corregir: false,
-    validada: false,
-    rechazada: false,
-    bienvenidaGrupo: false,
-    validarGrupo: false,
+    crearGrupo: VisitanteDash && !miGrupo, // No tiene grupo creado aún
+    sinValidar: VisitanteDash && miGrupo && !miGrupo.activo, // Tiene grupo pero el admin general no lo ha activado
+    corregir: false, // Puedes activar esta bandera si añades un campo de observaciones en tu BD
+    validada: VisitanteDash && miGrupo && miGrupo.activo, // Es visitante pero su grupo ya fue aprobado
+    bienvenidaGrupo: GroupDash && infoAlDia, // Es admin/helper y su info anual está vigente
+    validarGrupo: GroupDash && !infoAlDia, // Es admin/helper pero requiere actualización anual
   };
 
-  if (InvitadoDash && estado) {
-    switch (estado.evento) {
-      case "NuevoUsuario":
-        mostrar.crearGrupo = true;
-        break;
-      case "SolicitudNuevoGrupo":
-        mostrar.sinValidar = true;
-        break;
-      case "SolicitudCorregirGrupo":
-        mostrar.corregir = true;
-        break;
-      case "SolicitudGrupoValida":
-        mostrar.validada = true;
-        break;
-      case "SolicitudGrupoRechazada":
-        mostrar.rechazada = true;
-        break;
-    }
-  }
-
-  if (GroupDash) {
-    const fecha = new Date(estado?.date);
-    const limite = new Date(fecha);
-    limite.setFullYear(limite.getFullYear() + 1);
-
-    if (new Date() <= limite) {
-      mostrar.bienvenidaGrupo = true;
-    } else {
-      mostrar.validarGrupo = true;
-    }
-  }
-
   return (
-    <VStack spacing={12} align="center" justify="center" minH="80vh">
+    <VStack spacing={12} align="center" justify="center" minH="80vh" w="full" px={4}>
       
-      {/* Invitado */}
-      {InvitadoDash && (
+      {/* Visitante */}
+      {VisitanteDash && (
         <>
           {/* Botón Crear Grupo */}
             {mostrar.crearGrupo && (
@@ -97,7 +107,7 @@ export default function DashboardPage() {
               </Text>
               <NextLink href="/admingroup/crear_grupo" passHref>
                 <Button background="primary" color="white" size="lg">
-                  Crea tu grupo de extensión!
+                  ¡Crea tu grupo de extensión!
                 </Button>
               </NextLink>
             </VStack>
@@ -180,8 +190,8 @@ export default function DashboardPage() {
       >
         
         <Text fontSize="lg">Para más información:</Text>
-        <Text fontSize="md" mt={2}>📧 a@gmail.com</Text>
-        <Text fontSize="md">📱 0414-1111111</Text>
+        <Text fontSize="md" mt={2}>📧 deu.depgsu@gmail.com</Text>
+        <Text fontSize="md">📱 412-5502096</Text>
 
         <Divider my={4} />
 

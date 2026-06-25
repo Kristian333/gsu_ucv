@@ -1,57 +1,91 @@
 import React, { useEffect, useState } from "react";
-import { VStack, Box, Link as ChakraLink } from "@chakra-ui/react";
+import { VStack, Box, Link as ChakraLink, SkeletonText, Text } from "@chakra-ui/react";
 import NextLink from "next/link";
 import { useAuth } from "@/app/context/auth-context";
-import { testLog } from "@/data/testLog";
+import { apiRequest } from "@/components/formularios/api";
 
-// Función que lee el test.log simulado
-function obtenerEstadoDesdeLog(userId, role) {
-  const eventos = testLog.filter((l) => l.id === userId);
-  if (eventos.length === 0) return null;
-
-  // Si es un rol de grupo, buscamos su última validación de info
-  if (role === "Grupo") {
-    const info = eventos.filter((e) => e.evento === "GrupoInfoValida").pop();
-    return info || null;
-  }
-  return eventos[eventos.length - 1];
+interface GroupData {
+  id: any; 
+  nombre: string;
+  descripcion: string;
+  propietario: {
+    id: any;  
+  };
+  ubicacion: string;
+  activo: boolean;
+  creado_en: string;
+  actualizado_en: string;
 }
 
 export const AdminGroupNavbar = () => {
   const { user } = useAuth();
-  const [estado, setEstado] = useState(null);
-
+  const [infoAlDia, setInfoAlDia] = useState<boolean>(false);
+  const [nombreGrupo, setNombreGrupo] = useState<string>("Buscando grupo...");
+  const [loading, setLoading] = useState<boolean>(true);
 
   const rolesArray = (user?.roles || []).map(r => r.toLowerCase().trim());
-  const userId = user?.id || null;
+  const userIdStr = user?.id || null;
 
-  let role = "Invitado"; 
-  if (rolesArray.includes('group_admin') || rolesArray.includes('group_helper')) {
-    role = "Grupo";
-  }
-  // ---------------------------------------
-
-  let infoAlDia = false;
-  const GroupDash = role === "Grupo";
+  const esGrupo = rolesArray.includes('group_admin') || rolesArray.includes('group_helper');
 
   useEffect(() => {
-    if (!userId) return;
-    const data = obtenerEstadoDesdeLog(userId, role);
-    setEstado(data);
-  }, [userId, role]);
-
-
-  if (GroupDash && estado?.date) {
-    const fecha = new Date(estado.date);
-    const limite = new Date(fecha);
-    limite.setFullYear(limite.getFullYear() + 1);
-
-    if (new Date() <= limite) {
-      infoAlDia = true;
+    if (!userIdStr || !esGrupo) {
+      setInfoAlDia(false);
+      setNombreGrupo("Sin Rol de Grupo");
+      setLoading(false);
+      return;
     }
-  }
 
- 
+    async function verificarVigenciaGrupo() {
+      try {
+        const data = await apiRequest("groups?per_page=50", {
+          method: "GET"
+        });
+        
+        // LOGS DE CONTROL: Ábrelos con F12 en el navegador
+        console.log("ID del Usuario Autenticado:", userIdStr);
+        console.log("Data completa recibida del Backend:", data);
+
+        const listaGrupos: GroupData[] = data.grupos || [];
+
+        const miGrupo = listaGrupos.find(g => {
+          if (!g.propietario || g.propietario.id === undefined || g.propietario.id === null) return false;
+          return String(g.propietario.id).trim() === String(userIdStr).trim();
+        });
+
+        console.log("Grupo encontrado tras buscar por ID:", miGrupo);
+        
+        if (miGrupo) {
+          setNombreGrupo(miGrupo.nombre);
+
+          if (miGrupo.actualizado_en) {
+            const fechaActualizacion = new Date(miGrupo.actualizado_en);
+            const fechaLimite = new Date(fechaActualizacion);
+            fechaLimite.setFullYear(fechaLimite.getFullYear() + 1);
+
+            const hoy = new Date();
+            // Si hoy es menor a la fecha límite, significa que la información está vigente
+            setInfoAlDia(hoy < fechaLimite);
+          } else {
+            setInfoAlDia(false);
+          }
+        } else {
+          setNombreGrupo("Grupo no asociado");
+          setInfoAlDia(false);
+        }
+      } catch (error) {
+        console.error("Error validando vigencia del grupo con el backend:", error);
+        setNombreGrupo("Error de conexión");
+        setInfoAlDia(false);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    verificarVigenciaGrupo();
+  }, [userIdStr, esGrupo]);
+
+  // Items de navegación según privilegios
   const fullNavItems = [
     { label: "Inicio", href: "/admingroup/dashboard" },
     { label: "Planificar Actividad", href: "/admingroup/crear_actividad" },
@@ -60,13 +94,22 @@ export const AdminGroupNavbar = () => {
     { label: "Estadísticas", href: "/admingroup/estadisticas" },
   ];
 
-
   const invitadoNavItems = [
     { label: "Inicio", href: "/admingroup/dashboard" },
+  // Aquí puedes añadir la pestaña para rellenar/actualizar la información del grupo obligatoriamente
   ];
 
-  // Selección de items
-  let navItems = (role === "Grupo" && infoAlDia) ? fullNavItems : invitadoNavItems;
+  // Si está cargando la API de Go, evitamos mostrar rutas incorrectas
+  if (loading) {
+    return (
+      <Box w="250px" bg="primary" p={6} minH="100vh">
+        <SkeletonText mt="4" noOfLines={4} spacing="4" skeletonHeight="2" />
+      </Box>
+    );
+  }
+
+  // Selección de menú definitivo
+  const navItems = infoAlDia ? fullNavItems : invitadoNavItems;
 
   return (
     <Box
@@ -76,9 +119,10 @@ export const AdminGroupNavbar = () => {
       p={6}
       display="flex"
       flexDirection="column"
+      justifyContent="space-between"
       minH="100vh"
     >
-      <VStack align="start" spacing={0} w="full">
+      <VStack align="start" spacing={0} w="full" flex="1">
         {navItems.map((item) => (
           <Box key={item.href} w="full">
             <ChakraLink
@@ -96,6 +140,19 @@ export const AdminGroupNavbar = () => {
           </Box>
         ))}
       </VStack>
+
+      {/* Control visual al final del menú */}
+      <Box pt={4} borderTop="2px dashed rgba(255,255,255,0.3)">
+        <Text fontSize="xs" color="gray.300" textTransform="uppercase" letterSpacing="wider">
+          Grupo:
+        </Text>
+        <Text fontSize="md" fontWeight="black" color="teal.200" noOfLines={1}>
+          {nombreGrupo}
+        </Text>
+        <Text fontSize="xx-small" color={infoAlDia ? "green.300" : "orange.300"} mt={1}>
+          ● {infoAlDia ? "Información al día" : "Actualización requerida"}
+        </Text>
+      </Box>
     </Box>
   );
 };

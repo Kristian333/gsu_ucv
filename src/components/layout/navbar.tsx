@@ -33,11 +33,11 @@ export const Navbar = () => {
 
     const menuButtonColor = useColorModeValue("primary.500", "whiteAlpha.900");
 
-    const userRole = user?.role || null;
+    const userRole = (user?.roles || []).map(r => r.toLowerCase().trim());
     
-    const showAdminPanel = userRole === "Admin";
-    const showGroupPanel = userRole === "Invitado" || userRole === "Grupo";
-    const showFacultyPanel = userRole === "Facultad";
+    const showAdminPanel = userRole.includes('root') || userRole.includes('deu_admin');
+    const showGroupPanel = userRole.includes('visitante') || userRole.includes('group_admin') || userRole.includes('group_helper');
+    const showFacultyPanel = userRole.includes('faculty_admin');
 
     const router = useRouter();
     const pathname = usePathname();

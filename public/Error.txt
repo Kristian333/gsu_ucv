@@ -1,0 +1,628 @@
+main-app.js?v=1782332914063:1576 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+hot-reloader-client.js:151 [Fast Refresh] rebuilding
+admingroup-navbar.tsx:41  GET http://localhost:3000/api/groups?per_page=50 404 (Not Found)
+verificarVigenciaGrupo @ admingroup-navbar.tsx:41
+(anonymous) @ admingroup-navbar.tsx:86
+commitHookEffectListMount @ react-dom.development.js:20004
+commitHookPassiveMountEffects @ react-dom.development.js:22057
+commitPassiveMountOnFiber @ react-dom.development.js:22162
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22170
+commitPassiveMountEffects @ react-dom.development.js:22128
+flushPassiveEffectsImpl @ react-dom.development.js:25292
+flushPassiveEffects @ react-dom.development.js:25233
+performSyncWorkOnRoot @ react-dom.development.js:23688
+flushSyncWorkAcrossRoots_impl @ react-dom.development.js:10000
+flushSyncWorkOnAllRoots @ react-dom.development.js:9960
+commitRootImpl @ react-dom.development.js:25164
+commitRoot @ react-dom.development.js:24877
+commitRootWhenReady @ react-dom.development.js:23605
+finishConcurrentRender @ react-dom.development.js:23570
+performConcurrentWorkOnRoot @ react-dom.development.js:23415
+workLoop @ scheduler.development.js:261
+flushWork @ scheduler.development.js:230
+performWorkUntilDeadline @ scheduler.development.js:534
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+requestHostCallback @ scheduler.development.js:585
+unstable_scheduleCallback @ scheduler.development.js:444
+scheduleCallback$2 @ react-dom.development.js:10229
+scheduleTaskForRootDuringMicrotask @ react-dom.development.js:10193
+processRootScheduleInMicrotask @ react-dom.development.js:10066
+eval @ react-dom.development.js:10273
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+requestHostCallback @ scheduler.development.js:585
+unstable_scheduleCallback @ scheduler.development.js:444
+scheduleCallback$2 @ react-dom.development.js:10229
+scheduleTaskForRootDuringMicrotask @ react-dom.development.js:10193
+processRootScheduleInMicrotask @ react-dom.development.js:10066
+eval @ react-dom.development.js:10273
+admingroup-navbar.tsx:78 Error validando vigencia del grupo con el backend: Error: HTTP error! status: 404
+    at verificarVigenciaGrupo (admingroup-navbar.tsx:42:33)
+window.console.error @ app-index.js:32
+console.error @ hydration-error-info.js:41
+verificarVigenciaGrupo @ admingroup-navbar.tsx:78
+await in verificarVigenciaGrupo
+(anonymous) @ admingroup-navbar.tsx:86
+commitHookEffectListMount @ react-dom.development.js:20004
+commitHookPassiveMountEffects @ react-dom.development.js:22057
+commitPassiveMountOnFiber @ react-dom.development.js:22162
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22159
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22273
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:22140
+commitPassiveMountOnFiber @ react-dom.development.js:22170
+commitPassiveMountEffects @ react-dom.development.js:22128
+flushPassiveEffectsImpl @ react-dom.development.js:25292
+flushPassiveEffects @ react-dom.development.js:25233
+performSyncWorkOnRoot @ react-dom.development.js:23688
+flushSyncWorkAcrossRoots_impl @ react-dom.development.js:10000
+flushSyncWorkOnAllRoots @ react-dom.development.js:9960
+commitRootImpl @ react-dom.development.js:25164
+commitRoot @ react-dom.development.js:24877
+commitRootWhenReady @ react-dom.development.js:23605
+finishConcurrentRender @ react-dom.development.js:23570
+performConcurrentWorkOnRoot @ react-dom.development.js:23415
+workLoop @ scheduler.development.js:261
+flushWork @ scheduler.development.js:230
+performWorkUntilDeadline @ scheduler.development.js:534
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+requestHostCallback @ scheduler.development.js:585
+unstable_scheduleCallback @ scheduler.development.js:444
+scheduleCallback$2 @ react-dom.development.js:10229
+scheduleTaskForRootDuringMicrotask @ react-dom.development.js:10193
+processRootScheduleInMicrotask @ react-dom.development.js:10066
+eval @ react-dom.development.js:10273
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+requestHostCallback @ scheduler.development.js:585
+unstable_scheduleCallback @ scheduler.development.js:444
+scheduleCallback$2 @ react-dom.development.js:10229
+scheduleTaskForRootDuringMicrotask @ react-dom.development.js:10193
+processRootScheduleInMicrotask @ react-dom.development.js:10066
+eval @ react-dom.development.js:10273
+admingroup-navbar.tsx:41  GET http://localhost:3000/api/groups?per_page=50 404 (Not Found)
+verificarVigenciaGrupo @ admingroup-navbar.tsx:41
+(anonymous) @ admingroup-navbar.tsx:86
+commitHookEffectListMount @ react-dom.development.js:20004
+invokePassiveEffectMountInDEV @ react-dom.development.js:22883
+invokeEffectsInDev @ react-dom.development.js:25636
+legacyCommitDoubleInvokeEffectsInDEV @ react-dom.development.js:25619
+commitDoubleInvokeEffectsInDEV @ react-dom.development.js:25600
+flushPassiveEffectsImpl @ react-dom.development.js:25309
+flushPassiveEffects @ react-dom.development.js:25233
+performSyncWorkOnRoot @ react-dom.development.js:23688
+flushSyncWorkAcrossRoots_impl @ react-dom.development.js:10000
+flushSyncWorkOnAllRoots @ react-dom.development.js:9960
+commitRootImpl @ react-dom.development.js:25164
+commitRoot @ react-dom.development.js:24877
+commitRootWhenReady @ react-dom.development.js:23605
+finishConcurrentRender @ react-dom.development.js:23570
+performConcurrentWorkOnRoot @ react-dom.development.js:23415
+workLoop @ scheduler.development.js:261
+flushWork @ scheduler.development.js:230
+performWorkUntilDeadline @ scheduler.development.js:534
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+requestHostCallback @ scheduler.development.js:585
+unstable_scheduleCallback @ scheduler.development.js:444
+scheduleCallback$2 @ react-dom.development.js:10229
+scheduleTaskForRootDuringMicrotask @ react-dom.development.js:10193
+processRootScheduleInMicrotask @ react-dom.development.js:10066
+eval @ react-dom.development.js:10273
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+requestHostCallback @ scheduler.development.js:585
+unstable_scheduleCallback @ scheduler.development.js:444
+scheduleCallback$2 @ react-dom.development.js:10229
+scheduleTaskForRootDuringMicrotask @ react-dom.development.js:10193
+processRootScheduleInMicrotask @ react-dom.development.js:10066
+eval @ react-dom.development.js:10273
+admingroup-navbar.tsx:78 Error validando vigencia del grupo con el backend: Error: HTTP error! status: 404
+    at verificarVigenciaGrupo (admingroup-navbar.tsx:42:33)
+window.console.error @ app-index.js:32
+console.error @ hydration-error-info.js:41
+verificarVigenciaGrupo @ admingroup-navbar.tsx:78
+await in verificarVigenciaGrupo
+(anonymous) @ admingroup-navbar.tsx:86
+commitHookEffectListMount @ react-dom.development.js:20004
+invokePassiveEffectMountInDEV @ react-dom.development.js:22883
+invokeEffectsInDev @ react-dom.development.js:25636
+legacyCommitDoubleInvokeEffectsInDEV @ react-dom.development.js:25619
+commitDoubleInvokeEffectsInDEV @ react-dom.development.js:25600
+flushPassiveEffectsImpl @ react-dom.development.js:25309
+flushPassiveEffects @ react-dom.development.js:25233
+performSyncWorkOnRoot @ react-dom.development.js:23688
+flushSyncWorkAcrossRoots_impl @ react-dom.development.js:10000
+flushSyncWorkOnAllRoots @ react-dom.development.js:9960
+commitRootImpl @ react-dom.development.js:25164
+commitRoot @ react-dom.development.js:24877
+commitRootWhenReady @ react-dom.development.js:23605
+finishConcurrentRender @ react-dom.development.js:23570
+performConcurrentWorkOnRoot @ react-dom.development.js:23415
+workLoop @ scheduler.development.js:261
+flushWork @ scheduler.development.js:230
+performWorkUntilDeadline @ scheduler.development.js:534
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+requestHostCallback @ scheduler.development.js:585
+unstable_scheduleCallback @ scheduler.development.js:444
+scheduleCallback$2 @ react-dom.development.js:10229
+scheduleTaskForRootDuringMicrotask @ react-dom.development.js:10193
+processRootScheduleInMicrotask @ react-dom.development.js:10066
+eval @ react-dom.development.js:10273
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+performWorkUntilDeadline @ scheduler.development.js:539
+postMessage
+schedulePerformWorkUntilDeadline @ scheduler.development.js:572
+requestHostCallback @ scheduler.development.js:585
+unstable_scheduleCallback @ scheduler.development.js:444
+scheduleCallback$2 @ react-dom.development.js:10229
+scheduleTaskForRootDuringMicrotask @ react-dom.development.js:10193
+processRootScheduleInMicrotask @ react-dom.development.js:10066
+eval @ react-dom.development.js:10273

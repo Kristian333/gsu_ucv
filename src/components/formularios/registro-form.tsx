@@ -16,7 +16,7 @@ import {
 } from "@chakra-ui/react";
 import { useAuth } from "@/app/context/auth-context";
 import { useRouter } from "next/navigation";
-import { apiRequest } from "@/utils/api";
+import { apiRequest } from "@/components/formularios/api";
 
 export const RegisterForm = () => {
   const [step, setStep] = useState(1);

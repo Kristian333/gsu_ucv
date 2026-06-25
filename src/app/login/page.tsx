@@ -68,11 +68,11 @@ export default function LoginPage() {
       else if (roles.includes("faculty_admin")) {
         router.push("/adminfacultad/dashboard");
       } 
-      else if (roles.includes("group_admin") || roles.includes("group_helper")) {
+      else if (roles.includes("group_admin") || roles.includes("group_helper") || roles.includes("visitante")) {
         router.push("/admingroup/dashboard");
       } 
       else {
-        router.push("/dashboard"); 
+        router.push("/"); 
       } // <--- Se agregó esta llave que cerraba el else
 
     } catch (error: any) {

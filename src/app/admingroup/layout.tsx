@@ -11,7 +11,6 @@ export default function AdminGroupLayout({ children }: { children: React.ReactNo
   const router = useRouter();
   const [authorized, setAuthorized] = useState(false);
   
-
   const bgColor = useColorModeValue("gray.50", "gray.900");
 
   useEffect(() => {
@@ -22,8 +21,9 @@ export default function AdminGroupLayout({ children }: { children: React.ReactNo
       
       const esAdminDeGrupo = roles.includes('group_admin');
       const esAyudanteDeGrupo = roles.includes('group_helper');
+      const esVisitnate = roles.includes('visitante');
 
-      if (!user || !(esAdminDeGrupo || esAyudanteDeGrupo)) {
+      if (!user || !(esAdminDeGrupo || esAyudanteDeGrupo || esVisitnate)) {
         
         router.push("/login?error=unauthorized");
       } else {
