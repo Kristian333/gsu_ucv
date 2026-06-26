@@ -52,7 +52,7 @@ export default function LoginPage() {
         throw new Error("No se recibieron datos del perfil del usuario.");
       }
 
-      if (infoUsuario.group_id){
+      if (infoUsuario.group_id) {
         localStorage.setItem("group_id", String(infoUsuario.group_id));
       }
 
@@ -76,8 +76,8 @@ export default function LoginPage() {
         router.push("/admingroup/dashboard");
       } 
       else {
-        router.push("/"); 
-      } // <--- Se agregó esta llave que cerraba el else
+        router.push("/dashboard"); 
+      }
 
     } catch (error: any) {
       toast({ 
@@ -179,4 +179,4 @@ export default function LoginPage() {
       </Box>
     </Flex>
   );
-} 
+}

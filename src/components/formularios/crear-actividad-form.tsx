@@ -23,20 +23,19 @@ export default function CrearActividadForm() {
   const toast = useToast();
   const [loading, setLoading] = useState(false);
 
-  
+  // Se adaptan las claves al español para que coincidan con la API
   const [form, setForm] = useState({
-    name: "",           
+    nombre: "",           
     location: "",       
-    date: "",           
-    description: "",
-    financing: "",      
+    fecha: "",           
+    descripcion: "",
+    financiamiento: "",      
     financing_org: ""   
   });
 
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
 
-  // Tipado para TypeScript
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -53,23 +52,32 @@ export default function CrearActividadForm() {
     setLoading(true);
     const formData = new FormData();
     
-    
     Object.keys(form).forEach(key => {
       const value = form[key as keyof typeof form];
-      // Si el campo está vacío, NO lo agregamos al FormData.
-      // Así, el backend lo recibe como undefined/null y la BD lo guarda como NULL.
       if (value !== "" && value !== null) {
         formData.append(key, value);
       }
     });
 
+    const storedGroupId = localStorage.getItem("group_id");
+    
+    if (storedGroupId && storedGroupId !== "string" && !isNaN(Number(storedGroupId))) {
+      formData.append("group_id", String(parseInt(storedGroupId, 10)));
+    } else {
+      formData.append("group_id", "1"); 
+    }
+
     if (imageFile) formData.append("image", imageFile);
 
     try {
-      await apiRequest('activities', { 
+      const response = await apiRequest('activities', { 
         method: 'POST',
         body: formData
       });
+
+      if (response && (response.error || response.status === 500 || response.status === 400)) {
+        throw new Error(response.message || "El servidor backend rechazó la petición.");
+      }
 
       toast({
         title: "Actividad creada",
@@ -93,8 +101,8 @@ export default function CrearActividadForm() {
         <FormControl isRequired>
           <FormLabel>Título de la Actividad</FormLabel>
           <Input
-            name="name"
-            value={form.name}
+            name="nombre"
+            value={form.nombre}
             onChange={handleChange}
             placeholder="Simulación ONU Junior"
           />
@@ -131,22 +139,22 @@ export default function CrearActividadForm() {
           <FormLabel>Fecha</FormLabel>
           <Input
             type="date"
-            name="date"
-            value={form.date}
+            name="fecha"
+            value={form.fecha}
             onChange={handleChange}
           />
         </FormControl>
 
         <FormControl isRequired>
           <FormLabel>Financiamiento</FormLabel>
-          <Select name="financing" value={form.financing} onChange={handleChange}>
+          <Select name="financiamiento" value={form.financiamiento} onChange={handleChange}>
             <option value="">Seleccione...</option>
             <option value="SI">SI</option>
             <option value="NO">NO</option>
         </Select>
         </FormControl>
 
-        {form.financing === "SI" && (
+        {form.financiamiento === "SI" && (
             <FormControl isRequired>
             <FormLabel>Organización Financiadora</FormLabel>
             <Input
@@ -161,8 +169,8 @@ export default function CrearActividadForm() {
         <FormControl isRequired>
           <FormLabel>Descripción</FormLabel>
           <Textarea
-            name="description"
-            value={form.description}
+            name="descripcion"
+            value={form.descripcion}
             onChange={handleChange}
             placeholder="Describe la actividad..."
             rows={5}
