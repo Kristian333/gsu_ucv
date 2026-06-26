@@ -487,14 +487,15 @@ export default function CrearGrupoForm() {
           >
             <VStack align="stretch">
               {[
-                "SALUD",
                 "ACCIÓN SOCIAL",
-                "CULTURAL",
-                "DEPORTIVA",
-                "AMBIENTE / CONSERVACIÓN",
-                "INVESTIGACIÓN",
+                "ACOMPAÑAMIENTO Y ACCESORIA ESTUDIANTIL",
+                "AMBIENTAL",
+                "COMUNICACIÓN Y RETÓRICA",
+                "DIFUSIÓN DEL CONOCIMIENTO",
+                "FORMACIÓN",
+                "INNOVACIÓN",
                 "RECREACIÓN",
-                "DEBATE",
+                "SALUD Y BIENESTAR",
                 "OTROS",
               ].map((a) => (
                 <Checkbox key={a} value={a}>

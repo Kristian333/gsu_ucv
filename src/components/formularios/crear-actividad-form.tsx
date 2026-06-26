@@ -9,6 +9,8 @@ import {
   FormLabel,
   Input,
   Select,
+  Checkbox,
+  CheckboxGroup,
   Textarea,
   Image,
   Heading,
@@ -26,12 +28,13 @@ export default function CrearActividadForm() {
 
   // Se adaptan las claves al español para que coincidan con la API
   const [form, setForm] = useState({
-    nombre: "",           
-    location: "",       
-    fecha: "",           
+    nombre: "",
+    location: "",
+    fecha: "",
     descripcion: "",
-    financiamiento: "",      
-    financing_org: ""   
+    area_conocimiento: [] as string[],
+    financiamiento: "",
+    financing_org: ""
   });
 
   // Estado local recuperado para dividir la ubicación (Tu versión anterior)
@@ -217,6 +220,32 @@ export default function CrearActividadForm() {
             value={form.fecha}
             onChange={handleChange}
           />
+        </FormControl>
+
+        <FormControl isRequired>
+          <FormLabel>ÁREA DE CONOCIMIENTO </FormLabel>
+          <CheckboxGroup
+            value={form.area_conocimiento}
+            onChange={(val) => setForm({ ...form, area_conocimiento: val as string[] })}
+          >
+            <VStack align="stretch">
+              {[
+                "SALUD",
+                "ACCIÓN SOCIAL",
+                "CULTURAL",
+                "DEPORTIVA",
+                "AMBIENTE / CONSERVACIÓN",
+                "INVESTIGACIÓN",
+                "RECREACIÓN",
+                "DEBATE",
+                "OTROS",
+              ].map((a) => (
+                <Checkbox key={a} value={a}>
+                  {a}
+                </Checkbox>
+              ))}
+            </VStack>
+          </CheckboxGroup>
         </FormControl>
 
         <FormControl isRequired>
