@@ -3,7 +3,7 @@ export const mockGroupItems = [
   {
     id: "1",
     title: "LAMUN",
-    image: "/LAMUN.webp",
+    image: "groups/logos/LAMUN.webp",
     objetive: "Descripción 1 con un texto más largo para probar el límite de caracteres.",
     fundation: "2009-02-01",
     phone: "55555555",
@@ -63,7 +63,7 @@ export const mockGroupItems = [
   {
     id: "2",
     title: "SPECTRUM",
-    image: "/SPECTRUM.jpg",
+    image: "groups/logos/SPECTRUM.jpg",
     objetive: "Descripción 2 con más contenido para ver cómo se corta.",
     fundation: "2025-03-10",
     phone: "55555555",
@@ -84,7 +84,7 @@ export const mockGroupItems = [
   {
     id: "3",
     title: "JAM UCV",
-    image: "/JAM UCV.jpg",
+    image: "groups/logos/JAM UCV.jpg",
     objetive: "Descripción 3 ejemplo.",
     fundation: "2025-04-22",
     phone: "55555555",
@@ -96,7 +96,7 @@ export const mockGroupItems = [
   {
     id: "4",
     title: "Cecobio",
-    image: "/CECOBIO.jpg",
+    image: "groups/logos/CECOBIO.jpg",
     objetive: "Descripción 4 es un ejemplo de una descripcion extremadamente larga de la cual no va a hacer mas perdon para verla con amor y pasion de gabilanes. Asi mismo no ilvides darle like, subscribirte y seguir el paso a paso para ser un excitoso humano",
     fundation: "2025-04-22",
     phone: "55555555",
@@ -108,7 +108,7 @@ export const mockGroupItems = [
   {
     id: "5",
     title: "CUÁSAR",
-    image: "/CUASAR.jpg",
+    image: "groups/logos/CUASAR.jpg",
     objetive: "Descripción 3 ejemplo.",
     fundation: "2025-04-22",
     phone: "55555555",
@@ -120,7 +120,7 @@ export const mockGroupItems = [
   {
     id: "6",
     title: "CORAL FACULTAD DE CIENCIAS",
-    image: "/CORAL.jpg",
+    image: "groups/logos/CORAL.jpg",
     objetive: "Descripción 3 ejemplo.",
     fundation: "2025-04-22",
     phone: "55555555",
@@ -132,7 +132,7 @@ export const mockGroupItems = [
   {
     id: "7",
     title: "GRUPO E.R.A.",
-    image: "/E.R.A..jpg",
+    image: "groups/logos/E.R.A..jpg",
     objetive: "Descripción 3 ejemplo.",
     fundation: "2025-04-22",
     phone: "55555555",
@@ -144,7 +144,7 @@ export const mockGroupItems = [
   {
     id: "8",
     title: "Asociación Geoquímica Ciencias UCV",
-    image: "/AGQ1.jpg",
+    image: "groups/logos/AGQ1.jpg",
     objetive: "Descripción 2 con más contenido para ver cómo se corta.",
     fundation: "2025-03-10",
     phone: "55555555",
@@ -156,7 +156,7 @@ export const mockGroupItems = [
   {
     id: "9",
     title: "BIOSub",
-    image: "/biosub.jpg",
+    image: "groups/logos/biosub.jpg",
     objetive: "Descripción 3 ejemplo.",
     fundation: "2025-04-22",
     phone: "55555555",
@@ -168,7 +168,7 @@ export const mockGroupItems = [
   {
     id: "10",
     title: "BAILA CIENCIAS",
-    image: "/BAILACIENCIAS.jpg",
+    image: "groups/logos/BAILACIENCIAS.jpg",
     objetive: "Descripción 4 es un ejemplo de una descripcion extremadamente larga de la cual no va a hacer mas perdon para verla con amor y pasion de gabilanes. Asi mismo no ilvides darle like, subscribirte y seguir el paso a paso para ser un excitoso humano",
     fundation: "2025-04-22",
     phone: "55555555",
@@ -249,7 +249,7 @@ export const mockGroupItems = [
   {
     id: "11",
     title: "UCV TANGO",
-    image: "/UCVTANGO.jpg",
+    image: "groups/logos/UCVTANGO.jpg",
     objetive: "Descripción 3 ejemplo.",
     fundation: "2025-04-22",
     phone: "55555555",
@@ -261,7 +261,7 @@ export const mockGroupItems = [
   {
     id: "12",
     title: "PROCIENCIAS",
-    image: "/PROCIENCIAS.jpg",
+    image: "groups/logos/PROCIENCIAS.jpg",
     objetive: "Descripción 3 ejemplo.",
     fundation: "2025-04-22",
     phone: "55555555",
@@ -273,7 +273,7 @@ export const mockGroupItems = [
   {
     id: "13",
     title: "CINECLUB CIENCIAS",
-    image: "/CINECLUBCIENCIAS.jpg",
+    image: "groups/logos/CINECLUBCIENCIAS.jpg",
     objetive: "Descripción 3 ejemplo.",
     fundation: "2025-04-22",
     phone: "55555555",
@@ -285,7 +285,7 @@ export const mockGroupItems = [
   {
     id: "14",
     title: "TEATRO Y CULTURA BÚHO DE CIENCIAS",
-    image: "/tcb.png",
+    image: "groups/logos/tcb.png",
     objetive: "Descripción 3 ejemplo.",
     fundation: "2025-04-22",
     phone: "55555555",
@@ -297,7 +297,7 @@ export const mockGroupItems = [
   {
     id: "15",
     title: "BARRIO MATEMÁTICO",
-    image: "/barrio-mat.png",
+    image: "groups/logos/barrio-mat.png",
     objetive: "Descripción 3 ejemplo.",
     fundation: "2025-04-22",
     phone: "55555555",
@@ -309,7 +309,7 @@ export const mockGroupItems = [
   {
     id: "16",
     title: "PHYSIS",
-    image: "/PHYSYS.jpg",
+    image: "groups/logos/PHYSYS.jpg",
     objetive: "Descripción 3 ejemplo.",
     fundation: "2025-04-22",
     phone: "55555555",
@@ -321,7 +321,7 @@ export const mockGroupItems = [
   {
     id: "17",
     title: "CONCIENCIA GAITERA",
-    image: "/conciencia-gaitera.png",
+    image: "groups/logos/conciencia-gaitera.png",
     objetive: "Descripción 3 ejemplo.",
     fundation: "2025-04-22",
     phone: "55555555",
@@ -333,7 +333,7 @@ export const mockGroupItems = [
   {
     id: "18",
     title: "CIENCIAS ES RITMO",
-    image: "/logo-ciencias-es-ritmo.jpg",
+    image: "groups/logos/logo-ciencias-es-ritmo.jpg",
     objetive: "Descripción 3 ejemplo.",
     fundation: "2025-04-22",
     phone: "55555555",

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, ChangeEvent } from "react";
+import React, { useState, useEffect, ChangeEvent } from "react";
 import {
   Box,
   Button,
@@ -13,7 +13,8 @@ import {
   Image,
   Heading,
   VStack,
-  useToast
+  useToast,
+  SimpleGrid,
 } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
 import { apiRequest } from "@/components/formularios/api";
@@ -33,11 +34,34 @@ export default function CrearActividadForm() {
     financing_org: ""   
   });
 
+  // Estado local recuperado para dividir la ubicación (Tu versión anterior)
+  const [locationParts, setLocationParts] = useState({
+    pais: "",
+    estado: "",
+    municipio: "",
+    detalle: ""
+  });
+
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  
+  // Efecto recuperado: Junta las partes y actualiza la clave 'location' que espera el backend
+  useEffect(() => {
+    const { pais, estado, municipio, detalle } = locationParts;
+    // Evitamos comas sueltas si los campos están vacíos al inicio
+    if (pais || estado || municipio || detalle) {
+      const fullAddress = `${pais}, ${estado}, ${municipio}, ${detalle}`;
+      setForm(prev => ({ ...prev, location: fullAddress }));
+    }
+  }, [locationParts]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  // Manejador recuperado para las partes de la ubicación
+  const handleLocationChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setLocationParts({ ...locationParts, [e.target.name]: e.target.value });
   };
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -104,7 +128,7 @@ export default function CrearActividadForm() {
             name="nombre"
             value={form.nombre}
             onChange={handleChange}
-            placeholder="Simulación ONU Junior"
+            placeholder="Nombre de Actividad"
           />
         </FormControl>
 
@@ -125,15 +149,65 @@ export default function CrearActividadForm() {
           <Input type="file" accept="image/*" onChange={handleImageChange} />
         </FormControl>
 
-        <FormControl isRequired>
-          <FormLabel>Lugar</FormLabel>
-          <Input
-            name="location"
-            value={form.location}
-            onChange={handleChange}
-            placeholder="Ej: Aula Magna"
-          />
-        </FormControl>
+        {/* Bloque de ubicación recuperado y estilizado con tu SimpleGrid */}
+        <Box border="1px" borderColor="gray.100" p={4} borderRadius="md" bg="gray.50">
+          <Heading size="sm" mb={4}>Ubicación de la Actividad*</Heading>
+            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+            <FormControl isRequired>
+              <FormLabel fontSize="sm">País</FormLabel>
+              <Input 
+                name="pais" 
+                bg="white"
+                value={locationParts.pais} 
+                onChange={handleLocationChange} 
+                placeholder="Ej: Venezuela" 
+              />
+            </FormControl>
+            
+            <FormControl isRequired>
+              <FormLabel fontSize="sm">Estado</FormLabel>
+              <Input 
+                name="estado" 
+                bg="white"
+                value={locationParts.estado} 
+                onChange={handleLocationChange} 
+                placeholder="Ej: Carabobo" 
+              />
+            </FormControl>
+
+            <FormControl isRequired>
+              <FormLabel fontSize="sm">Municipio</FormLabel>
+              <Input 
+                name="municipio" 
+                bg="white"
+                value={locationParts.municipio} 
+                onChange={handleLocationChange} 
+                placeholder="Ej: Valencia" 
+              />
+            </FormControl>
+
+            <FormControl isRequired>
+              <FormLabel fontSize="sm">Dirección Específica</FormLabel>
+              <Input 
+                name="detalle" 
+                bg="white"
+                value={locationParts.detalle} 
+                onChange={handleLocationChange} 
+                placeholder="Ej: Av. Bolívar, Edif. X" 
+              />
+            </FormControl>
+          </SimpleGrid>
+        </Box>
+
+        {/* Línea divisoria decorativa que tenías en tu commit anterior */}
+        <Box 
+            width="100%" 
+            height="1px" 
+            bg="gray.200" 
+            mx="auto" 
+            my={2} 
+            borderRadius="full" 
+        />
 
         <FormControl isRequired>
           <FormLabel>Fecha</FormLabel>

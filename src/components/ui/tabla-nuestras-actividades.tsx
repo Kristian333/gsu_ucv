@@ -38,13 +38,13 @@ export default function TablaNuestrasActividades({
 
   function parseLocalDate(dateStr?: string | null): Date | null {
     if (!dateStr) return null;
-    const parts = dateStr.split("-");
+    const parts = dateStr.split("/");
     if (parts.length < 3) return null;
 
     return new Date(
-      Number(parts[0]),
+      Number(parts[2]),
       Number(parts[1]) - 1,
-      Number(parts[2])
+      Number(parts[0]),
     );
   }
 
@@ -72,7 +72,7 @@ export default function TablaNuestrasActividades({
     .filter((a) => a.group?.trim().toLowerCase() === "lamun");
 
   const format = (d?: Date | null) =>
-    d ? d.toLocaleDateString("es-ES") : "-";
+    d ? d.toLocaleDateString("es-ES") : "/";
 
   return (
     <Box bg="white" p={6} rounded="md" shadow="sm">

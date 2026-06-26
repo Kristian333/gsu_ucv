@@ -74,7 +74,7 @@ interface ClientContentProps {
 export function ClientContent({ groups, activities }: ClientContentProps) {
     return (
         <Box width="100%" py={0} px={0}>
-            <Box maxW="container.xl" mx="auto" textAlign="center"  as="section" id="our-groups" mt={6} mb={20} px={6}>
+            <Box maxW="container.xl" mx="auto" textAlign="center" as="section" id="our-groups" mt={6} mb={20} px={6}>
                 <VStack spacing={4} py={8} px={6} textAlign="center">
                     <Heading size="xl">Conoce Nuestros Grupos de Extensión</Heading>
                     {/*<Paragraph fontSize="lg">Aprende nuevas habilidades con el respaldo de la universidad.</Paragraph>*/}
@@ -82,6 +82,7 @@ export function ClientContent({ groups, activities }: ClientContentProps) {
                 <SimpleGrid columns={{ base: 1, md: 3 }} spacing={10}>
                     {groups.map(group => (
                         <GroupCard
+                            key={group.id} 
                             id={group.id}
                             title={group.title}
                             image={group.image}
@@ -95,12 +96,29 @@ export function ClientContent({ groups, activities }: ClientContentProps) {
                 </Stack>
             </Box>
 
-            <Carousel activities={activities} />
+            <Box 
+                width="60%" 
+                height="4px" 
+                bg="primary" 
+                mx="auto" 
+                my={0} 
+                borderRadius="full" 
+            />
+            <Box bg="linear-gradient(to bottom, white 30%, var(--chakra-colors-primary) 100%)">
 
+                <VStack spacing={4} py={12} px={6} textAlign="center">
+                    
+                    <Heading size="xl" color="gray.800">Conoce las Actividades de Extensión</Heading>
+                    {/*<Paragraph fontSize="lg">Aprende nuevas habilidades con el respaldo de la universidad.</Paragraph>*/}
+                </VStack>
+
+                <Carousel activities={activities} />
+            
+            </Box>
+            
             <Box 
                 as="section" 
                 id="join-us" 
-                mt={12} 
                 width="100%" 
                 h="600px" 
                 display="flex"
@@ -110,35 +128,35 @@ export function ClientContent({ groups, activities }: ClientContentProps) {
                 textAlign="center"
                 position="relative"
                 overflow="hidden"
-                >
-                    <Box
-                        position="absolute"
-                        top={0}
-                        left={0}
-                        w="100%"
-                        h="100%"
-                        backgroundImage="url('/image-1.png')"
-                        backgroundSize="cover"
-                        backgroundPosition="center"
-                        filter="blur(5px)"
-                        zIndex={0}
-                    />
-                    <Box
-                        position="absolute"
-                        top={0}
-                        left={0}
-                        w="100%"
-                        h="100%"
-                        bg="radial-gradient(circle, rgba(1,105,91,0) 0%, rgba(1,105,91,1) 100%)"
-                        zIndex={1}
-                    />
-                    <VStack zIndex={2} spacing={4} py={8} px={6} color={"white"}>
-                        <Heading size="4xl">¿Sabes como registrar un Grupo de Extensión?</Heading>
-                        <NextLink href="/registro" passHref>
-                            <SecondaryButton fontSize="4xl" px={8} py={10} size="md" mt={10}>¡Unete!</SecondaryButton>
-                        </NextLink>
-                    </VStack>
-            </Box>
+            >
+                <Box
+                    position="absolute"
+                    top={0}
+                    left={0}
+                    w="100%"
+                    h="100%"
+                    backgroundImage="url('/image-1.png')"
+                    backgroundSize="cover"
+                    backgroundPosition="center"
+                    filter="blur(5px) brightness(0.7)"
+                    zIndex={0}
+                />
+                <Box
+                    position="absolute"
+                    top={0}
+                    left={0}
+                    w="100%"
+                    h="100%"
+                    bg="radial-gradient(circle, rgba(1,143,124,0.2) 0%, var(--chakra-colors-primary) 100%)"
+                    zIndex={1}
+                />
+                <VStack zIndex={2} spacing={4} py={8} px={6} color={"white"}>
+                    <Heading size="4xl">¿Sabes cómo registrar un Grupo de Extensión?</Heading>
+                    <NextLink href="/registro" passHref>
+                        <SecondaryButton fontSize="4xl" px={10} py={10} size="md" mt={10}>¡Únete!</SecondaryButton>
+                    </NextLink>
+                </VStack>
+            </Box> 
         </Box>
     );
 }
