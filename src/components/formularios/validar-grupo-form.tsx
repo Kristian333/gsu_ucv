@@ -93,7 +93,7 @@ export default function ValidarGrupoForm({ groups }: { groups: GrupoItem[] }) {
     "Ciencias Jurídicas y Políticas",
     "Medicina",
     "Odontología",
-    "Veterinaria",
+    "Ciencias Veterinarias",
   ];
 
   const ESCUELAS_POR_FACULTAD: Record<string, string[]> = {
@@ -153,7 +153,7 @@ export default function ValidarGrupoForm({ groups }: { groups: GrupoItem[] }) {
       "Salud Pública"
     ],
     Odontología: ["Odontología"],
-    Veterinaria: ["Medicina Veterinaria"],
+    "Ciencias Veterinarias": ["Medicina Veterinaria"],
   };
 
   // Buscar grupo cuyo title = nombre de usuario

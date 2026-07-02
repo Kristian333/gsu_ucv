@@ -1,8 +1,24 @@
 // /app/admin/usuarios/page.tsx
 import { Box, Heading, Text } from '@chakra-ui/react';
 import { UsersTable } from '@/components/ui/users-table';
+import { apiServerRequest } from "@/utils/apiServer";
+
+async function getInitialUsers() {
+  try {
+    // Usamos el script de servidor optimizado sin vulnerar el localStorage
+    const data = await apiServerRequest("users?per_page=100", {
+      cache: "no-store" // Datos siempre frescos para paneles administrativos
+    });
+    return data?.usuarios || [];
+  } catch (error) {
+    console.error("ADMIN USERS SERVER - Error precargando usuarios:", error);
+    return []; // Fallback seguro
+  }
+}
 
 export default async function UsuariosPage() {
+  const initialUsers = await getInitialUsers();
+
   return (
     <Box maxW="container.xl" mx="auto" py={10} px={6}>
       <Heading as="h1" size="xl" mb={4}>Gestión de Usuarios</Heading>
@@ -10,7 +26,7 @@ export default async function UsuariosPage() {
         Administra los usuarios registrados y sus permisos en la plataforma.
       </Text>
       
-      <UsersTable />
+      <UsersTable initialUsers={initialUsers} />
     </Box>
   );
 }

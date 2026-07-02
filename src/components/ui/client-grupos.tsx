@@ -3,7 +3,7 @@
 
 import { Box, SimpleGrid, Card, CardBody, Stack, Image, Text } from "@chakra-ui/react";
 import NextLink from 'next/link';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Heading, Paragraph } from "@/components/ui/tipografia";
 import { Pagination } from "@/components/ui/pagination";
 import { useRouter } from 'next/navigation';
@@ -21,6 +21,7 @@ interface ClientGroupsProps {
     totalPages: number;
     currentSearch?: string;
     currentFaculty?: string;
+    limit: number;
 }
 
 const GroupCard = ({ title, faculty, image }: Omit<GroupProps, 'id'>) => {
@@ -69,20 +70,37 @@ const GroupCard = ({ title, faculty, image }: Omit<GroupProps, 'id'>) => {
     );
 };
 
-export function ClientGroups({ groups, currentPage, totalPages, currentSearch = "", currentFaculty = "" }: ClientGroupsProps) {
+export function ClientGroups({ groups, currentPage, currentSearch = "", currentFaculty = "", limit }: ClientGroupsProps) {
     
-    //Estados del buscador y filtro
     const router = useRouter();
-    const [search, setSearch] = React.useState("");
-    const [facultyFilter, setFacultyFilter] = React.useState("");
+    const [search, setSearch] = React.useState(currentSearch);
+    const [facultyFilter, setFacultyFilter] = React.useState(currentFaculty);
     const [filterMenuOpen, setFilterMenuOpen] = React.useState(false);
     
-    const faculties = ["Agronomía", "Arquitectura y Urbanismo", "Ciencias", "Ciencias Económicas y Sociales", "Farmacia", "Humanidades y Educación", "Ingeniería", "Ciencias Jurídicas y Políticas", "Medicina", "Odontología", "Veterinaria", "DEU"];
+    const faculties = ["Agronomía", "Arquitectura y Urbanismo", "Ciencias", "Ciencias Económicas y Sociales", "Farmacia", "Humanidades y Educación", "Ingeniería", "Ciencias Jurídicas y Políticas", "Medicina", "Odontología", "Ciencias Veterinarias", "DEU"];
 
-    // Ordenar alfabeticamente por nombre
-    const sortedGroups = [...groups].sort((a, b) => a.title.localeCompare(b.title));
+    // Nota de Contingencia: El backend no filtra todavía por texto, así que hacemos una búsqueda reactiva local sobre el lote de la página actual
+    const processedGroups = useMemo(() => {
+        let resultado = groups.filter(g =>
+            g.title.toLowerCase().includes(search.toLowerCase())
+        );
 
-    // Actualizar URL al cambiar search o faculty
+        if (facultyFilter) {
+            resultado = resultado.filter(g => g.faculty.toLowerCase().trim() === facultyFilter.toLowerCase().trim());
+        }
+
+        // Orden alfabético por cada página
+        return [...resultado].sort((a, b) => a.title.localeCompare(b.title));
+    }, [groups, search, facultyFilter]);
+
+    // Recalcular total de páginas virtuales si hay filtros en el cliente
+    const totalPagesVirtual = useMemo(() => {
+        if (groups.length < limit) {
+            return currentPage;
+        }
+        return currentPage + 1;
+  }, [groups, currentPage, limit]);
+
     const handleSearchChange = (value: string) => {
         setSearch(value);
         router.push(`/grupos?page=1&search=${encodeURIComponent(value)}&faculty=${encodeURIComponent(facultyFilter)}`);
@@ -168,16 +186,16 @@ export function ClientGroups({ groups, currentPage, totalPages, currentSearch = 
             </Box>
             
             {/* Mensaje cuando no hay grupos */}
-            {sortedGroups.length === 0 && (
+            {processedGroups.length === 0 && (
                 <Box textAlign="center" py={10}>
-                <Text fontSize="xl">No se encontraron grupos.</Text>
+                <Text fontSize="xl">No se encontraron grupos registrados.</Text>
                 </Box>
             )}
 
             {/* Grid con 4 columnas */}
-            {sortedGroups.length > 0 && (
+            {processedGroups.length > 0 && (
                 <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={10} textAlign="center">
-                    {sortedGroups.map(group => (
+                    {processedGroups.map(group => (
                         <NextLink href={`/grupo/${group.id}`} passHref key={group.id}>
                             <GroupCard
                                 title={group.title}
@@ -190,8 +208,8 @@ export function ClientGroups({ groups, currentPage, totalPages, currentSearch = 
             )}
             
             {/* Paginación */}
-            {sortedGroups.length > 0 && (
-            <Pagination currentPage={currentPage} totalPages={totalPages} />
+            {processedGroups.length > 0 && (
+            <Pagination currentPage={currentPage} totalPages={totalPagesVirtual} />
              )}
         </Box>
     );

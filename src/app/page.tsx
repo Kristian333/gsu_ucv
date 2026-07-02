@@ -1,26 +1,46 @@
-// Este es un Server Component por defecto
+// /app/page.tsx
 import React from 'react';
 import { Box } from "@chakra-ui/react";
 import dynamic from "next/dynamic";
 import { Heading, Paragraph } from "@/components/ui/tipografia";
 import { ClientContent } from '../components/ui/client-components';
-import { mockGroupItems } from "@/data/gruposMock";
 import { mockActivityItems } from "@/data/actividadesMock";
+import { apiServerRequest } from "@/utils/apiServer"; 
 
-// Esta función simula una llamada a la API en el servidor
-async function getGroups() {
-    // Aquí es donde harías tu llamada a la API real, por ejemplo:
-    // const res = await fetch('https://tu-api.com/groups');
-    // const groups = await res.json();
-    return mockGroupItems;
+interface GroupBackend {
+    id: any;
+    nombre?: string;
+    name?: string;
+    image?: string;
+    logo_url?: string;
+    logo?: string;
+}
+
+async function getGroups(): Promise<GroupBackend[]> {
+    try {
+        const responseData = await apiServerRequest('groups?per_page=100', {
+            next: { revalidate: 60 } 
+        });
+
+        return responseData?.grupos || responseData?.Groups || [];
+    } catch (error) {
+        console.error("HOME SERVER - Error trayendo grupos con apiServerRequest:", error);
+        return [];
+    }
 }
 
 export default async function HomePage() {
-    const groups = await getGroups();
-    const activities = mockActivityItems;
+    const rawGroups = await getGroups();
+    const activities = mockActivityItems; 
+    
+    const mappedGroups = rawGroups.map(g => ({
+        id: String(g.id),
+        title: g.nombre || g.name || "Sin nombre asignado",
+        image: g.image || g.logo_url || g.logo || null
+    }));
     
     // Mezclar y tomar solo 3
-    const shuffledGroups = groups.sort(() => Math.random() - 0.5).slice(0, 3);
+    const shuffledGroups = mappedGroups.sort(() => Math.random() - 0.5).slice(0, 3);
 
     return (
         <Box minH="100vh">

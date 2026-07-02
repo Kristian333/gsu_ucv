@@ -1,38 +1,32 @@
 // /app/grupos/page.tsx
 import React from 'react';
-import { Box, Text } from '@chakra-ui/react';
 import { ClientGroups } from '@/components/ui/client-grupos';
-import { mockGroupItems } from "@/data/gruposMock";
+import { apiServerRequest } from "@/utils/apiServer";
 
-interface GetGroupsParams {
-  page: number;
-  limit: number;
-  search?: string;
-  faculty?: string;
+interface GroupBackend {
+    id: any;
+    nombre?: string;
+    name?: string;
+    facultad?: string;
+    faculty?: string;
+    image?: string;
+    logo_url?: string;
+    logo?: string;
 }
 
 // Esta función ahora acepta los parámetros de paginación
-async function getGroups({ page, limit, search = "", faculty = "" }: GetGroupsParams) {
-    // Filtrar primero
-    let filtered = mockGroupItems.filter(g =>
-        g.title.toLowerCase().includes(search.toLowerCase())
-    );
+async function getGroupsFromServer(page: number, limit: number) {
+    try {
+        // Petición optimizada al backend real de Go
+        const responseData = await apiServerRequest(`groups?page=${page}&per_page=${limit}`, {
+            next: { revalidate: 30 } // Cache inteligente pública por 30 segundos
+        });
 
-    if (faculty) {
-        filtered = filtered.filter(g => g.faculty === faculty);
+        return responseData?.grupos || responseData?.Groups || [];
+    } catch (error) {
+        console.error("PUBLIC GROUPS SERVER - Error cargando grupos:", error);
+        return [];
     }
-
-    // ORDENAR ALFABÉTICAMENTE ANTES DE PAGINAR
-    filtered = filtered.sort((a, b) => a.title.localeCompare(b.title));
-
-    // Paginación 
-    const totalGroups = filtered.length;
-    const totalPages = Math.ceil(totalGroups / limit);
-    const start = (page - 1) * limit;
-    const end = start + limit;
-    const groups = filtered.slice(start, end);
-
-    return { groups, totalPages };
 }
 
 interface GruposPageProps {
@@ -41,13 +35,31 @@ interface GruposPageProps {
 
 export default async function GruposPage({ searchParams }: GruposPageProps) {
     const page = Number(searchParams.page) || 1;
-    const limit = 12; // Cuantos grupos por página
+    const limit = 12; // Grupos por página (4 columnas)
     const search = searchParams.search || "";
     const faculty = searchParams.faculty || "";
 
-    const { groups, totalPages } = await getGroups({ page, limit, search, faculty });
+    const rawGroups = await getGroupsFromServer(page, limit);
+
+    // Mapeamos los nombres del struct de Go de manera segura a la interfaz original
+    const mappedGroups = rawGroups.map((g: GroupBackend) => ({
+        id: String(g.id),
+        title: g.nombre || g.name || "Sin nombre asignado",
+        faculty: g.facultad || g.faculty || "No asignada",
+        image: g.image || g.logo_url || g.logo || null
+    }));
+
+    // Calculamos virtualmente el total de páginas ya que el backend no lo envía
+    const totalPagesVirtual = rawGroups.length < limit ? page : page + 1;
 
     return (
-        <ClientGroups groups={groups} currentPage={page} totalPages={totalPages} currentSearch={search} currentFaculty={faculty} />
+        <ClientGroups 
+            groups={mappedGroups} 
+            currentPage={page} 
+            totalPages={totalPagesVirtual} 
+            currentSearch={search} 
+            currentFaculty={faculty} 
+            limit={limit}
+        />
     );
 }

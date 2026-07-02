@@ -170,7 +170,7 @@ export default function LoginPage() {
 
             <Text color="gray.500" fontSize="sm">
               ¿No tienes cuenta?{" "}
-              <Link color="blue.500" fontWeight="bold">
+              <Link  href="/registro" color="blue.500" fontWeight="bold">
                 Crea tu perfil ahora
               </Link>
             </Text>

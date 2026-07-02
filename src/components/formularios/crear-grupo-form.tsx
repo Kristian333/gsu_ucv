@@ -126,13 +126,13 @@ export default function CrearGrupoForm() {
     "Arquitectura y Urbanismo",
     "Ciencias",
     "Ciencias Económicas y Sociales",
+    "Ciencias Jurídicas y Políticas",
+    "Ciencias Veterinarias",
     "Farmacia",
     "Humanidades y Educación",
     "Ingeniería",
-    "Ciencias Jurídicas y Políticas",
     "Medicina",
     "Odontología",
-    "Veterinaria",
   ];
 
   const ESCUELAS_POR_FACULTAD: Record<string, string[]> = {
@@ -192,7 +192,7 @@ export default function CrearGrupoForm() {
       "Salud Pública"
     ],
     Odontología: ["Odontología"],
-    Veterinaria: ["Medicina Veterinaria"],
+    "Ciencias Veterinarias": ["Medicina Veterinaria"],
   };
 
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -427,7 +427,7 @@ export default function CrearGrupoForm() {
                 "Ciencias Jurídicas y Políticas",
                 "Medicina",
                 "Odontología",
-                "Veterinaria",
+                "Ciencias Veterinarias",
                 ].map((f) => (
                 <option key={f} value={f}>
                     {f}
@@ -455,7 +455,7 @@ export default function CrearGrupoForm() {
                 "Ciencias Jurídicas y Políticas",
                 "Medicina",
                 "Odontología",
-                "Veterinaria",
+                "Ciencias Veterinarias",
               ].map((a) => (
                 <Checkbox key={a} value={a}>
                   {a}

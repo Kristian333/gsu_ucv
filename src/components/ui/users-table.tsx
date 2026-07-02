@@ -15,8 +15,6 @@ import {
   Stack,
   Radio,
   Button,
-  Flex,
-  Spinner,
   useDisclosure,
   AlertDialog,
   AlertDialogOverlay,
@@ -29,16 +27,18 @@ import {
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from "@/app/context/auth-context";
-import { apiRequest } from "@/components/formularios/api";
 
 interface UserBackend {
   id: string;
   nombres: string;
   apellidos: string;
   email: string;
-  // Campos previstos para cuando el Backend los integre:
   roles?: string[]; 
   domain_type?: string;
+}
+
+interface UsersTableProps {
+  initialUsers: UserBackend[];
 }
 
 const getRoleColorScheme = (rol: string) => {
@@ -55,21 +55,20 @@ const getRoleColorScheme = (rol: string) => {
 
 const traducirRolParaModal = (rol: string): string => {
   switch (rol) {
-    case 'deu_admin': return 'Administrado de la Direccion de Extencion Universitaria';
+    case 'deu_admin': return 'Administrador de la Dirección de Extensión Universitaria';
     case 'faculty_admin': return 'Coordinador de Facultad';
-    case 'group_admin': return 'Administrador de Grupo de Extension';
-    case 'group_helper': return 'Subcuenta de Grupo de Extension';
+    case 'group_admin': return 'Administrador de Grupo de Extensión';
+    case 'group_helper': return 'Subcuenta de Grupo de Extensión';
     default: return rol;
   }
 };
 
-export function UsersTable() {
-  const { user: currentUser } = useAuth();
+export function UsersTable({ initialUsers }: UsersTableProps) {
+  const { user: currentUser, loading: authLoading } = useAuth();
   const router = useRouter();
   const toast = useToast();
 
-  const [users, setUsers] = useState<UserBackend[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+const [users, setUsers] = useState<UserBackend[]>(initialUsers);
   const [filter, setFilter] = useState<string>('Todos');
 
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -83,27 +82,15 @@ export function UsersTable() {
 
   // Redirección de seguridad en el cliente si no tiene rol correspondiente
   useEffect(() => {
-    if (!loading && !esRoot && !esDeuAdmin) {
+    if (!authLoading && !esRoot && !esDeuAdmin) {
       router.push('/login?error=unauthorized');
     }
-  }, [esRoot, esDeuAdmin, loading, router]);
+  }, [esRoot, esDeuAdmin, authLoading, router]);
 
   // Carga de datos desde el backend utilizando apiRequest
   useEffect(() => {
-    async function fetchUsers() {
-      try {
-        setLoading(true);
-        // Traemos una lista amplia para paginar del lado del cliente de momento
-        const data = await apiRequest("users?per_page=100", { method: "GET" });
-        setUsers(data.usuarios || []);
-      } catch (error) {
-        console.error("Error cargando usuarios:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchUsers();
-  }, []);
+    setUsers(initialUsers);
+  }, [initialUsers]);
 
   // Definición de roles disponibles para filtrar según el perfil
   const rolesFiltrables = useMemo(() => {
@@ -120,9 +107,8 @@ export function UsersTable() {
         ? u.roles.map(r => r.toLowerCase().trim()) 
         : ['visitante']; 
 
-      const domainType = u.domain_type || 'group'; // Asumido temporalmente como 'group'
+      const domainType = u.domain_type || 'group';
 
-      // 1. Reglas de Visibilidad Base
       let esVisible = false;
       if (esRoot) {
         esVisible = rolesUsuario.some(r => 
@@ -137,7 +123,6 @@ export function UsersTable() {
 
       if (!esVisible) return false;
 
-      // 2. Filtro seleccionado por el Radio Button
       if (filter === 'Todos') return true;
       return rolesUsuario.includes(filter.toLowerCase().trim());
     });
@@ -170,15 +155,6 @@ export function UsersTable() {
       onClose();
     }
   };
-
-  if (loading) {
-    return (
-      <Flex justify="center" align="center" minH="400px" direction="column" gap={4}>
-        <Spinner size="xl" color="teal.500" thickness="4px" />
-        <Text color="gray.500">Buscando registros en el sistema...</Text>
-      </Flex>
-    );
-    }
 
   return (
     <Box>
@@ -261,7 +237,7 @@ export function UsersTable() {
         </Table>
       </TableContainer>
 
-      {/* Alerta de Confirmación de Borrado (Exclusiva Root) */}
+      {/* Alerta de Confirmación de Borrado */}
       <AlertDialog
         isOpen={isOpen}
         leastDestructiveRef={cancelRef}

@@ -92,7 +92,7 @@ export default function LetterGeneratorClient({ groups, templates, generalData, 
       "Salud Pública"
     ],
     Odontología: ["Odontología"],
-    Veterinaria: ["Medicina Veterinaria"],
+    "Ciencias Veterinarias": ["Medicina Veterinaria"],
   };
 
   // --- LÓGICA DE FECHA EN ESPAÑOL ---

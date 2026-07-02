@@ -237,16 +237,6 @@ export default function GroupClientPage({ groupId, groups, activities }: Props) 
           </>
         )}
 
-        {/* Galeria */}
-        <Box>
-          <Heading size="lg" mb={4} color="primary">
-            Galería
-          </Heading>
-
-          {/* Galeria aqui*/}
-
-        </Box>
-
       </VStack>
     </Box>
   );
