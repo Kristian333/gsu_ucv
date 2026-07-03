@@ -1,3 +1,4 @@
+// /components/layout/admingroup-navbar.tsx
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -6,19 +7,6 @@ import NextLink from "next/link";
 import { useAuth } from "@/app/context/auth-context";
 import { apiRequest } from "@/components/formularios/api";
 
-interface GroupData {
-  id: any; 
-  nombre: string;
-  descripcion: string;
-  propietario: {
-    id: any;  
-  };
-  ubicacion: string;
-  activo: boolean;
-  creado_en: string;
-  actualizado_en: string;
-}
-
 export const AdminGroupNavbar = () => {
   const { user, isHydrated } = useAuth();
   const [infoAlDia, setInfoAlDia] = useState<boolean>(false);
@@ -26,34 +14,32 @@ export const AdminGroupNavbar = () => {
   const [loading, setLoading] = useState<boolean>(true);
 
   const rolesArray = (user?.roles || []).map(r => r.toLowerCase().trim());
-  const userIdStr = user?.id || null;
-  const esGrupo = rolesArray.includes('group_admin') || rolesArray.includes('group_helper');
+  const esVisitante = rolesArray.includes("visitante");
 
   useEffect(() => {
     if (!isHydrated) return;
 
-    if (!userIdStr || !esGrupo) {
+    if (!user?.groupId) {
       setInfoAlDia(false);
-      setNombreGrupo("Sin Rol de Grupo");
+      setNombreGrupo(esVisitante ? "Aplicante de Grupo" : "Sin Grupo Asociado");
       setLoading(false);
       return;
     }
 
     async function verificarVigenciaGrupo() {
       try {
-        // Hacemos el llamado controlado
-        const data = await apiRequest("groups?per_page=100", { method: "GET" });
-        const listaGrupos: GroupData[] = data.grupos || data.Groups || [];
-
-        const miGrupo = listaGrupos.find(g => 
-          g.propietario && String(g.propietario.id).trim() === String(userIdStr).trim()
-        );
+        // 🔄 Contingencia:
+        const dataGrupos = await apiRequest("groups?per_page=100", { method: "GET" });
+        const lista = dataGrupos.grupos || dataGrupos.Groups || dataGrupos.groups || [];
+        
+        const miGrupo = lista.find((g: any) => String(g.id) === String(user?.groupId));
         
         if (miGrupo) {
           setNombreGrupo(miGrupo.nombre);
 
-          if (miGrupo.actualizado_en) {
-            const fechaActualizacion = new Date(miGrupo.actualizado_en);
+          const fechaRaw = miGrupo.actualizado_en;
+          if (fechaRaw) {
+            const fechaActualizacion = new Date(fechaRaw);
             const fechaLimite = new Date(fechaActualizacion);
             fechaLimite.setFullYear(fechaLimite.getFullYear() + 1);
 
@@ -62,9 +48,6 @@ export const AdminGroupNavbar = () => {
           } else {
             setInfoAlDia(false);
           }
-        } else {
-          setNombreGrupo("Grupo no asociado");
-          setInfoAlDia(false);
         }
       } catch (error) {
         console.error("Error validando vigencia del grupo:", error);
@@ -76,7 +59,7 @@ export const AdminGroupNavbar = () => {
     }
 
     verificarVigenciaGrupo();
-  }, [userIdStr, esGrupo, isHydrated]);
+  }, [user?.groupId, isHydrated, esVisitante]);
 
   const fullNavItems = [
     { label: "Inicio", href: "/admingroup/dashboard" },
@@ -89,6 +72,8 @@ export const AdminGroupNavbar = () => {
   const invitadoNavItems = [
     { label: "Inicio", href: "/admingroup/dashboard" },
   ];
+  
+  const navItems = (infoAlDia && !esVisitante) ? fullNavItems : invitadoNavItems;
 
   if (loading || !isHydrated) {
     return (
@@ -97,8 +82,6 @@ export const AdminGroupNavbar = () => {
       </Box>
     );
   }
-
-  const navItems = infoAlDia ? fullNavItems : invitadoNavItems;
 
   return (
     <Box

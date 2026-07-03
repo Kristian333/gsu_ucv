@@ -1,53 +1,63 @@
+// /components/ui/group-dashboard-content.tsx
 "use client";
 
 import React, { useEffect, useState } from "react";
 import { VStack, Button, Text, Heading, Divider, Box, Spinner, Center } from "@chakra-ui/react";
 import NextLink from "next/link";
 import { useAuth } from "@/app/context/auth-context";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { apiRequest } from "@/components/formularios/api";
 
-interface GroupDashboardContentProps {
-  miGrupo: any | null;
-}
-
-export function GroupDashboardContent({ miGrupo }: GroupDashboardContentProps) {
+export function GroupDashboardContent() {
   const { user, isHydrated } = useAuth();
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const [miGrupo, setMiGrupo] = useState<any | null>(null);
+  const [loadingGrupo, setLoadingGrupo] = useState<boolean>(true);
   const [infoAlDia, setInfoAlDia] = useState<boolean>(false);
 
   const rolesArray = (user?.roles || []).map(r => r.toLowerCase().trim());
-  const userIdStr = user?.id || null;
-
   const GroupDash = rolesArray.includes("group_admin") || rolesArray.includes("group_helper");
   const VisitanteDash = rolesArray.includes("visitante");
 
-  // Sincronizar el ID del usuario con la URL para disparar el renderizado del Servidor
   useEffect(() => {
-    if (!isHydrated || !userIdStr) return;
+    if (!isHydrated) return;
 
-    if (searchParams.get("userId") !== userIdStr) {
-      const params = new URLSearchParams(searchParams.toString());
-      params.set("userId", userIdStr);
-      router.replace(`${pathname}?${params.toString()}`);
+    // Si no cuenta con id de grupo (como un visitante nuevo), no hay nada que buscar en el backend
+    if (!user?.groupId) {
+      setLoadingGrupo(false);
+      return;
     }
-  }, [userIdStr, isHydrated, searchParams, pathname, router]);
 
-  // Verificar vigencia anual si el servidor consiguió el grupo
-  useEffect(() => {
-    if (miGrupo?.actualizado_en) {
-      const fechaActualizacion = new Date(miGrupo.actualizado_en);
-      const fechaLimite = new Date(fechaActualizacion);
-      fechaLimite.setFullYear(fechaLimite.getFullYear() + 1);
+    async function cargarDetalleGrupo() {
+      try {
+        // 🔄 Contingencia:
+        const dataGrupos = await apiRequest("groups?per_page=100", { method: "GET" });
+        const lista = dataGrupos.grupos || dataGrupos.Groups || dataGrupos.groups || [];
+        
+        const grupoEncontrado = lista.find((g: any) => String(g.id) === String(user?.groupId));
+        
+        if (grupoEncontrado) {
+          setMiGrupo(grupoEncontrado);
+          
+          const fechaRaw = grupoEncontrado.actualizado_en;
+          if (fechaRaw) {
+            const fechaActualizacion = new Date(fechaRaw);
+            const fechaLimite = new Date(fechaActualizacion);
+            fechaLimite.setFullYear(fechaLimite.getFullYear() + 1);
 
-      const hoy = new Date();
-      setInfoAlDia(hoy < fechaLimite);
+            const hoy = new Date();
+            setInfoAlDia(hoy < fechaLimite);
+          }
+        }
+      } catch (error) {
+        console.error("Error obteniendo detalles del grupo en dashboard:", error);
+      } finally {
+        setLoadingGrupo(false);
+      }
     }
-  }, [miGrupo]);
 
-  // Spinner limpio mientras se lee el localStorage o el servidor actualiza la query
-  if (!isHydrated || (userIdStr && !miGrupo && searchParams.get("userId") !== userIdStr)) {
+    cargarDetalleGrupo();
+  }, [user?.groupId, isHydrated]);
+
+  if (!isHydrated || loadingGrupo) {
     return (
       <Center minH="80vh">
         <VStack spacing={4}>
@@ -58,15 +68,16 @@ export function GroupDashboardContent({ miGrupo }: GroupDashboardContentProps) {
     );
   }
 
-  // Banderas visuales simplificadas basadas en datos limpios
+  const esGrupoActivo = miGrupo ? ( miGrupo.activo ?? false) : false;
+
   const mostrar = {
     crearGrupo: VisitanteDash && !miGrupo,
-    sinValidar: VisitanteDash && miGrupo && !miGrupo.activo,
-    corregir: false, // Disponible para lógica de observaciones futuras
-    validada: VisitanteDash && miGrupo && miGrupo.activo,
+    sinValidar: VisitanteDash && miGrupo && !esGrupoActivo,
+    corregir: false,
+    validada: VisitanteDash && miGrupo && esGrupoActivo,
     bienvenidaGrupo: GroupDash && infoAlDia,
     validarGrupo: GroupDash && !infoAlDia,
-    rechazada: false, // Por si se implementa una bandera de rechazo explícita
+    rechazada: false,
   };
 
   return (

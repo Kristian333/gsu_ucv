@@ -17,13 +17,16 @@ import {
   VStack,
   useToast,
   SimpleGrid,
+  Text,
 } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
 import { apiRequest } from "@/components/formularios/api";
+import { useAuth } from "@/app/context/auth-context";
 
 export default function CrearActividadForm() {
   const router = useRouter();
   const toast = useToast();
+  const { user, isHydrated } = useAuth();
   const [loading, setLoading] = useState(false);
 
   // Se adaptan las claves al español para que coincidan con la API
@@ -51,7 +54,6 @@ export default function CrearActividadForm() {
   // Efecto recuperado: Junta las partes y actualiza la clave 'location' que espera el backend
   useEffect(() => {
     const { pais, estado, municipio, detalle } = locationParts;
-    // Evitamos comas sueltas si los campos están vacíos al inicio
     if (pais || estado || municipio || detalle) {
       const fullAddress = `${pais}, ${estado}, ${municipio}, ${detalle}`;
       setForm(prev => ({ ...prev, location: fullAddress }));
@@ -76,30 +78,59 @@ export default function CrearActividadForm() {
   };
 
   const handleCreate = async () => {
+    // 🛡️ Validación estricta del Group ID usando el auth-context
+    if (!isHydrated) return;
+
+    if (!user?.groupId) {
+      toast({
+        title: "Identificación de Grupo Requerida",
+        description: "La actividad no se pudo crear, ¡no pudimos identificar tu grupo! Por favor contacta al administrador para solucionar este problema.",
+        status: "error",
+        duration: 9000,
+        isClosable: true,
+        position: "top"
+      });
+      return;
+    }
+
     setLoading(true);
     const formData = new FormData();
     
     Object.keys(form).forEach(key => {
-      const value = form[key as keyof typeof form];
-      if (value !== "" && value !== null) {
-        formData.append(key, value);
+      let value = form[key as keyof typeof form];
+
+      if (key === "financiamiento") {
+        if (form.financiamiento === "SI") {
+          value = form.financing_org || "SI";
+        }
+      }
+
+      if (key !== "financing_org" && value !== "" && value !== null) {
+        if (Array.isArray(value)) {
+          formData.append(key, JSON.stringify(value));
+        } else {
+          formData.append(key, String(value));
+        }
       }
     });
 
-    const storedGroupId = localStorage.getItem("group_id");
-    
-    if (storedGroupId && storedGroupId !== "string" && !isNaN(Number(storedGroupId))) {
-      formData.append("group_id", String(parseInt(storedGroupId, 10)));
-    } else {
-      formData.append("group_id", "1"); 
-    }
+    formData.append("group_id", String(user.groupId));
 
-    if (imageFile) formData.append("image", imageFile);
+    if (user?.id) {
+      formData.append("uploaded_by", String(user.id));
+    }       
+
+    if (imageFile) formData.append("reporte", imageFile);
 
     try {
+      const token = localStorage.getItem("token") || ""; 
+
       const response = await apiRequest('activities', { 
         method: 'POST',
-        body: formData
+        body: formData,
+        headers: {
+          "Authorization": `Bearer ${token}` 
+        }
       });
 
       if (response && (response.error || response.status === 500 || response.status === 400)) {
@@ -136,7 +167,11 @@ export default function CrearActividadForm() {
         </FormControl>
 
         <FormControl isRequired>
-          <FormLabel>Imagen de la Actividad</FormLabel>
+          <FormLabel mb={1}>Imagen Referencial de la Actividad</FormLabel>
+          
+          <Text fontSize="xs" color="gray.500" mb={3} lineHeight="tall" bg="teal.50/50" p={2} borderRadius="md" borderLeft="3px solid" borderColor="teal.400">
+            💡 <strong>Nota sobre la imagen:</strong> Puedes subir una foto temporal o general que ilustre la actividad que planean ejecutar (por ejemplo, de un evento similar anterior). Posteriormente, al finalizar la jornada y rellenar el reporte final de la actividad, podrás sustituirla por los registros fotográficos reales capturados durante el evento.
+          </Text>
 
           {previewImage && (
             <Image
@@ -152,7 +187,7 @@ export default function CrearActividadForm() {
           <Input type="file" accept="image/*" onChange={handleImageChange} />
         </FormControl>
 
-        {/* Bloque de ubicación recuperado y estilizado con tu SimpleGrid */}
+        {/* Bloque de ubicación */}
         <Box border="1px" borderColor="gray.100" p={4} borderRadius="md" bg="gray.50">
           <Heading size="sm" mb={4}>Ubicación de la Actividad*</Heading>
             <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
@@ -202,7 +237,6 @@ export default function CrearActividadForm() {
           </SimpleGrid>
         </Box>
 
-        {/* Línea divisoria decorativa que tenías en tu commit anterior */}
         <Box 
             width="100%" 
             height="1px" 
@@ -288,7 +322,7 @@ export default function CrearActividadForm() {
           <Button 
             colorScheme="green" 
             onClick={handleCreate} 
-            isLoading={loading}
+            isLoading={loading || !isHydrated}
             loadingText="Creando..."
           >
             Crear Actividad
