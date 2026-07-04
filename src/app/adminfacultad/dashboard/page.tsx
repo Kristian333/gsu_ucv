@@ -70,9 +70,10 @@ export default function FacultyDashboardPage() {
       
       <Box mt={12} w="100%" maxW="600px" p={8} bg="gray.100" borderRadius="lg" textAlign="center">
         <Text fontSize="lg" fontWeight="bold">Soporte Técnico DEU</Text>
-        <Text mt={2}>📧 soporte@ucv.ve</Text>
+        <Text fontSize="md" mt={2}>📧 deu.depgsu@gmail.com</Text>
+        <Text fontSize="md">📱 412-5502096</Text>
         <Divider my={4} borderColor="gray.300" />
-        <Text fontSize="sm">Caracas, UCV, Edif. Biblioteca Central, Piso 5</Text>
+        <Text fontSize="md" mt={2}>Caracas, UCV, Edif. Biblioteca Central, Piso 5</Text>
       </Box>
     </VStack>
   );

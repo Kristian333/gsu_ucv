@@ -79,7 +79,7 @@ export function SolicitudesTable({ grupoExtension }: SolicitudesTableProps) {
           <Tbody>
             {filteredSolicitudes.length > 0 ? (
               filteredSolicitudes.map((sol) => (
-                <NextLink key={sol.id} href={`/admin/solicitudes/${sol.id}`} passHref legacyBehavior>
+                <NextLink key={sol.id} href={`/admin/solicitud/${sol.id}`} passHref legacyBehavior>
                   <ChakraLink
                     as="tr"
                     // CAMBIO: Usamos gray.100, que es sensible al tema y se adapta automáticamente.

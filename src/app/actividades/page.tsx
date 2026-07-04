@@ -1,5 +1,6 @@
 // /app/actividades/page.tsx
 import React from 'react';
+import { Metadata } from "next";
 import { Box, Text } from '@chakra-ui/react';
 import { ClientActivities } from '@/components/ui/client-actividades';
 import { mockActivityItems } from "@/data/actividadesMock";
@@ -96,6 +97,11 @@ interface ActividadesPageProps {
         status?: string;
     };
 }
+
+export const metadata: Metadata = {
+  title: "Actividades de Extensión | GSU",
+  description: "Lista completa de nuestras actividades de extensión universitaria.",
+};
 
 export default async function ActividadesPage({ searchParams }: ActividadesPageProps) {
     const page = Number(searchParams.page) || 1;

@@ -273,7 +273,7 @@ export default function LetterGeneratorClient({ groups, templates, generalData, 
   };
 
   const handleDownloadPDF = async () => {
-    const html2pdf = (await import("html2pdf.js")).default;
+    //const html2pdf = (await import("html2pdf.js")).default;
     const element = documentRef.current;
     const opt = {
       margin: 0,

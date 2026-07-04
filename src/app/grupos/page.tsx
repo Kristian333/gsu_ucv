@@ -1,5 +1,6 @@
 // /app/grupos/page.tsx
 import React from 'react';
+import { Metadata } from "next";
 import { ClientGroups } from '@/components/ui/client-grupos';
 import { apiServerRequest } from "@/utils/apiServer";
 
@@ -14,12 +15,15 @@ interface GroupBackend {
     logo?: string;
 }
 
-// Esta función ahora acepta los parámetros de paginación
+export const metadata: Metadata = {
+  title: "Grupos de Extensión | GSU",
+  description: "Lista completa de nuestros grupos de extensión universitaria.",
+};
+
 async function getGroupsFromServer(page: number, limit: number) {
     try {
-        // Petición optimizada al backend real de Go
         const responseData = await apiServerRequest(`groups?page=${page}&per_page=${limit}`, {
-            next: { revalidate: 30 } // Cache inteligente pública por 30 segundos
+            next: { revalidate: 30 } 
         });
 
         return responseData?.grupos || responseData?.Groups || [];
@@ -41,11 +45,10 @@ export default async function GruposPage({ searchParams }: GruposPageProps) {
 
     const rawGroups = await getGroupsFromServer(page, limit);
 
-    // Mapeamos los nombres del struct de Go de manera segura a la interfaz original
     const mappedGroups = rawGroups.map((g: GroupBackend) => ({
         id: String(g.id),
-        title: g.nombre || g.name || "Sin nombre asignado",
-        faculty: g.facultad || g.faculty || "No asignada",
+        title: g.nombre || "Sin nombre asignado",
+        faculty: g.facultad || "No asignada",
         image: g.image || g.logo_url || g.logo || null
     }));
 

@@ -51,6 +51,8 @@ export default function CrearGrupoForm() {
   const router = useRouter();
   const toast = useToast();
 
+  const [loading, setLoading] = useState(false);
+
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   // ESTADOS DEL FORMULARIO
@@ -66,6 +68,7 @@ export default function CrearGrupoForm() {
     otrosActividad: "",
     tipoIntegrantes: [] as string[],
     observaciones: "",
+    liderCedula: "",
   });
 
   const miembroVacio = (): Miembro => ({
@@ -202,7 +205,7 @@ export default function CrearGrupoForm() {
   const [archivoMiembros, setArchivoMiembros] = useState<File | null>(null);
 
   // FUNCIONES DE CAMBIO
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
@@ -272,6 +275,13 @@ export default function CrearGrupoForm() {
 
   const removeMiembro = (index: number) => {
     if (miembros.length <= 5) return;
+    const removedMember = miembros[index];
+    
+    // Si borramos el que era líder, limpiamos la selección
+    if (removedMember.cedula && removedMember.cedula === form.liderCedula) {
+      setForm(f => ({ ...f, liderCedula: "" }));
+    }
+
     setMiembros(miembros.filter((_, i) => i !== index));
   };
 
@@ -298,7 +308,7 @@ export default function CrearGrupoForm() {
   };
 
   // SUBMIT
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // Validaciones básicas
     if (!form.nombre || !form.correo || !form.tipoGrupo || !form.fechaFundacion || !form.objetivo) {
       return toast({
@@ -306,6 +316,24 @@ export default function CrearGrupoForm() {
         description: "Debe completar todos los campos obligatorios.",
         status: "error",
         duration: 2000,
+      });
+    }
+
+    if (miembrosGuardados.length < 5) {
+      return toast({
+        title: "Miembros insuficientes",
+        description: "Se requiere un mínimo de 5 miembros registrados y guardados en el gestor para enviar la solicitud.",
+        status: "error",
+        duration: 4000,
+      });
+    }
+
+    if (!form.liderCedula) {
+      return toast({
+        title: "Líder de grupo requerido",
+        description: "Debe seleccionar un líder entre los miembros agregados.",
+        status: "error",
+        duration: 3000,
       });
     }
 
@@ -330,34 +358,85 @@ export default function CrearGrupoForm() {
     if (form.actividades.includes("OTROS") && !form.otrosActividad) {
       return toast({
         title: "Debe especificar actividad",
-        description: "Indicó 'OTROS', debe especificar cuál.",
+        description: "Indicó 'OTROS' en Tipo de Actividades, debe especificar cuál.",
         status: "error",
         duration: 2000,
       });
     }
 
-    if (miembros.some(m => !m.nombre || !m.cedula || !m.correo)) {
-      return toast({
-        title: "Datos incompletos",
-        description: "Todos los miembros deben tener al menos nombre, cédula y correo.",
-        status: "error",
-        duration: 2000,
-      });
-    }
+    setLoading(true);
+    const formData = new FormData();
 
-    console.log("DATOS DEL GRUPO (mock)", form);
-    console.log("Logo:", logoFile);
-    console.log("Proyecto PDF:", pdfProyecto);
-    console.log("Archivo Miembros:", archivoMiembros);
+    // 3. Empaquetar los metadatos principales del grupo en la estructura que espera el Backend
+    // Adaptamos las claves según lo que suele inferir el struct de Go (puedes ajustar los nombres de las propiedades si tu backend usa nombres específicos)
+    const datosGrupo = {
+      nombre: form.nombre,
+      correo: form.correo,
+      password: form.password,
+      tipo_grupo: form.tipoGrupo,
+      facultades: Array.isArray(form.facultad) ? form.facultad : [form.facultad],
+      fecha_fundacion: form.fechaFundacion,
+      objetivo: form.objetivo,
+      actividades: form.actividades,
+      otros_actividad: form.otrosActividad,
+      tipo_integrantes: form.tipoIntegrantes,
+      observaciones: form.observaciones,
+      lider_cedula: form.liderCedula,
+      miembros: miembrosGuardados.map((m) => ({
+        nombre: m.nombre,
+        cedula: m.cedula,
+        telefono: m.telefono,
+        correo: m.correo,
+        coordinacion: m.coordinacion,
+        anio: m.anio,
+        facultad: m.facultad,
+        escuela: m.escuela,
+      }))
+    };
+
+    // Adjuntamos el objeto serializado como un string JSON bajo la clave que recupera el backend (ej: "grupo")
+    formData.append("grupo", JSON.stringify(datosGrupo));
+
+    // 4. Adjuntar Archivos principales de la raíz
+    formData.append("logo", logoFile);
+    formData.append("proyecto", pdfProyecto);
+
+    // 5. Adjuntar los archivos individuales de los miembros de forma correlativa para que el backend pueda asociarlos por índice
+    miembrosGuardados.forEach((miembro, index) => {
+      if (miembro.documento) {
+        formData.append(`documento_miembro_${index}`, miembro.documento);
+      }
+    });
+
+    try {
+      // Realizamos la petición al endpoint respectivo de creación de grupos
+      const response = await apiRequest('/groups/requests', { 
+        method: 'POST',
+        body: formData
+      });
+
+      if (response && (response.error || response.status === 500 || response.status === 400)) {
+        throw new Error(response.message || "El servidor backend rechazó la petición de creación.");
+      }
 
     toast({
-      title: "Solicitud enviada",
-      description: "Esto es una simulación. Los datos se imprimirán en consola.",
+      title: "Solicitud enviada exitosamente",
+      description: "El grupo ha sido registrado en estado de revisión.",
       status: "success",
-      duration: 2500,
+      duration: 5000,
     });
 
     router.push("/admingroup/dashboard");
+  } catch (error: any) {
+      toast({ 
+        title: "Error al enviar la solicitud", 
+        description: error.message || "Ocurrió un error inesperado de comunicación.", 
+        status: "error",
+        duration: 5000
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -416,19 +495,7 @@ export default function CrearGrupoForm() {
             <FormLabel>FACULTAD</FormLabel>
             <Select name="facultad" value={form.facultad} onChange={handleChange}>
                 <option value="">Seleccione...</option>
-                {[
-                "Agronomía",
-                "Arquitectura y Urbanismo",
-                "Ciencias",
-                "Ciencias Económicas y Sociales",
-                "Farmacia",
-                "Humanidades y Educación",
-                "Ingeniería",
-                "Ciencias Jurídicas y Políticas",
-                "Medicina",
-                "Odontología",
-                "Ciencias Veterinarias",
-                ].map((f) => (
+                {FACULTADES.map((f) => (
                 <option key={f} value={f}>
                     {f}
                 </option>
@@ -444,19 +511,7 @@ export default function CrearGrupoForm() {
             onChange={(val) => setForm({ ...form, facultad: val as string[] })}
           >
             <VStack align="stretch">
-              {[
-                "Agronomía",
-                "Arquitectura y Urbanismo",
-                "Ciencias",
-                "Ciencias Económicas y Sociales",
-                "Farmacia",
-                "Humanidades y Educación",
-                "Ingeniería",
-                "Ciencias Jurídicas y Políticas",
-                "Medicina",
-                "Odontología",
-                "Ciencias Veterinarias",
-              ].map((a) => (
+              {FACULTADES.map((a) => (
                 <Checkbox key={a} value={a}>
                   {a}
                 </Checkbox>
@@ -551,9 +606,28 @@ export default function CrearGrupoForm() {
           <Text fontSize="sm" color="gray.600" mt={2}>
             Miembros agregados: {miembrosGuardados.length}
           </Text>
-
-          
         </FormControl>
+
+        {/* Líder de Grupo (Select dependiente de los miembros guardados) */}
+        <FormControl isRequired isDisabled={miembrosGuardados.length === 0}>
+          <FormLabel>LÍDER DE GRUPO</FormLabel>
+          <Select 
+            name="liderCedula" 
+            placeholder={miembrosGuardados.length === 0 ? "Primero gestione y guarde los miembros" : "Seleccione el líder..."}
+            value={form.liderCedula} 
+            onChange={handleChange}
+          >
+            {miembrosGuardados.map((m, idx) => (
+              <option key={m.cedula || idx} value={m.cedula}>
+                {m.nombre ? `${m.nombre} (C.I. ${m.cedula})` : `Miembro sin nombre - ${m.cedula}`}
+              </option>
+            ))}
+          </Select>
+          <Text fontSize="xs" color="gray.500" mt={1}>
+            Esta lista se actualizará cada vez que modifiques y guardes los datos en el gestor de arriba.
+          </Text>
+        </FormControl>
+
         <Modal isOpen={isOpen} onClose={onClose} size="full">
           <ModalOverlay />
           <ModalContent maxW="95vw" maxH="90vh"  mx="auto" overflowY="auto">
@@ -816,7 +890,7 @@ export default function CrearGrupoForm() {
             Cancelar
           </Button>
 
-          <Button colorScheme="green" onClick={handleSubmit}>
+          <Button colorScheme="green" onClick={handleSubmit} isLoading={loading}>
             Enviar Solicitud
           </Button>
         </Flex>

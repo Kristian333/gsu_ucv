@@ -1,5 +1,6 @@
 import { Box, Heading, Text } from '@chakra-ui/react';
 import { redirect } from 'next/navigation';
+import { Metadata } from "next";
 import { SolicitudesTable } from '@/components/ui/solicitudes-table';
 
 async function getGrupoExtensionSolicitudes() {
@@ -17,6 +18,11 @@ async function checkAdminRole() {
     redirect('/login?error=unauthorized');
   }
 }
+
+export const metadata: Metadata = {
+  title: "Solicitudes de Grupos de Extensión | GSU",
+  description: "Solicitudes hechas por los Grupos de Extensión.",
+};
 
 export default async function SolicitudesPage() {
   await checkAdminRole();

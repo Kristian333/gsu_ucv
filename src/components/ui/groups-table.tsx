@@ -132,7 +132,7 @@ export function GroupsTable({ initialGroups, currentPage, perPage }: GroupsTable
                           color="teal.600" 
                           cursor="pointer"
                           _hover={{ textDecoration: "underline" }}
-                          onClick={() => router.push(`/admin/usuarios/${grupoId}`)}
+                          onClick={() => router.push(`/admin/grupo/${grupoId}`)}
                         >
                           {nombreGrupo}
                         </Text>
@@ -164,7 +164,7 @@ export function GroupsTable({ initialGroups, currentPage, perPage }: GroupsTable
                         size="sm"
                         colorScheme="teal"
                         variant="outline"
-                        onClick={() => router.push(`/admin/usuarios/${grupoId}`)}
+                        onClick={() => router.push(`/admin/grupo/${grupoId}`)}
                       >
                         Ver Detalles
                       </Button>

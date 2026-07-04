@@ -1,5 +1,6 @@
 // /app/admin/usuarios/page.tsx
 import { Box, Heading, Text } from '@chakra-ui/react';
+import { Metadata } from "next";
 import { UsersTable } from '@/components/ui/users-table';
 import { apiServerRequest } from "@/utils/apiServer";
 
@@ -15,6 +16,11 @@ async function getInitialUsers() {
     return []; // Fallback seguro
   }
 }
+
+export const metadata: Metadata = {
+  title: "Usuarios del sistema | GSU",
+  description: "Usuarios registraods en el sistema.",
+};
 
 export default async function UsuariosPage() {
   const initialUsers = await getInitialUsers();

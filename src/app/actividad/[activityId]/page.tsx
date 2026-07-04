@@ -1,5 +1,6 @@
 // app/actividad/[activityId]/page.tsx
 import React from 'react';
+import { Metadata } from "next";
 import ActivityClientPage from "@/components/ui/actividad";
 import { apiServerRequest } from "@/utils/apiServer";
 
@@ -29,6 +30,27 @@ async function getGroupData(groupId: string) {
     console.error(`ACTIVITY DETAIL SERVER - Falló consulta de grupo id ${groupId}:`, error);
     return null;
   }
+}
+
+export async function generateMetadata({ params }: ActivityPageProps): Promise<Metadata> {
+  const activityData = await getActivityData(params.activityId);
+
+  // Si por alguna razón la API no responde o no existe la actividad, manejamos un fallback elegante
+  if (!activityData) {
+    return {
+      title: "Actividad no encontrada | GSU",
+      description: "La actividad universitaria solicitada no se encuentra disponible.",
+    };
+  }
+
+  // Si todo sale bien, extraemos el nombre de la actividad (ajusta la clave según tu backend)
+  const nombreActividad = activityData.titulo || activityData.name || activityData.nombre || `Actividad #${params.activityId}`;
+  const descripcionActividad = activityData.descripcion || activityData.description || "Detalles de nuestra actividad de extensión universitaria.";
+
+  return {
+    title: `${nombreActividad} | GSU`,
+  description: descripcionActividad,
+  };
 }
 
 export default async function ActivityDetailPage({ params }: ActivityPageProps) {

@@ -93,7 +93,7 @@ export default function TablaGruposFacultad({ grupos, faculty }: Props) {
                   <Td textAlign="center">
                     <Button
                       as={Link}
-                      href={`/admin/usuarios/${grupo.id}`}
+                      href={`/adminfacultad/grupo/${grupo.id}`}
                       size="sm"
                       colorScheme="teal"
                       variant="outline"

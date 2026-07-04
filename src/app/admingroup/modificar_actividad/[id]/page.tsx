@@ -1,6 +1,12 @@
 import { notFound } from "next/navigation";
+import { Metadata } from "next";
 import { mockActivityItems } from "@/data/actividadesMock";
 import ModificarActividadForm from "@/components/formularios/modificar-actividad-form";
+
+export const metadata: Metadata = {
+  title: "Modificar Actividad de Extensión | GSU",
+  description: "Modificar información de la Actividad de Extensión.",
+};
 
 export default function ModificarActividadPage({ params }) {
   const actividad = mockActivityItems.find(

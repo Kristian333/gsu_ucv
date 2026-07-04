@@ -197,7 +197,7 @@ const [users, setUsers] = useState<UserBackend[]>(initialUsers);
                       color="teal.600" 
                       cursor="pointer"
                       _hover={{ textDecoration: "underline" }}
-                      onClick={() => router.push(`/admin/usuarios/${user.id}`)}
+                      onClick={() => router.push(`/admin/usuario/${user.id}`)}
                     >
                       {user.nombres} {user.apellidos}
                     </Td>

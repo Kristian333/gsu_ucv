@@ -17,6 +17,7 @@ export function AdminNavbar() {
     { name: 'Grupos', href: '/admin/grupos' },
     { name: 'Usuarios', href: '/admin/usuarios' },
     { name: 'Estadisticas', href: '/admin/estadisticas' },
+    { name: 'Formatos de Solicitudes', href: '/admin/formatos' },
   ];
 
   return (

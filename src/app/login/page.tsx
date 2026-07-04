@@ -1,7 +1,13 @@
 // /app/login/page.tsx
 import React from "react";
+import { Metadata } from "next";
 import { Flex, Box } from "@chakra-ui/react";
 import { LoginForm } from "@/components/formularios/login-form";
+
+export const metadata: Metadata = {
+  title: "Inicio de Sesión | GSU",
+  description: "Inicia sesión en nuestro portal web.",
+};
 
 export default function LoginPage() {
   return (

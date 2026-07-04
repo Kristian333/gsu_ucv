@@ -1,5 +1,6 @@
 // /app/admin/grupos/page.tsx
 import { Box, Heading, Text } from '@chakra-ui/react';
+import { Metadata } from "next";
 import { GroupsTable } from '@/components/ui/groups-table';
 import { apiServerRequest } from "@/utils/apiServer";
 
@@ -20,6 +21,11 @@ async function fetchGroupsFromBackend(page: number, perPage: number) {
     return [];
   }
 }
+
+export const metadata: Metadata = {
+  title: "Grupos de Extensión en el Sistema | GSU",
+  description: "Grupos de Extensión registrados en el sistema.",
+};
 
 export default async function GruposPage({ searchParams }: GruposPageProps) {
   // Capturamos el query param directamente en el servidor
