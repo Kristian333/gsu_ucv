@@ -1,55 +1,20 @@
 [
   {
+    "id": 1,
     "tipo_solicitud": "Constancia de Registro de Grupo",
-    "modelo_carta": "Caracas, <fecha_actual>\n\nPARA QUIEN PUEDA INTERESAR\n\nPor medio de la presente se hace constar que el grupo de extensión denominado <nombre_grupo>, con correo electrónico <correo_grupo>, se encuentra registrado oficialmente desde la fecha <fecha_fundacion>.\n\nSin más a qué hacer referencia,\n\nDirección de Extensión Universitaria.",
-    "campos": [
-      { "nombre": "Fecha de hoy", "indicador": "<fecha_actual>", "tipo": "Texto", "buscar_bd": "" },
-      { "nombre": "Grupo a Certificar", "indicador": "<nombre_grupo>", "tipo": "Texto", "buscar_bd": "gruposMock.title" },
-      { "nombre": "Fecha de Fundación", "indicador": "<fecha_fundacion>", "tipo": "Texto", "buscar_bd": "gruposMock.fundation" },
-      { "nombre": "Email del Grupo", "indicador": "<correo_grupo>", "tipo": "Texto", "buscar_bd": "gruposMock.email" }
-    ]
+    "modelo_carta": "<p style=\"text-align: right\">Caracas, {{fecha_actual}}</p><p></p><p><strong>PARA QUIEN PUEDA INTERESAR</strong></p><p></p><p>Por medio de la presente se hace constar que el grupo de extensión denominado <strong>{{nombre_grupo}}</strong>, con correo electrónico {{correo_grupo}}, se encuentra registrado oficialmente desde la fecha {{fecha_fundacion}}.</p><p></p><p>Sin más a qué hacer referencia,</p><p></p><p>Dirección de Extensión Universitaria.</p>",
+    "notas": ""
   },
   {
+    "id": 2,
     "tipo_solicitud": "Acreditación de Miembros",
-    "modelo_carta": "Por medio de la presente, la Dirección de Extensión avala que los siguientes estudiantes pertenecen al grupo <nombre_grupo>:\n\n<tabla:miembros_tabla>\n\nTodos los mencionados cumplen con las horas de servicio correspondientes.",
-    "campos": [
-      { "nombre": "Nombre del Grupo", "indicador": "<nombre_grupo>", "tipo": "Texto", "buscar_bd": "gruposMock.title" },
-      { 
-        "nombre": "Listado de Miembros", 
-        "indicador": "miembros_tabla", 
-        "tipo": "Tabla", 
-        "columnas": ["name", "ci", "school", "year"],
-        "buscar_bd": "gruposMock.members" 
-      }
-    ]
+    "modelo_carta": "<p>Por medio de la presente, la Dirección de Extensión avala que los siguientes estudiantes pertenecen al grupo <strong>{{nombre_grupo}}</strong>:</p><table style=\"min-width: 75px;\"><colgroup><col style=\"min-width: 25px;\"><col style=\"min-width: 25px;\"><col style=\"min-width: 25px;\"></colgroup><tbody><tr><th colspan=\"1\" rowspan=\"1\"><p><strong>NOMBRE Y APELLIDO</strong></p></th><th colspan=\"1\" rowspan=\"1\"><p><strong>C.I.</strong></p></th><th colspan=\"1\" rowspan=\"1\"><p><strong>ESCUELA</strong></p></th></tr><tr><td colspan=\"1\" rowspan=\"1\"><p>{{miembro_nombre}}</p></td><td colspan=\"1\" rowspan=\"1\"><p>{{miembro_cedula}}</p></td><td colspan=\"1\" rowspan=\"1\"><p>{{miembro_escuela}}</p></td></tr></tbody></table><p></p><p>Todos los mencionados cumplen con las horas de servicio correspondientes.</p>",
+    "notas": ""
   },
   {
+    "id": 3,
     "tipo_solicitud": "Constancia de Participación en Actividad",
-    "modelo_carta": "Ciudadana:\n**<nombre_coordinador>**\nCoordinadora de Extensión\n**<facultad_coordinador>**\nUniversidad Central de Venezuela\nPresente.\n\nPor medio de la presente, me permito dirigirme a usted con el fin de hacer constar que los estudiantes regulares de la Escuela de <nombre_escuela> de su facultad pertenecientes al Grupo de Extensión Estudiantil **<nombre_grupo>**, participaron en <articulo_actividad> <nombre_actividad> que realizamos <intervalo> <fecha> en el horario comprendido de <hora_inicio> a <hora_fin>, en <lugar_actividad><final_actividad>.\n\n<tabla:TABLA_Miembros>\n\n**<nombre_grupo>** es un Grupo de Extensión adscrito al Programa de Extensión Estudiantil del Departamento de Gestión Social Universitaria de la Dirección de Extensión de la Universidad Central de Venezuela.\nSin más a que hacer referencia, se despide.",
-    "campos": [
-        { "nombre": "Coordinador", "indicador": "<nombre_coordinador>", "tipo": "Texto", "buscar_bd": "generalData.coordinadores" },
-        { "nombre": "Facultad", "indicador": "<facultad_coordinador>", "tipo": "Texto", "buscar_bd": "dependencia.facultad" },
-        { "nombre": "Escuela", "indicador": "<nombre_escuela>", "tipo": "Texto", "buscar_bd": "dependencia.escuela" },
-        { "nombre": "Nombre del Grupo", "indicador": "<nombre_grupo>", "tipo": "Texto", "buscar_bd": "group.title" },
-        { "nombre": "Artículo", "indicador": "<articulo_actividad>", "tipo": "Texto", "buscar_bd": "" },
-        { "nombre": "Actividad", "indicador": "<nombre_actividad>", "tipo": "Texto", "buscar_bd": "actividades" },
-        { "nombre": "Nota Final", "indicador": "<final_actividad>", "tipo": "Texto", "buscar_bd": "", "ejemplo": "Ej: , atendiendo a más de 100 niños en edad escolar" },
-        { 
-        "nombre": "Estudiantes Participantes", 
-        "indicador": "TABLA_Miembros", 
-        "tipo": "Tabla", 
-        "buscar_bd": "members", 
-        "columnas": ["name", "ci", "school", "year"] 
-        }
-    ]
-  },
-  {
-    "tipo_solicitud": "",
-    "modelo_carta": "",
-    "campos": [
-        {
-            "nombre": ""
-        }
-    ]
+    "modelo_carta": "<p>Ciudadan{{a/o}}:<br><strong>{{nombre_coordinador}}</strong><br>Coordinador{{a/}} de Extensión<br><strong>{{facultad_del_coordinador}}</strong><br>Universidad Central de Venezuela<br>Presente.</p><p></p><p>Por medio de la presente, me permito dirigirme a usted con el fin de hacer constar que los estudiantes regulares de la Escuela de {{nombre_escuela}} de su facultad pertenecientes al Grupo de Extensión Estudiantil <strong>{{nombre_grupo}}</strong>, participaron en {{nombre_actividad}} que realizamos {{fecha}} en el horario comprendido de {{hora_inicio}} a {{hora_fin}}, en {{lugar_actividad}}{{info_actividad_extra}}.</p><p></p><table style=\"min-width: 400px;\"><colgroup><col style=\"width: 250px;\"><col style=\"width: 100px;\"><col style=\"min-width: 25px;\"><col style=\"min-width: 25px;\"></colgroup><tbody><tr><th colspan=\"1\" rowspan=\"1\" colwidth=\"250\"><p><strong>NOMBRE Y APELLIDO</strong></p></th><th colspan=\"1\" rowspan=\"1\" colwidth=\"100\"><p><strong>C.I.</strong></p></th><th colspan=\"1\" rowspan=\"1\"><p>Escuela</p></th><th colspan=\"1\" rowspan=\"1\"><p>Semestre</p></th></tr><tr><td colspan=\"1\" rowspan=\"1\" colwidth=\"250\"><p>{{miembro_nombre}}</p></td><td colspan=\"1\" rowspan=\"1\" colwidth=\"100\"><p>{{miembro_cedula}}</p></td><td colspan=\"1\" rowspan=\"1\"><p>{{nombre_escuela}}</p></td><td colspan=\"1\" rowspan=\"1\"><p>{{numero_semestre}}</p></td></tr></tbody></table><p></p><p><strong>{{nombre_grupo}}</strong> es un Grupo de Extensión adscrito al Programa de Extensión Estudiantil del Departamento de Gestión Social Universitaria de la Dirección de Extensión de la Universidad Central de Venezuela.<br>Sin más a que hacer referencia, se despide.</p>",
+    "notas": "- Ejemplo para {{fecha}}: el día jueves 30 de octubre del 2025.\n- {{info_actividad_extra}} es opcional para agregar informacion extra sobre la actividad. Por ejemplo, agregando un ejemplo incluyendo  tanto {{lugar_actividad}}{{info_actividad_extra}}: \"en Hoyo la Puerta, municipio Baruta, estado Miranda, atendiendo a más de 100 niños en edad escolar\", donde {{lugar_actividad}}=\"Hoyo la Puerta, municipio Baruta, estado Miranda\" y {{info_actividad_extra}}=\"atendiendo a más de 100 niños en edad escolar\""
   }
 ]
