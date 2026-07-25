@@ -4,8 +4,10 @@ import {
   Modal, ModalOverlay, ModalContent, ModalHeader, ModalCloseButton,
   ModalBody, ModalFooter, Button, Box, Flex, VStack, Text, Image, useToast
 } from "@chakra-ui/react";
-import { FileText } from "lucide-react";
+import { FileText, CheckCircle } from "lucide-react";
 import { useState } from "react";
+
+export type PreviewModalMode = "default" | "preview_previa_s_r" | "approve";
 
 interface PreviewModalProps {
   isOpen: boolean;
@@ -13,11 +15,22 @@ interface PreviewModalProps {
   tipoSolicitud: string;
   modeloCarta: string;
   generalData: any;
+  mode?: PreviewModalMode;
+  onConfirmApprove?: () => Promise<void>;
 }
 
-export default function TemplatePreviewModal({ isOpen, onClose, tipoSolicitud, modeloCarta, generalData }: PreviewModalProps) {
+export default function TemplatePreviewModal({ 
+  isOpen, 
+  onClose, 
+  tipoSolicitud, 
+  modeloCarta, 
+  generalData,
+  mode = "default",
+  onConfirmApprove
+}: PreviewModalProps) {
   const toast = useToast();
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isApproving, setIsApproving] = useState(false);
   
   const getFechaFormateada = () => {
     const meses = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
@@ -157,8 +170,8 @@ export default function TemplatePreviewModal({ isOpen, onClose, tipoSolicitud, m
                       <br/><br/><br/>
                       <div style="width: 300px; margin: 0 auto; text-align: center; page-break-inside: avoid;">
                         <div style="border-top: 1.5px solid black; padding-top: 5px;">
-                          <strong>${generalData?.director?.director_extension || "Prof. Trino Alcides Díaz"}</strong><br/>
-                          <span style="font-size: 10pt; font-weight: bold;">${generalData?.director?.director_genero === "Femenino" ? "Directora" : "Director"} de Extensión Universitaria</span>
+                          <strong>${generalData?.director?.director_extension}</strong><br/>
+                          <span style="font-size: 10pt; font-weight: bold;">${generalData?.director?.cargo}</span>
                         </div>
                       </div>
                     </div>
@@ -210,6 +223,22 @@ export default function TemplatePreviewModal({ isOpen, onClose, tipoSolicitud, m
       toast({ title: "Error", description: "No se pudo compilar el archivo PDF.", status: "error" });
     } finally {
       setIsDownloading(false);
+    }
+  };
+
+  // Acción del modo de aprobación: Descarga el PDF y envía la confirmación de aprobación al backend
+  const handleApproveAndDownload = async () => {
+    setIsApproving(true);
+    try {
+      await handleDownloadPDF();
+      if (onConfirmApprove) {
+        await onConfirmApprove();
+      }
+      onClose();
+    } catch (error) {
+      console.error("Error al aprobar y descargar:", error);
+    } finally {
+      setIsApproving(false);
     }
   };
 
@@ -269,9 +298,9 @@ export default function TemplatePreviewModal({ isOpen, onClose, tipoSolicitud, m
                 <Text mb={14}>Atentamente,</Text>
                 <VStack spacing={0} align="center" w="300px" mx="auto">
                   <Box borderTop="1.5px solid black" w="full" mb={2} />
-                  <Text fontWeight="bold" fontSize="11pt">{generalData?.director?.director_extension || "Prof. Trino Alcides Díaz"}</Text>
+                  <Text fontWeight="bold" fontSize="11pt">{generalData?.director?.director_extension}</Text>
                   <Text fontWeight="bold" fontSize="10pt" color="gray.600">
-                    {generalData?.director?.director_genero === "Femenino" ? "Directora" : "Director"} de Extensión Universitaria
+                    {generalData?.director?.cargo}
                   </Text>
                 </VStack>
               </Box>
@@ -290,16 +319,49 @@ export default function TemplatePreviewModal({ isOpen, onClose, tipoSolicitud, m
         </ModalBody>
 
         <ModalFooter borderTop="1px solid" borderColor="gray.100">
+          {mode === "preview_previa_s_r" && (
+            <Button bg="secondary" color="white" _hover={{ filter: "brightness(0.9)" }} onClick={onClose} ml="auto">
+              Cerrar
+            </Button>
+          )}
+
+          {mode === "approve" && (
+            <Flex w="full" justify="space-between" align="center">
+              <Button variant="ghost" onClick={onClose} isDisabled={isApproving}>
+                Cancelar
+              </Button>
+              <Button 
+                leftIcon={<CheckCircle size={16} />} 
+                bg="primary" 
+                color="white"
+                _hover={{ filter: "brightness(0.9)" }} 
+                onClick={handleApproveAndDownload}
+                isLoading={isApproving || isDownloading}
+                loadingText="Procesando"
+              >
+                Aprobar y Descargar
+              </Button>
+            </Flex>
+          )}
+
+          {mode === "default" && (
+            <>
           <Button 
             leftIcon={<FileText size={16} />} 
-            colorScheme="red" 
+                bg="danger" 
+                color="white"
+                _hover={{ filter: "brightness(0.9)" }} 
             onClick={handleDownloadPDF}
             isLoading={isDownloading}
             loadingText="Generando PDF"
           >
             Descargar Documento PDF (.pdf)
           </Button>
-          <Button colorScheme="blue" onClick={onClose} ml="auto">Cerrar Inspección</Button>
+              <Button bg="primary" color="white" _hover={{ filter: "brightness(0.9)" }} onClick={onClose} ml="auto">
+                Cerrar Inspección
+              </Button>
+            </>
+          )}
         </ModalFooter>
       </ModalContent>
     </Modal>

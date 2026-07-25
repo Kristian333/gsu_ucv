@@ -1,6 +1,10 @@
 "use client";
 
 import {
+  Box,
+  Button,
+  ButtonGroup,
+  Select,
   Table,
   Thead,
   Tbody,
@@ -8,45 +12,62 @@ import {
   Th,
   Td,
   TableContainer,
-  Tabs,
-  TabList,
-  Tab,
-  TabPanels,
-  TabPanel,
-  Box,
   Text,
   Badge,
-  RadioGroup,
-  Stack,
-  Radio,
-  Link as ChakraLink,
+  Flex,
+  Spinner,
 } from '@chakra-ui/react';
-import NextLink from 'next/link';
-import React, { useState, useMemo } from 'react';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '@/app/context/auth-context'; 
+import { apiRequest } from '@/components/formularios/api';
+import { Pagination } from '@/components/ui/pagination'; 
 
-interface Solicitud {
+const FACULTADES = [
+  "Agronomía",
+  "Arquitectura y Urbanismo",
+  "Ciencias",
+  "Ciencias Económicas y Sociales",
+  "Ciencias Jurídicas y Políticas",
+  "Ciencias Veterinarias",
+  "Farmacia",
+  "Humanidades y Educación",
+  "Ingeniería",
+  "Medicina",
+  "Odontología",
+  'DEU',
+];
+
+// Tipado de respuestas
+interface SolicitudGrupo {
   id: string;
-  tipo: string;
-  fecha: string;
+  grupo_id: string;
+  comentarios: string;
   estado: string;
-  nombre: string;
+  facultad: string;
+  creado_en: string;
 }
 
-interface SolicitudesTableProps {
-  grupoExtension: Solicitud[];
+interface SolicitudRecurso {
+  id: string;
+  grupo_id: string;
+  tipo: string;
+  contenido: string;
+  estado: string;
+  creado_en: string;
 }
 
-const tipoColorMap: { [key: string]: string } = {
-  'Solicitud de Evento': 'green',
-  'Solicitud de Recurso': 'orange',
-};
+type TabType = 'groups' | 'resources';
 
 const getBadgeColorScheme = (estado: string) => {
   switch (estado.toLowerCase()) {
+    case 'under_review':
     case 'pendiente':
-      return 'orange';
+      return 'yellow';
+    case 'approved':
     case 'aprobada':
       return 'green';
+    case 'rejected':
     case 'rechazada':
       return 'red';
     default:
@@ -54,90 +75,210 @@ const getBadgeColorScheme = (estado: string) => {
   }
 };
 
-export function SolicitudesTable({ grupoExtension }: SolicitudesTableProps) {
-  const [filter, setFilter] = useState('Todos');
+const formatEstado = (estado: string) => {
+  const map: Record<string, string> = {
+    approved: 'Aprobada',
+    pending: 'Pendiente',
+    rejected: 'Rechazada',
+  };
+  return map[estado.toLowerCase()] || estado;
+};
 
-  const grupoExtensionTypes = useMemo(() => ['Todos', ...new Set(grupoExtension.map(sol => sol.tipo))], [grupoExtension]);
+export function SolicitudesTable() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const { isHydrated } = useAuth();
+  
+  // Obtener la página actual directamente de los query params
+  const pageParam = searchParams.get('page');
+  const page = pageParam ? parseInt(pageParam, 10) : 1;
+  
+  const [activeTab, setActiveTab] = useState<TabType>('groups');
+  const [facultad, setFacultad] = useState<string>(FACULTADES[0]); 
+  const [loading, setLoading] = useState<boolean>(false);
+  const [data, setData] = useState<any[]>([]);
+  const [totalPages, setTotalPages] = useState<number>(1);
 
-  const renderTable = (solicitudes: Solicitud[]) => {
-    const filteredSolicitudes = filter === 'Todos'
-      ? solicitudes
-      : solicitudes.filter(sol => sol.tipo === filter);
+  // Normalización de la facultad para la URL (espacios -> _)
+  const formattedFacultad = facultad.replace(/\s+/g, '_');
 
-    return (
-      <TableContainer minH="500px">
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const endpoint = activeTab === 'groups'
+        ? `/admin/group-requests?faculty=${formattedFacultad}&page=${page}&per_page=20`
+        : `/admin/group-resource-requests?faculty=${formattedFacultad}&page=${page}&pageSize=20`;
+        
+      // Llamada directa usando apiRequest (ya procesa el JSON)
+      const result = await apiRequest(endpoint);
+
+      setData(result.solicitudes || []);
+      
+      const totalCount = result.paginas?.count || 0;
+      const perPage = result.paginas?.per_page || 20;
+      setTotalPages(Math.ceil(totalCount / perPage) || 1);
+    } catch (error) {
+      console.error("Error cargando datos:", error);
+      setData([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [activeTab, formattedFacultad, page]);
+
+  useEffect(() => {
+    if (isHydrated) {
+      fetchData();
+    }
+  }, [fetchData, isHydrated]);
+
+  const handleTabChange = (type: TabType) => {
+    setActiveTab(type);
+    router.push(pathname);
+  };
+
+  const handleRowClick = (id: string) => {
+    const route = activeTab === 'groups'
+      ? `/admin/solicitud/${id}`
+      : `/admin/solicitud_recurso/${id}`;
+    router.push(route);
+  };
+
+  return (
+    <Box>
+      {/* Botones principales */}
+      <ButtonGroup spacing={4} mb={6} size="md">
+        <Button
+          bg={activeTab === 'groups' ? 'primary' : 'transparent'}
+          color={activeTab === 'groups' ? 'white' : 'primary'}
+          border="1px solid"
+          borderColor="primary"
+          _hover={{
+            bg: activeTab === 'groups' ? 'primary' : 'primary',
+            color: activeTab === 'groups' ? 'white' : 'white',
+          }}
+          onClick={() => handleTabChange('groups')}
+        >
+          Solicitudes de Grupos
+        </Button>
+        <Button
+          bg={activeTab === 'resources' ? 'primary' : 'transparent'}
+          color={activeTab === 'resources' ? 'white' : 'primary'}
+          border="1px solid"
+          borderColor="primary"
+          _hover={{
+            bg: activeTab === 'resources' ? 'primary' : 'primary',
+            color: activeTab === 'resources' ? 'white' : 'white',
+          }}
+          onClick={() => handleTabChange('resources')}
+        >
+          Solicitudes de Recursos
+        </Button>
+      </ButtonGroup>
+
+      {/* Controles de Filtro por Facultad */}
+      <Flex justify="space-between" align="center" mb={6} gap={4} wrap="wrap">
+        <Box w={{ base: '100%', md: '320px' }}>
+          <Text mb={2} fontWeight="bold" fontSize="sm">
+            Filtrar por Facultad:
+          </Text>
+          <Select
+            value={facultad}
+            focusBorderColor="primary"
+            onChange={(e) => {
+              setFacultad(e.target.value);
+              router.push(pathname); // Reset de página a 1 al cambiar filtro
+            }}
+          >
+            {FACULTADES.map((f) => (
+              <option key={f} value={f}>
+                {f}
+              </option>
+            ))}
+          </Select>
+        </Box>
+      </Flex>
+
+      {/* Tabla */}
+      <TableContainer border="1px" borderColor="gray.200" borderRadius="md" minH="400px">
         <Table variant="simple">
-          <Thead>
+          <Thead bg="gray.50">
             <Tr>
               <Th>ID</Th>
-              <Th>Tipo</Th>
-              <Th>Nombre</Th>
-              <Th>Fecha</Th>
+              <Th>ID Grupo</Th>
+              {activeTab === 'groups' ? (
+                <>
+                  <Th>Facultad</Th>
+                </>
+              ) : (
+                <>
+                  <Th>Tipo de Recurso</Th>
+                </>
+              )}
+              <Th>Fecha Creación</Th>
               <Th>Estado</Th>
             </Tr>
           </Thead>
           <Tbody>
-            {filteredSolicitudes.length > 0 ? (
-              filteredSolicitudes.map((sol) => (
-                <NextLink key={sol.id} href={`/admin/solicitud/${sol.id}`} passHref legacyBehavior>
-                  <ChakraLink
-                    as="tr"
-                    // CAMBIO: Usamos gray.100, que es sensible al tema y se adapta automáticamente.
-                    // En modo claro será un gris claro, en modo oscuro será un blanco semitransparente.
-                    _hover={{ bg: 'rowhover', cursor: 'pointer' }} 
-                    style={{ display: 'table-row' }}
-                  >
-                    <Td>{sol.id}</Td>
-                    <Td>
-                      <Badge colorScheme={tipoColorMap[sol.tipo] || 'gray'}>{sol.tipo}</Badge>
-                    </Td>
-                    <Td>{sol.nombre}</Td>
-                    <Td>{sol.fecha}</Td>
-                    <Td>
-                      <Badge colorScheme={getBadgeColorScheme(sol.estado)}>{sol.estado}</Badge>
-                    </Td>
-                  </ChakraLink>
-                </NextLink>
+            {loading ? (
+              <Tr>
+                <Td colSpan={6} textAlign="center" py={12}>
+                  <Spinner size="lg" color="primary" />
+                  <Text mt={2} color="gray.500">Cargando solicitudes...</Text>
+                </Td>
+              </Tr>
+            ) : data.length > 0 ? (
+              data.map((item) => (
+                <Tr
+                key={item.id}
+                onClick={() => handleRowClick(item.id)}
+                _hover={{ bg: 'gray.100', cursor: 'pointer' }}
+                transition="background 0.15s ease-in-out"
+                >
+                  <Td fontWeight="bold">#{item.id}</Td>
+                  <Td>{item.grupo_id}</Td>
+
+                  {activeTab === 'groups' ? (
+                    <>
+                      <Td>{item.facultad}</Td>
+                    </>
+                  ) : (
+                    <>
+                      <Td>
+                          <Badge colorScheme="purple">{item.tipo}</Badge>
+                      </Td>
+                    </>
+                  )}
+
+                  <Td>{new Date(item.creado_en).toLocaleDateString()}</Td>
+                  <Td>
+                      <Badge colorScheme={getBadgeColorScheme(item.estado)}>
+                        {formatEstado(item.estado)}
+                      </Badge>
+                  </Td>
+                </Tr>
               ))
             ) : (
               <Tr>
-                <Td colSpan={5} textAlign="center" py={10}>
-                  <Text>No hay solicitudes de este tipo.</Text>
+                <Td colSpan={6} textAlign="center" py={10}>
+                  <Text color="gray.500">
+                    No se encontraron solicitudes para esta facultad.
+                  </Text>
                 </Td>
               </Tr>
             )}
           </Tbody>
         </Table>
       </TableContainer>
-    );
-  };
 
-  const renderFilters = (types: string[]) => (
-    <RadioGroup onChange={setFilter} value={filter}>
-      <Stack direction={{ base: 'column', md: 'row' }} spacing={4}>
-        {types.map(tipo => (
-          <Radio key={tipo} value={tipo}>
-            {tipo}
-          </Radio>
-        ))}
-      </Stack>
-    </RadioGroup>
-  );
-
-  return (
-    <Tabs variant="enclosed">
-      <TabList>
-        <Tab>Grupo de Extensión ({grupoExtension.length})</Tab>
-      </TabList>
-      <TabPanels>
-        <TabPanel>
-          <Box mb={6}>
-            <Text mb={2} fontWeight="bold">Filtrar por tipo de solicitud:</Text>
-            {renderFilters(grupoExtensionTypes)}
-          </Box>
-          {renderTable(grupoExtension)}
-        </TabPanel>
-      </TabPanels>
-    </Tabs>
+      {/* Paginación */}
+      {totalPages > 0 && (
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          basePath={pathname}
+        />
+      )}
+    </Box>
   );
 }

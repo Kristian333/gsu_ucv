@@ -18,7 +18,8 @@ export interface AuthUser {
 interface AuthContextType {
     isAuthenticated: boolean;
     user: AuthUser | null;
-    login: (user: AuthUser) => void;
+    token: string | null;
+    login: (user: AuthUser, token?: string) => void;
     logout: () => void;
     isHydrated: boolean;
 }
@@ -27,11 +28,13 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<AuthUser | null>(null);
+    const [token, setToken] = useState<string | null>(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isHydrated, setIsHydrated] = useState(false);
 
     useEffect(() => {
         const stored = localStorage.getItem("auth-user");
+        const storedToken = localStorage.getItem("token");
         if (stored) {
             try {
                 const u = JSON.parse(stored) as AuthUser;
@@ -41,24 +44,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 console.error("Error cargando sesión:", error);
             }
         }
+
+        if (storedToken) {
+            setToken(storedToken);
+        }
+
         setIsHydrated(true);
     }, []);
 
-    const login = (user: AuthUser) => {
+    const login = (user: AuthUser, newToken?: string) => {
         setUser(user);
         setIsAuthenticated(true);
         localStorage.setItem("auth-user", JSON.stringify(user));
+
+        // Si pasamos el token en login, lo guardamos
+        if (newToken) {
+            setToken(newToken);
+            localStorage.setItem("token", newToken);
+        } else {
+        // Si ya fue guardado en localStorage externamente (ej: login-form), lo leemos
+            const currentToken = localStorage.getItem("token");
+            if (currentToken) setToken(currentToken);
+        }
     };
 
     const logout = () => {
         setUser(null);
+        setToken(null);
         setIsAuthenticated(false);
         localStorage.removeItem("auth-user");
+        localStorage.removeItem("token");
         localStorage.removeItem("group_id");
     };
 
     return (
-        <AuthContext.Provider value={{ user, isAuthenticated, login, logout, isHydrated }}>
+        <AuthContext.Provider value={{ user, token, isAuthenticated, login, logout, isHydrated }}>
             {children}
         </AuthContext.Provider>
     );
