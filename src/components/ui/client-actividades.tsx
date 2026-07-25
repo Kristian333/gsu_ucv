@@ -165,7 +165,7 @@ export function ClientActivities({
                 >
                     <option value="">Todos los estados</option>
                     <option value="futura">Futuras</option>
-                    <option value="curso">En curso</option>
+                    <option value="en_curso">En curso</option>
                     <option value="finalizada">Finalizadas</option>
                 </select>
             </Box>

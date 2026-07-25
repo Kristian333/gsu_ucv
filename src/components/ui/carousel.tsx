@@ -34,8 +34,16 @@ export default function Carousel({activities}: CarouselProps) {
   }
 
   function parseLocalDate(dateStr: string) {
-    const [d, m, y] = dateStr.split("/").map(Number);
-    return new Date(y, m - 1, d); 
+    if (!dateStr) return new Date();
+  
+    // Si viene en formato DD/MM/YYYY
+    if (dateStr.includes("/")) {
+      const [d, m, y] = dateStr.split("/").map(Number);
+      return new Date(y, m - 1, d); 
+  }
+
+    // Si viene en formato ISO o YYYY-MM-DD
+    return new Date(dateStr);
   }
 
   const today = normalizeDate(new Date());
