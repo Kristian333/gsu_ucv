@@ -29,7 +29,6 @@ export default function CrearActividadForm() {
   const { user, isHydrated } = useAuth();
   const [loading, setLoading] = useState(false);
 
-  // Se adaptan las claves al español para que coincidan con la API
   const [form, setForm] = useState({
     nombre: "",
     location: "",
@@ -40,7 +39,6 @@ export default function CrearActividadForm() {
     financing_org: ""
   });
 
-  // Estado local recuperado para dividir la ubicación (Tu versión anterior)
   const [locationParts, setLocationParts] = useState({
     pais: "",
     estado: "",
@@ -51,7 +49,7 @@ export default function CrearActividadForm() {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   
-  // Efecto recuperado: Junta las partes y actualiza la clave 'location' que espera el backend
+ 
   useEffect(() => {
     const { pais, estado, municipio, detalle } = locationParts;
     if (pais || estado || municipio || detalle) {
@@ -64,7 +62,7 @@ export default function CrearActividadForm() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // Manejador recuperado para las partes de la ubicación
+
   const handleLocationChange = (e: ChangeEvent<HTMLInputElement>) => {
     setLocationParts({ ...locationParts, [e.target.name]: e.target.value });
   };
@@ -78,7 +76,7 @@ export default function CrearActividadForm() {
   };
 
   const handleCreate = async () => {
-    // 🛡️ Validación estricta del Group ID usando el auth-context
+  
     if (!isHydrated) return;
 
     if (!user?.groupId) {
