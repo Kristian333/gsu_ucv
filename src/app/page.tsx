@@ -8,10 +8,7 @@ import { apiServerRequest } from "@/utils/apiServer";
 interface GroupBackend {
     id: any;
     nombre?: string;
-    name?: string;
-    image?: string;
-    logo_url?: string;
-    logo?: string;
+    imagen_url?: string;
 }
 
 interface ActivityBackend {
@@ -26,7 +23,7 @@ interface ActivityBackend {
     participantes_reales?: number;
     financiamiento?: string;
     observaciones?: string;
-    imagen_url?: string; // Por si el backend añade o devuelve imagen
+    imagen_url?: string;
 }
 
 async function getRandomGroups(): Promise<GroupBackend[]> {
@@ -41,14 +38,34 @@ async function getRandomGroups(): Promise<GroupBackend[]> {
     }
 }
 
+// Función auxiliar para formatear la fecha a DD-MM-YYYY (lo que exige Go)
+function formatDateToClient(date: Date): string {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+}
+
 async function getActivities() {
     try {
-        // Formatear la fecha actual a YYYY-MM-DD o DD-MM-YYYY según requiera la API
-        const todayStr = new Date().toISOString().split('T')[0];
+        const now = new Date();
+        
+        // Fecha de ayer en formato DD-MM-YYYY
+        const startDateStr = formatDateToClient(now);
 
-        // Se pueden pasar filtros de fecha si se desea, por ejemplo start_date y end_date 
-        // o pedir una página con límite razonable para el carrusel (ej: per_page=10)
-        const responseData = await apiServerRequest(`activities?per_page=10`, {
+        // Fecha a 5 años en el futuro para abarcar todas las actividades futuras
+        const farFuture = new Date(now);
+        farFuture.setFullYear(now.getFullYear() + 5);
+        const endDateStr = formatDateToClient(farFuture);
+
+        // Construimos la URL con los parámetros que la API de Go requiere
+        const queryParams = new URLSearchParams({
+            per_page: "10",
+            start_date: startDateStr,
+            end_date: endDateStr
+        });
+
+        const responseData = await apiServerRequest(`activities?${queryParams.toString()}`, {
             cache: 'no-store'
         });
 
@@ -71,7 +88,7 @@ async function getActivities() {
                 id: Number(act.id) || act.id,
                 title: act.nombre || "Actividad de Extensión",
                 description: act.descripcion || "Sin descripción disponible.",
-                image: act.imagen_url || "https://placehold.co/1200x500/01695b/ffffff/png?text=Actividad+de+Extensión",
+                image: act.imagen_url || "/imagen-no-disponible.jpg",
                 date_start: formattedDate,
                 date_end: formattedDate,
                 place: "Universidad Central de Venezuela",
@@ -94,8 +111,8 @@ export default async function HomePage() {
     
     const mappedGroups = rawGroups.map(g => ({
         id: String(g.id),
-        title: g.nombre || g.name || "Sin nombre asignado",
-        image: g.image || g.logo_url || g.logo || null
+        title: g.nombre || "Sin nombre asignado",
+        image: g.imagen_url || "/imagen-no-disponible.jpg"
     }));
     
     return (

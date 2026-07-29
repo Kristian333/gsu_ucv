@@ -26,6 +26,29 @@ interface GroupBackend {
 }
 
 // Traer lista de grupos para poblar el dropdown de filtro
+function formatDateDDMMYYYY(date: Date): string {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+}
+
+// Para formatear la fecha a mostrar en pantalla (DD/MM/YYYY) sin desfase por zona horaria
+function formatDisplayDate(dateStr: string): string {
+    if (!dateStr) return "";
+    
+    // Si viene en formato YYYY-MM-DD o ISO (2026-07-27T00:00:00Z)
+    const dateObj = new Date(dateStr);
+    if (isNaN(dateObj.getTime())) return dateStr;
+
+    // Usamos los métodos UTC para evitar que el timezone local cambie el día
+    const day = String(dateObj.getUTCDate()).padStart(2, '0');
+    const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
+    const year = dateObj.getUTCFullYear();
+
+    return `${day}/${month}/${year}`;
+}
+
 async function getGroups(): Promise<string[]> {
     try {
         const responseData = await apiServerRequest('groups', { cache: 'no-store' });
@@ -60,17 +83,33 @@ async function getActivities({
         }
 
         // --- Manejo de Filtros por Rango de Fecha / Estado ---
-        const todayStr = new Date().toISOString().split("T")[0]; // "YYYY-MM-DD"
+        const now = new Date();
+        const todayStr = formatDateDDMMYYYY(now);
 
         if (status === "futura") {
             // Actividades con fecha posterior a hoy
-            queryParams.set("start_date", todayStr);
+            const tomorrow = new Date(now);
+            tomorrow.setDate(now.getDate() + 1);
+
+            const farFuture = new Date(now);
+            farFuture.setFullYear(now.getFullYear() + 5);
+
+            queryParams.set("start_date", formatDateDDMMYYYY(tomorrow));
+            queryParams.set("end_date", formatDateDDMMYYYY(farFuture));
+            
         } else if (status === "en_curso") {
             // Actividades en el día de hoy
-            queryParams.set("date", todayStr);
+            queryParams.set("start_date", todayStr);
+            queryParams.set("end_date", todayStr);
         } else if (status === "finalizada") {
             // Actividades anteriores a hoy
-            queryParams.set("end_date", todayStr);
+            const yesterday = new Date(now);
+            yesterday.setDate(now.getDate() - 1);
+
+            const pastDate = new Date("2000-01-01");
+
+            queryParams.set("start_date", formatDateDDMMYYYY(pastDate));
+            queryParams.set("end_date", formatDateDDMMYYYY(yesterday));
         }
 
         const responseData = await apiServerRequest(`activities?${queryParams.toString()}`, {
@@ -86,15 +125,7 @@ async function getActivities({
 
         // Mapeo al formato consumido por la interfaz de usuario
         let mappedActivities = rawActivities.map((act) => {
-            let formattedDate = "";
-            if (act.fecha) {
-                const dateObj = new Date(act.fecha);
-                formattedDate = dateObj.toLocaleDateString('es-ES', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric'
-                });
-            }
+            const formattedDate = formatDisplayDate(act.fecha);
 
             return {
                 id: String(act.id),

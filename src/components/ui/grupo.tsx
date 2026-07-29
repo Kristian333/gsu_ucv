@@ -1,24 +1,24 @@
 // app/grupo/[groupId]/GroupClientPage.tsx
 "use client";
 
-import { Box, Flex, Heading, Text, Image, VStack, Divider, SimpleGrid } from "@chakra-ui/react";
+import { Box, Flex, Heading, Text, Image, VStack, Divider } from "@chakra-ui/react";
 import NextLink from "next/link";
 import React, { useState } from "react";
 
-interface GroupItem {
+export interface GroupItem {
   id: string;
   title: string;
   image: string;
   objetive: string;
-  fundation?: string;
+  foundation?: string;
   email?: string;
   phone?: string;
   faculty?: string;
   awards?: { awardName: string; awarddate: number }[] | string;
 }
 
-interface ActivityItem {
-  id: number;
+export interface ActivityItem {
+  id: string | number;
   title: string;
   image: string;
   group: string;
@@ -26,33 +26,11 @@ interface ActivityItem {
 
 interface Props {
   groupId: string;
-  groups: GroupItem[];
+  group: GroupItem;
   activities: ActivityItem[];
 }
 
-export default function GroupClientPage({ groupId, groups, activities }: Props) {
-  
-  // Normalizamos ambos a string
-  const id = String(groupId);
-
-  const group = groups.find((g) => String(g.id) === id);
-
-  // Grupo no Encontrado
-  if (!group) {
-    return (
-      <Box maxW="4xl" mx="auto" p={10} textAlign="center">
-        <Heading size="lg">Grupo no encontrado</Heading>
-        <Text mt={4}>No existe un grupo con el ID {groupId}.</Text>
-      </Box>
-    );
-  }
-
-  const activitiesForGroup = activities
-      .filter((a) => a.group === group.title)
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 4);
-
-  // Reconocimientos: ordenar por awarddate
+export default function GroupClientPage({ groupId, group, activities }: Props) {
   const awards = Array.isArray(group.awards)
     ? [...group.awards].sort((a, b) => b.awarddate - a.awarddate)
     : [];
@@ -77,6 +55,7 @@ export default function GroupClientPage({ groupId, groups, activities }: Props) 
             border="5px solid"
             borderColor="primary"
             shadow="lg"
+            fallbackSrc="/imagen-no-disponible.jpg"
           />
 
           {/* Info básica */}
@@ -103,9 +82,9 @@ export default function GroupClientPage({ groupId, groups, activities }: Props) 
               </Text>
             )}
 
-            {group.fundation && (
+            {group.foundation && (
               <Text fontSize="lg" color="gray.500">
-                📅 Fundado en {group.fundation}
+                📅 Fundado en {group.foundation}
               </Text>
             )}
           </VStack>
@@ -134,11 +113,11 @@ export default function GroupClientPage({ groupId, groups, activities }: Props) 
 
           {/* Actividades aqui*/}
           <Flex gap={6} wrap="wrap">
-            {activitiesForGroup.length === 0 && (
-              <Text color="gray.500">Este grupo no tiene actividades registradas.</Text>
+            {activities.length === 0 && (
+              <Text color="gray.500">Este grupo no tiene actividades registradas actualmente.</Text>
             )}
 
-            {activitiesForGroup.map((activity) => (
+            {activities.map((activity) => (
               <NextLink
                 key={activity.id}
                 href={`/actividad/${activity.id}`}
@@ -163,6 +142,7 @@ export default function GroupClientPage({ groupId, groups, activities }: Props) 
                     w="100%"
                     h="200px"
                     objectFit="cover"
+                    fallbackSrc="/imagen-no-disponible.jpg"
                   />
 
                   <Box p={4}>

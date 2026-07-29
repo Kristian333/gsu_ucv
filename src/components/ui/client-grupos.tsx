@@ -3,7 +3,7 @@
 
 import { Box, SimpleGrid, Card, CardBody, Stack, Image, Text } from "@chakra-ui/react";
 import NextLink from 'next/link';
-import React, { useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Heading, Paragraph } from "@/components/ui/tipografia";
 import { Pagination } from "@/components/ui/pagination";
 import { useRouter } from 'next/navigation';
@@ -70,52 +70,72 @@ const GroupCard = ({ title, faculty, image }: Omit<GroupProps, 'id'>) => {
     );
 };
 
-export function ClientGroups({ groups, currentPage, currentSearch = "", currentFaculty = "", limit }: ClientGroupsProps) {
+export function ClientGroups({ groups, currentPage, totalPages, currentSearch = "", currentFaculty = "" }: ClientGroupsProps) {
     
     const router = useRouter();
-    const [search, setSearch] = React.useState(currentSearch);
-    const [facultyFilter, setFacultyFilter] = React.useState(currentFaculty);
-    const [filterMenuOpen, setFilterMenuOpen] = React.useState(false);
+    const [search, setSearch] = useState(currentSearch);
+    const [filterMenuOpen, setFilterMenuOpen] = useState(false);
     
-    const faculties = ["Agronomía", "Arquitectura y Urbanismo", "Ciencias", "Ciencias Económicas y Sociales", "Farmacia", "Humanidades y Educación", "Ingeniería", "Ciencias Jurídicas y Políticas", "Medicina", "Odontología", "Ciencias Veterinarias", "DEU"];
+    const faculties = [
+        'Agronomía',
+        'Arquitectura y Urbanismo',
+        'Ciencias',
+        'Ciencias Económicas y Sociales',
+        'Ciencias Jurídicas y Políticas',
+        'Ciencias Veterinarias',
+        'Farmacia',
+        'Humanidades y Educación',
+        'Ingeniería',
+        'Medicina',
+        'Odontología',
+        'DEU',
+    ];
 
-    // Nota de Contingencia: El backend no filtra todavía por texto, así que hacemos una búsqueda reactiva local sobre el lote de la página actual
-    const processedGroups = useMemo(() => {
-        let resultado = groups.filter(g =>
-            g.title.toLowerCase().includes(search.toLowerCase())
-        );
+    // Sincronizar el input local si cambia la URL
+    useEffect(() => {
+        setSearch(currentSearch);
+    }, [currentSearch]);
 
-        if (facultyFilter) {
-            resultado = resultado.filter(g => g.faculty.toLowerCase().trim() === facultyFilter.toLowerCase().trim());
+    // Debounce para actualizar la URL tras escribir en el buscador
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (search !== currentSearch) {
+                updateUrl(search, currentFaculty);
+            }
+        }, 400);
+
+        return () => clearTimeout(timer);
+    }, [search]);
+
+    const updateUrl = (newSearch: string, newFaculty: string) => {
+        const query = new URLSearchParams();
+        query.set("page", "1"); // Siempre resetear a página 1 al filtrar
+        
+        if (newSearch) {
+            query.set("search", newSearch);
         }
 
-        // Orden alfabético por cada página
-        return [...resultado].sort((a, b) => a.title.localeCompare(b.title));
-    }, [groups, search, facultyFilter]);
-
-    // Recalcular total de páginas virtuales si hay filtros en el cliente
-    const totalPagesVirtual = useMemo(() => {
-        if (groups.length < limit) {
-            return currentPage;
+        if (newFaculty) {
+            // Reemplazamos espacios por guiones bajos para que la URL quede limpia (ej: Ciencias_Económicas_y_Sociales)
+            const formattedFaculty = newFaculty.replace(/ /g, "_");
+            query.set("faculty", formattedFaculty);
         }
-        return currentPage + 1;
-  }, [groups, currentPage, limit]);
 
-    const handleSearchChange = (value: string) => {
-        setSearch(value);
-        router.push(`/grupos?page=1&search=${encodeURIComponent(value)}&faculty=${encodeURIComponent(facultyFilter)}`);
+        router.push(`/grupos?${query.toString()}`);
     };
 
     const handleFacultyChange = (faculty: string) => {
-        setFacultyFilter(faculty);
         setFilterMenuOpen(false);
-        router.push(`/grupos?page=1&search=${encodeURIComponent(search)}&faculty=${encodeURIComponent(faculty)}`);
+        updateUrl(search, faculty);
     };
+
+    // Formateamos la facultad activa para mostrarla con espacios en el botón del filtro
+    const displayFaculty = currentFaculty.replace(/_/g, " ");
 
     return (
         <Box maxW="container.xl" mx="auto" py={10} px={6}>
             
-            {/*Buscador y Filtro */}
+            {/* Buscador y Filtro */}
             <Box display="flex" gap={4} mb={8} flexWrap="wrap" justifyContent="center" width="100%">
                 
                 {/* Buscador */}
@@ -123,7 +143,7 @@ export function ClientGroups({ groups, currentPage, currentSearch = "", currentF
                     type="text"
                     placeholder="Buscar grupo..."
                     value={search}
-                    onChange={(e) => handleSearchChange(e.target.value)}
+                    onChange={(e) => setSearch(e.target.value)}
                     style={{
                         padding: "10px 15px",
                         borderRadius: "8px",
@@ -140,25 +160,28 @@ export function ClientGroups({ groups, currentPage, currentSearch = "", currentF
                             padding: "10px 15px",
                             borderRadius: "8px",
                             border: "1px solid #ccc",
-                            background: "primary",
-                            whiteSpace: "nowrap"
+                            background: "white",
+                            whiteSpace: "nowrap",
+                            cursor: "pointer"
                         }}
                         onClick={() => setFilterMenuOpen(!filterMenuOpen)}
                     >
-                        {facultyFilter ? `Facultad: ${facultyFilter}` : "Filtrar por facultad"}
+                        {displayFaculty ? `Facultad: ${displayFaculty}` : "Filtrar por facultad"}
                     </button>
 
                     {filterMenuOpen && (
                         <Box
                             position="absolute"
                             top="45px"
-                            left={0}
+                            right={0}
                             bg="white"
                             boxShadow="lg"
                             borderRadius="md"
                             zIndex={10}
                             p={2}
-                            minW="160px"
+                            minW="220px"
+                            maxH="300px"
+                            overflowY="auto"
                         >
                             <Box
                                 p={2}
@@ -174,6 +197,7 @@ export function ClientGroups({ groups, currentPage, currentSearch = "", currentF
                                     key={f}
                                     p={2}
                                     cursor="pointer"
+                                    bg={displayFaculty === f ? "gray.100" : "transparent"}
                                     _hover={{ bg: "gray.100" }}
                                     onClick={() => handleFacultyChange(f)}
                                 >
@@ -186,16 +210,16 @@ export function ClientGroups({ groups, currentPage, currentSearch = "", currentF
             </Box>
             
             {/* Mensaje cuando no hay grupos */}
-            {processedGroups.length === 0 && (
+            {groups.length === 0 && (
                 <Box textAlign="center" py={10}>
                 <Text fontSize="xl">No se encontraron grupos registrados.</Text>
                 </Box>
             )}
 
             {/* Grid con 4 columnas */}
-            {processedGroups.length > 0 && (
+            {groups.length > 0 && (
                 <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={10} textAlign="center">
-                    {processedGroups.map(group => (
+                    {groups.map(group => (
                         <NextLink href={`/grupo/${group.id}`} passHref key={group.id}>
                             <GroupCard
                                 title={group.title}
@@ -208,8 +232,18 @@ export function ClientGroups({ groups, currentPage, currentSearch = "", currentF
             )}
             
             {/* Paginación */}
-            {processedGroups.length > 0 && (
-            <Pagination currentPage={currentPage} totalPages={totalPagesVirtual} />
+            {groups.length > 0 && (
+                <Box mt={8}>
+                    <Pagination 
+                        currentPage={currentPage} 
+                        totalPages={totalPages} 
+                        basePath="/grupos"
+                        queryParams={{
+                            ...(search ? { search } : {}),
+                            ...(currentFaculty ? { faculty: currentFaculty } : {})
+                        }}
+                    />
+                </Box>
              )}
         </Box>
     );
