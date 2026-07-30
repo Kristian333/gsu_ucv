@@ -44,7 +44,7 @@ const GroupCard = ({ id, title, image }: GroupProps) => {
                 <Box cursor="pointer">
                     <Box overflow="hidden" display="flex" justifyContent="center" alignItems="center" width="100%" height="268px" >
                         <Image
-                            src={image as string} // Le decimos a TypeScript que 'image' es un string (esto es seguro porque 'fallbackSrc' lo maneja)
+                            src={image as string}
                             alt={title}
                             objectFit="cover"
                             maxH="100%" 

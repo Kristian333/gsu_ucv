@@ -1,3 +1,4 @@
+// /components/ui/groups-table.tsx
 "use client";
 
 import {
@@ -15,9 +16,16 @@ import {
   Select,
   Image,
   HStack,
+  IconButton,
+  Input,
+  InputGroup,
+  InputRightElement,
+  Stack,
+  Flex,
 } from '@chakra-ui/react';
-import React, { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { SearchIcon, CloseIcon } from '@chakra-ui/icons';
 import { Pagination } from "@/components/ui/pagination";
 
 interface GroupBackend {
@@ -29,21 +37,37 @@ interface GroupBackend {
   activo?: boolean;
   is_active?: boolean;
   email?: string;
+  telefono?: string;
   phone?: string;
-  image?: string;
-  logo_url?: string;
-  logo?: string;
+  imagen_url?: string;
 }
 
 interface GroupsTableProps {
   initialGroups: GroupBackend[];
   currentPage: number;
-  perPage: number;
+  totalPages: number;
+  currentFaculty: string;
+  currentSearch: string;
+  currentActive: string;
 }
 
-export function GroupsTable({ initialGroups, currentPage, perPage }: GroupsTableProps) {
+export function GroupsTable({ 
+  initialGroups, 
+  currentPage, 
+  totalPages,
+  currentFaculty,
+  currentSearch,
+  currentActive,
+}: GroupsTableProps) {
   const router = useRouter();
-  const [selectedFaculty, setSelectedFaculty] = useState<string>('Todos');
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // Estados locales para controlar los filtros
+  const [selectedFaculty, setSelectedFaculty] = useState<string>(currentFaculty);
+  const [selectedActive, setSelectedActive] = useState<string>(currentActive);
+  const [isSearchOpen, setIsSearchOpen] = useState<boolean>(Boolean(currentSearch));
+  const [searchQuery, setSearchQuery] = useState<string>(currentSearch);
 
   const facultadesUCV = [
     'Todos',
@@ -57,39 +81,131 @@ export function GroupsTable({ initialGroups, currentPage, perPage }: GroupsTable
     'Ciencias Económicas y Sociales',
     'Ciencias Jurídicas y Políticas',
     'Agronomía',
-    'Ciencias Veterinarias'
+    'Ciencias Veterinarias',
+    'DEU'
   ];
 
-  const filteredGroups = useMemo(() => {
-    return initialGroups.filter(g => {
-      if (selectedFaculty === 'Todos') return true;
-      const facultadReal = g.facultad || g.faculty || '';
-      return facultadReal.toLowerCase().trim() === selectedFaculty.toLowerCase().trim();
-    });
-  }, [initialGroups, selectedFaculty]);
+  // Helper para actualizar los parámetros en la URL
+  const updateUrlParams = (newParams: Record<string, string | null>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    
+    // Al cambiar cualquier filtro, reseteamos a la página 1
+    params.set('page', '1');
 
-  const totalPagesVirtual = useMemo(() => {
-    if (initialGroups.length < perPage) {
-      return currentPage;
+    Object.entries(newParams).forEach(([key, value]) => {
+      if (!value || value === 'Todos' || value === '') {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+    });
+
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  const handleFacultyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setSelectedFaculty(value);
+    updateUrlParams({ faculty: value });
+  };
+
+  const handleActiveChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setSelectedActive(value);
+    updateUrlParams({ active: value });
+  };
+
+  const handleSearchSubmit = () => {
+    updateUrlParams({ q: searchQuery });
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    setIsSearchOpen(false);
+    updateUrlParams({ q: null });
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearchSubmit();
     }
-    return currentPage + 1;
-  }, [initialGroups, currentPage, perPage]);
+  };
 
   return (
     <Box>
-      {/* Filtros por Facultad */}
-      <Box mb={6} p={4} bg="gray.50" borderRadius="md">
-        <Text mb={2} fontWeight="bold" color="gray.700">Filtrar por Facultad (UCV):</Text>
-        <Select 
-          maxW="400px" 
-          bg="white" 
-          value={selectedFaculty} 
-          onChange={(e) => setSelectedFaculty(e.target.value)}
-        >
-          {facultadesUCV.map(fac => (
-            <option key={fac} value={fac}>{fac}</option>
-          ))}
-        </Select>
+      {/* Sección de Filtros y Búsqueda */}
+      <Box mb={6} p={4} bg="gray.50" borderRadius="xl" borderWidth="1px" borderColor="gray.100">
+        <Stack direction={{ base: "column", md: "row" }} spacing={4} align="center" justify="space-between">
+          
+          <Flex wrap="wrap" gap={4} flex={1} w="full">
+            {/* Filtro por Facultad */}
+            <Box minW="220px">
+              <Text mb={1} fontSize="xs" fontWeight="bold" color="gray.700">Filtrar por Facultad (UCV):</Text>
+              <Select 
+                bg="white" 
+                size="sm"
+                borderRadius="md"
+                value={selectedFaculty} 
+                onChange={handleFacultyChange}
+              >
+                {facultadesUCV.map(fac => (
+                  <option key={fac} value={fac}>{fac}</option>
+                ))}
+              </Select>
+            </Box>
+
+            {/* Filtro por Estado */}
+            <Box minW="180px">
+              <Text mb={1} fontSize="xs" fontWeight="bold" color="gray.600">ESTADO DE GRUPO</Text>
+              <Select 
+                bg="white" 
+                size="sm"
+                borderRadius="md"
+                value={selectedActive} 
+                onChange={handleActiveChange}
+              >
+                <option value="Todos">Todos los Estados</option>
+                <option value="true">Activos</option>
+                <option value="false">Inactivos / Pendientes</option>
+              </Select>
+            </Box>
+          </Flex>
+
+          {/* Buscador interactivo por Nombre */}
+          <Box flexShrink={0} alignSelf={{ base: "flex-end", md: "center" }}>
+            {isSearchOpen ? (
+              <InputGroup size="sm" maxW="300px">
+                <Input
+                  placeholder="Buscar grupo por nombre..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  bg="white"
+                  borderRadius="md"
+                  autoFocus
+                />
+                <InputRightElement>
+                  <IconButton
+                    aria-label="Limpiar o cerrar búsqueda"
+                    icon={<CloseIcon />}
+                    size="xs"
+                    variant="ghost"
+                    onClick={handleClearSearch}
+                  />
+                </InputRightElement>
+              </InputGroup>
+            ) : (
+              <IconButton
+                aria-label="Buscar grupo por nombre"
+                icon={<SearchIcon />}
+                size="sm"
+                colorScheme="teal"
+                variant="outline"
+                onClick={() => setIsSearchOpen(true)}
+              />
+            )}
+          </Box>
+        </Stack>
       </Box>
 
       {/* Tabla */}
@@ -105,27 +221,33 @@ export function GroupsTable({ initialGroups, currentPage, perPage }: GroupsTable
             </Tr>
           </Thead>
           <Tbody>
-            {filteredGroups.length > 0 ? (
-              filteredGroups.map((grupo, index) => {
-                const nombreGrupo = grupo.nombre || grupo.name || "Sin nombre asignado";
-                const facultadGrupo = grupo.facultad || grupo.faculty || "No asignada";
-                const estaActivo = grupo.activo !== undefined ? grupo.activo : true;
-                const grupoId = grupo.id || index;
-                const logoSrc = grupo.image || grupo.logo_url || grupo.logo || "/placeholder-logo.png";
+            {initialGroups.length > 0 ? (
+              initialGroups.map((grupo, index) => {
+                const nombreGrupo = grupo.nombre || "Nombre no disponible";
+                const facultadGrupo = grupo.facultad || "Facultad no disponible";
+                const estaActivo = grupo.activo !== undefined ? grupo.activo : (grupo.is_active !== undefined ? grupo.is_active : true);
+                const grupoId = grupo.id;
+
+                // Mapeo exhaustivo para logo/imagen
+                const logoSrc = grupo.imagen_url || "/imagen-no-disponible.jpg";
+                
+                // Mapeo exhaustivo de contacto
+                const emailContacto = grupo.email || "Sin correo";
+                const telefonoContacto = grupo.telefono || "Sin teléfono";
 
                 return (
                   <Tr key={grupoId} _hover={{ bg: "gray.50" }}>
                     
-                    {/* Celda con Logo + Nombre clickable */}
+                    {/* Logo + Nombre */}
                     <Td>
                       <HStack spacing={3}>
                         <Image
                           src={logoSrc}
                           alt={nombreGrupo}
-                          boxSize="50px"
+                          boxSize="48px"
                           objectFit="cover"
                           borderRadius="md"
-                          fallbackSrc="https://placehold.co/50x50?text=Grupo"
+                          fallbackSrc="/imagen-no-disponible.jpg"
                         />
                         <Text
                           fontWeight="bold" 
@@ -139,26 +261,27 @@ export function GroupsTable({ initialGroups, currentPage, perPage }: GroupsTable
                       </HStack>
                     </Td>
                     
+                    {/* Facultad */}
                     <Td>
-                      <Badge colorScheme="purple" variant="subtle">
+                      <Badge colorScheme="secondary" variant="subtle" px={2} py={1} borderRadius="sm">
                         {facultadGrupo}
                       </Badge>
                     </Td>
 
                     {/* Contacto */}
                     <Td>
-                      <Text fontSize="sm">{grupo.email || "Sin correo"}</Text>
-                      <Text fontSize="sm" color="gray.500">
-                        {grupo.phone || "Sin teléfono"}
-                      </Text>
+                      <Text fontSize="sm" fontWeight="medium" color="gray.800">{emailContacto}</Text>
+                      <Text fontSize="xs" color="gray.500">{telefonoContacto}</Text>
                     </Td>
                     
+                    {/* Estado */}
                     <Td>
-                      <Badge colorScheme={estaActivo ? "green" : "orange"}>
+                      <Badge colorScheme={estaActivo ? "green" : "red"} variant="solid" borderRadius="full" px={2}>
                         {estaActivo ? "Activo" : "Pendiente / Inactivo"}
                       </Badge>
                     </Td>
 
+                    {/* Acciones */}
                     <Td textAlign="center">
                       <Button
                         size="sm"
@@ -174,8 +297,8 @@ export function GroupsTable({ initialGroups, currentPage, perPage }: GroupsTable
               })
             ) : (
               <Tr>
-                <Td colSpan={5} textAlign="center" py={10}>
-                  <Text color="gray.500">No se encontraron grupos registrados para los criterios seleccionados.</Text>
+                <Td colSpan={5} textAlign="center" py={12}>
+                  <Text color="gray.500" fontSize="md">No se encontraron grupos registrados para los criterios seleccionados.</Text>
                 </Td>
               </Tr>
             )}
@@ -186,8 +309,13 @@ export function GroupsTable({ initialGroups, currentPage, perPage }: GroupsTable
       {/* Paginación */}
       <Pagination 
         currentPage={currentPage} 
-        totalPages={totalPagesVirtual} 
+        totalPages={totalPages} 
         basePath="/admin/grupos"
+        queryParams={{
+          ...(selectedFaculty !== 'Todos' && { faculty: selectedFaculty }),
+          ...(selectedActive !== 'Todos' && { active: selectedActive }),
+          ...(currentSearch && { q: currentSearch }),
+        }}
       />
     </Box>
   );

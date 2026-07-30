@@ -4,11 +4,12 @@
 import React, { useState, useEffect } from "react";
 import { 
   VStack, Input, Button, FormControl, FormLabel, 
-  Heading, useToast, Box, Flex, Text, Link 
+  Heading, useToast, Box, Text, Link 
 } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/auth-context";
 import { apiRequest } from "@/components/formularios/api";
+import { getDashboardRouteByRoles } from "@/utils/redirectByRole";
 
 interface GroupBackendItem {
   id: any;
@@ -19,13 +20,16 @@ export function LoginForm() {
   const [nombreUsuario, setNombreUsuario] = useState(""); 
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { user, login } = useAuth();
   const router = useRouter();
   const toast = useToast();
 
   useEffect(() => { 
-    localStorage.clear(); 
-  }, []);
+    if (user && user.roles) {
+      const targetRoute = getDashboardRouteByRoles(user.roles);
+      router.replace(targetRoute);
+    }
+  }, [user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,18 +86,8 @@ export function LoginForm() {
 
       toast({ title: "¡Bienvenido!", status: "success", duration: 2000 });
 
-      if (roles.includes("root") || roles.includes("deu_admin")) {
-        window.location.href = "/admin/dashboard";
-      } 
-      else if (roles.includes("faculty_admin")) {
-        window.location.href = "/adminfacultad/dashboard";
-      } 
-      else if (roles.includes("group_admin") || roles.includes("group_helper") || roles.includes("visitante")) {
-        window.location.href = "/admingroup/dashboard";
-      } 
-      else {
-        window.location.href = "/"; 
-      }
+      const targetRoute = getDashboardRouteByRoles(infoUsuario.roles || []);
+      window.location.href = targetRoute;
 
     } catch (error: any) {
       toast({ 
@@ -106,6 +100,11 @@ export function LoginForm() {
       setIsLoading(false);
     }
   };
+
+  // Si ya hay un usuario logueado, podemos evitar renderizar el formulario mientras redirige
+  if (user) {
+    return null; 
+  }
 
   return (
     <Box 

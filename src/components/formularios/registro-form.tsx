@@ -1,6 +1,7 @@
+// /components/formularios/registro-form.tsx
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -18,6 +19,7 @@ import {
 import { useAuth } from "@/app/context/auth-context";
 import { useRouter } from "next/navigation";
 import { apiRequest } from "@/components/formularios/api";
+import { getDashboardRouteByRoles } from "@/utils/redirectByRole";
 
 export const RegisterForm = () => {
   const [step, setStep] = useState(1);
@@ -36,11 +38,19 @@ export const RegisterForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const toast = useToast();
 
-  const { login } = useAuth(); 
+  const { user, login } = useAuth(); 
   const router = useRouter(); 
 
   const formBgColor = useColorModeValue("white", "gray.700");
   const inputBorderColor = useColorModeValue("gray.300", "gray.600");
+
+  // Si hay sesión iniciada, reedirige
+  useEffect(() => {
+    if (user && user.roles) {
+      const targetRoute = getDashboardRouteByRoles(user.roles);
+      router.replace(targetRoute);
+    }
+  }, [user, router]);
 
   const handleNext = () => setStep(step + 1);
   const handleBack = () => setStep(step - 1);
@@ -87,7 +97,10 @@ export const RegisterForm = () => {
       if (data.token) {
         localStorage.setItem('token', data.token);
         login(data.user);
-        router.push("/");
+        
+        // Redirigir según el rol del nuevo usuario (visitante)
+        const targetRoute = getDashboardRouteByRoles(data.user?.roles || []);
+        window.location.href = targetRoute;
       } else {
         router.push("/login");
       }
@@ -97,6 +110,11 @@ export const RegisterForm = () => {
       setIsLoading(false);
     }
   };
+
+  // Si tenemos sesión iniciada, no mostramos el formulario
+  if (user) {
+    return null;
+  }
 
   return (
     <Box
@@ -237,12 +255,11 @@ export const RegisterForm = () => {
               {error && <Text color="red.500" fontSize="sm" mt={1}>{error}</Text>}
             </FormControl>
           </Stack>
-
         </Stack>
 
         <Stack direction="row" spacing={4} mt={6} justify="center">
           {step > 1 && (
-            <Button onClick={handleBack} variant="outline" size="lg" mt={4} >
+            <Button onClick={handleBack} variant="outline" size="lg" mt={4}>
               Atrás
             </Button>
           )}

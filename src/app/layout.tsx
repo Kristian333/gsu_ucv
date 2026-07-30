@@ -2,9 +2,14 @@ import type { Metadata } from 'next'
 import { Inter, Montserrat } from 'next/font/google'
 import { Providers } from "./providers"
 import './globals.css'
-import { Navbar } from "../components/layout/navbar";
+import { Navbar } from "../components/layout/navbar"
 
-const inter = Inter({ subsets: ['latin'] })
+// Declaramos 'variable' en ambas fuentes
+const inter = Inter({ 
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+})
 
 const montserrat = Montserrat({
   subsets: ['latin'],
@@ -14,8 +19,8 @@ const montserrat = Montserrat({
 })
 
 export const metadata: Metadata = {
-  title: 'Gestion Social Universitaria',
-  description: 'Descripcion del modulo de gestion social universitaria',
+  title: 'Gestión Social Universitaria',
+  description: 'Gestión social universitaria',
 }
 
 export default function RootLayout({

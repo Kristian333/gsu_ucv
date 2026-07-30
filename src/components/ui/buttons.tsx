@@ -9,7 +9,7 @@ interface ButtonLibraryProps extends ButtonProps {}
  * Suele ser el más destacado visualmente.
  */
 export const PrimaryButton: React.FC<ButtonLibraryProps> = (props) => {
-  return <ChakraButton bg="primary" color="white" size="lg" {...props} />;
+  return <ChakraButton bg="primary" color="white" size="lg" _hover={{ bg: "primary.600" }} _active={{ bg: "primary.700" }} {...props} />;
 };
 
 /**
@@ -17,7 +17,7 @@ export const PrimaryButton: React.FC<ButtonLibraryProps> = (props) => {
  * Es menos prominente que el botón primario.
  */
 export const SecondaryButton: React.FC<ButtonLibraryProps> = (props) => {
-  return <ChakraButton bg="secondary" color="white" size="lg"  {...props} />;
+  return <ChakraButton bg="secondary" color="white" size="lg" _hover={{ bg: "secondary.600" }} _active={{ bg: "secondary.700" }}  {...props} />;
 };
 
 /**

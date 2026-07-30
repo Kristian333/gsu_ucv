@@ -66,10 +66,10 @@ async function getAllGroups(): Promise<GroupOption[]> {
             totalPages = Math.ceil(count / perPage) || 1;
 
             for (const g of rawGroups) {
-                if (g.id && (g.nombre || g.name)) {
+                if (g.id && g.nombre) {
                     allGroups.push({
                         id: String(g.id),
-                        nombre: g.nombre || g.name,
+                        nombre: g.nombre,
                     });
                 }
             }

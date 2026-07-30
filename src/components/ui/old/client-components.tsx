@@ -7,7 +7,7 @@ import NextLink from 'next/link';
 import dynamic from "next/dynamic";
 import { PrimaryButton, SecondaryButton } from "@/components/ui/buttons";
 
-const Carousel = dynamic(() => import("@/components/ui/carousel"), {
+const Carousel = dynamic(() => import("@/components/ui/old/carousel"), {
   ssr: false,
 });
 
