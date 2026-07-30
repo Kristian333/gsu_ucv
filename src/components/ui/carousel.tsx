@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Box, Flex, IconButton, Image, Text, VStack, Container } from "@chakra-ui/react";
-import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
+import { Box, Flex, Image, Text, VStack, Grid, Badge, Stack } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
+import NextLink from "next/link";
+import { PrimaryButton, SecondaryButton } from "@/components/ui/buttons";
 
 interface Activity {
   id: number;
@@ -21,11 +22,10 @@ interface CarouselProps {
   activities: Activity[];
 }
 
-export default function Carousel({activities}: CarouselProps) {
+export default function Carousel({ activities }: CarouselProps) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const router = useRouter();
-
 
   function normalizeDate(date: Date) {
     const d = new Date(date);
@@ -35,228 +35,199 @@ export default function Carousel({activities}: CarouselProps) {
 
   function parseLocalDate(dateStr: string) {
     if (!dateStr) return new Date();
-  
-    // Si viene en formato DD/MM/YYYY
     if (dateStr.includes("/")) {
       const [d, m, y] = dateStr.split("/").map(Number);
-      return new Date(y, m - 1, d); 
-  }
-
-    // Si viene en formato ISO o YYYY-MM-DD
+      return new Date(y, m - 1, d);
+    }
     return new Date(dateStr);
   }
 
   const today = normalizeDate(new Date());
 
-  // Filtrar, ordenar y limitar los items. Solo actividades futuras
-  const upcomingOrOngoing = activities.filter(item => {
+  const upcomingOrOngoing = activities.filter((item) => {
     const start = normalizeDate(parseLocalDate(item.date_start));
     const end = normalizeDate(parseLocalDate(item.date_end));
-
-    /*
-        - Futuro: start > hoy
-        - En curso: start <= hoy <= end
-        - Pasado: end < hoy (se excluye)
-    */
     return start > today || (start <= today && end >= today);
   });
 
-  // Ordenar en curso + futuros por fecha de inicio ASC (más próximo primero)
+  // Ordenamiento adicional defensivo por fecha
   upcomingOrOngoing.sort((a, b) => (a.date_start > b.date_start ? 1 : -1));
 
-  // Limitar a 5 elementos
   let items = upcomingOrOngoing.slice(0, 5);
 
-  // Placeholder si no hay actividades futuras
-  const placeholder = {
+  const placeholder: Activity = {
     id: -1,
-    title: "Bienvenido a la Gestión Social Universitaria",
-    description: "Descubre nuestros grupos de extensión y sus próximas actividades",
-    image: "https://placehold.co/1200x500/01695b/ffffff/png?text=Gestión+Social+Universitaria",
+    title: "Próximas Actividades Universitarias",
+    description: "Mantente al tanto de las actividades de extensión e impacto social organizadas por nuestros grupos.",
+    image: "/image-1.png",
     date_start: "",
     date_end: "",
-    place: "",
+    place: "Universidad Central de Venezuela",
     group: "",
-    area: [] as string[],
+    area: [],
   };
 
   if (items.length === 0) items = [placeholder];
 
   const length = items.length;
 
-  // Prev / Next
-  const prev = () => setIndex((i) => (i - 1 + length) % length);
-  const next = () => setIndex((i) => (i + 1) % length);
-
-  const [tilt, setTilt] = useState({ x: 10, y: -18 });
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    const rotateY = ((x / rect.width) - 0.5) * 35;
-    const rotateX = -((y / rect.height) - 0.5) * 35;
-
-    setTilt({ x: rotateX, y: rotateY });
-  };
-
-  const resetTilt = () => setTilt({ x: 10, y: -18 });
-
-  // Auto-slide cada 4 segundos
   useEffect(() => {
-    if (paused) return;
-    const interval = setInterval(next, 4000);
+    if (paused || length <= 1) return;
+    const interval = setInterval(() => {
+      setIndex((prev) => (prev + 1) % length);
+    }, 4500);
     return () => clearInterval(interval);
-  }, [paused, index]);
-
-  if (!items || items.length === 0) return null;
+  }, [paused, length]);
 
   return (
-    <Box
-      position="relative"
-      w="100%"
-      overflow="hidden"
-      h={{ base: "auto", md: "600px" }}
-      bg="transparent"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-    >
-      {/* Contenedor de slides */}
-      <Flex
-        w={`${length * 100}%`}
-        h="100%"
-        transform={`translateX(-${index * (100 / length)}%)`}
-        transition="transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)"
+    <Box maxW="container.xl" mx="auto" px={0} py={6}>
+      <Grid
+        templateColumns={{ base: "1fr", lg: "1.5fr 1fr" }}
+        gap={8}
+        alignItems="stretch"
       >
-        {items.map((item) => (
-          <Box key={item.id} w={`${100 / length}%`} h="100%" px={{ base: 6, md: 32 }}>
-            <Flex
-              h="100%"
-              align="center"
-              justify="space-between"
-              direction={{ base: "column", md: "row" }}
-              onMouseMove={handleMouseMove}
-              onMouseLeave={resetTilt}
-            >
-              {/* TEXTO */}
-              <Box 
-                maxW={{ base: "100%", md: "45%" }} 
-                textAlign="left" 
-                p={8}
-                bg="white"
-                backdropFilter="blur(10px)"
-                borderRadius="2xl"
-                boxShadow="xl"
-                border="1px solid"
-                borderColor="whiteAlpha.400"
-              >
-                <Text fontSize="3xl" fontWeight="black" mb={2} lineHeight="1.1" color="gray.800">
-                  {item.title}
-                </Text>
-
-                {item.id !== -1 && (
-                  <Text fontSize="sm" fontWeight="bold" color="primary" mb={4} textTransform="uppercase">
-                    📅 {item.date_start === item.date_end ? item.date_start : `${item.date_start} al ${item.date_end}`} — 📍 {item.place}
-                  </Text>
-                )}
-
-                <Text fontSize="lg" color="gray.700" mb={6} noOfLines={3}>
-                  {item.description}
-                </Text>
-                
-                {item.id !== -1 && (
-                    <Box 
-                        as="button" 
-                        onClick={() => router.push(`/actividad/${item.id}`)}
-                        bg="primary" 
-                        color="white" 
-                        px={8} 
-                        py={3} 
-                        borderRadius="full" 
-                        fontWeight="bold"
-                        _hover={{ transform: "translateY(-2px)", boxShadow: "0 10px 20px rgba(0,0,0,0.3)" }}
-                        transition="all 0.2s"
-                    >
-                        Ver detalles
-                    </Box>
-                )}
-              </Box>
-
-              {/* IMAGEN */}
+        {/* COLUMNA 1: CARRUSEL CON EFECTO FADE */}
+        <Box
+          position="relative"
+          minH={{ base: "500px", md: "580px" }}
+          onMouseEnter={() => setPaused(true)}
+          onMouseLeave={() => setPaused(false)}
+        >
+          {items.map((item, i) => {
+            const isActive = i === index;
+            return (
               <Box
-                position="relative"
-                w={{ base: "80%", md: "45%" }}
-                perspective="1200px"
+                key={item.id !== -1 ? item.id : `placeholder-${i}`}
+                position={isActive ? "relative" : "absolute"}
+                top={0}
+                left={0}
+                w="100%"
+                h="100%"
+                opacity={isActive ? 1 : 0}
+                visibility={isActive ? "visible" : "hidden"}
+                transition="opacity 0.8s ease-in-out, visibility 0.8s ease-in-out"
+                bg="white"
+                borderRadius="2xl"
+                overflow="hidden"
+                boxShadow="2xl"
+                border="1px solid"
+                borderColor="gray.100"
+                display="flex"
+                flexDirection="column"
               >
-                <Image
-                  src={item.image}
-                  alt={item.title}
-                  borderRadius="3xl"
-                  boxShadow="0 25px 50px -12px rgba(0, 0, 0, 0.4)"
-                  transform={`rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) rotateZ(-3deg)`}
-                  transition="transform 0.2s ease-out"
-                  cursor="pointer"
-                  onClick={() => item.id !== -1 && router.push(`/actividad/${item.id}`)}
-                />
+                {/* Imagen superior */}
+                <Box position="relative" w="100%" h={{ base: "220px", md: "300px" }} overflow="hidden" bg="gray.100">
+                  <Image
+                    src={item.image}
+                    alt={item.title}
+                    w="100%"
+                    h="100%"
+                    objectFit="cover"
+                    fallbackSrc="/imagen-no-disponible.jpg"
+                  />
+                  {item.group && (
+                    <Badge
+                      position="absolute"
+                      top={4}
+                      left={4}
+                      bg="primary"
+                      color="white"
+                      px={3}
+                      py={1}
+                      borderRadius="full"
+                      fontSize="xs"
+                      textTransform="uppercase"
+                      boxShadow="md"
+                    >
+                      {item.group}
+                    </Badge>
+                  )}
+                </Box>
+
+                {/* Contenido / Data inferior */}
+                <VStack align="flex-start" justify="space-between" flex={1} p={{ base: 6, md: 8 }} spacing={4}>
+                  <VStack align="flex-start" spacing={2} w="100%">
+                    {item.id !== -1 && (
+                      <Text fontSize="xs" fontWeight="bold" color="secondary" textTransform="uppercase" letterSpacing="wider">
+                        📅 {item.date_start === item.date_end ? item.date_start : `${item.date_start} al ${item.date_end}`} — 📍 {item.place}
+                      </Text>
+                    )}
+
+                    <Text fontSize={{ base: "xl", md: "2xl" }} fontWeight="extrabold" color="gray.800" lineHeight="tight">
+                      {item.title}
+                    </Text>
+
+                    <Text fontSize="md" color="gray.600" noOfLines={3}>
+                      {item.description}
+                    </Text>
+                  </VStack>
+
+                  {item.id !== -1 && (
+                    <PrimaryButton
+                      size="md"
+                      onClick={() => router.push(`/actividad/${item.id}`)}
+                    >
+                      Ver detalles de la actividad
+                    </PrimaryButton>
+                  )}
+                </VStack>
               </Box>
-            </Flex>
-          </Box>
-        ))}
-      </Flex>
+            );
+          })}
+        </Box>
 
-      {/* Flechas */}
-    
-      <IconButton
-        aria-label="Prev"
-        icon={<ChevronLeftIcon boxSize={10} />}
-        position="absolute"
-        top="50%"
-        left="20px"
-        onClick={prev}
-        variant="ghost"
-        color="secondary"
-        bg= "whiteAlpha.800"
-        _hover={{ bg: "whiteAlpha.800", transform: "translateY(0%) scale(1.15)" }}
-        zIndex={10}
-      />
-
-      <IconButton
-        aria-label="Next"
-        icon={<ChevronRightIcon boxSize={10} />}
-        position="absolute"
-        top="50%"
-        right="20px"
-        onClick={next}
-        variant="ghost"
-        color="secondary"
-        bg= "whiteAlpha.800"
-        _hover={{ bg: "whiteAlpha.800", transform: "translateY(0%) scale(1.15)" }}
-        zIndex={10}
-      />
-      
-
-      {/* Dots */}
-      <Flex
-        position="absolute"
-        bottom="30px"
-        width="100%"
-        justifyContent="center"
-        gap={3}
-      >
-        {items.map((_, i) => (
+        {/* COLUMNA 2: BANNER Y BOTÓN DE ACTIVIDADES */}
+        <Box
+          position="relative"
+          borderRadius="2xl"
+          overflow="hidden"
+          boxShadow="xl"
+          minH={{ base: "320px", lg: "auto" }}
+          display="flex"
+          flexDirection="column"
+          justifyContent="center"
+          alignItems="center"
+          p={{ base: 8, md: 12 }}
+          textAlign="center"
+        >
+          {/* Fondo con imagen y overlay de color institucional */}
           <Box
-            key={i}
-            w={i === index ? "30px" : "10px"}
-            h="6px"
-            borderRadius="full"
-            bg={i === index ? "secondary" : "whiteAlpha.700"}
-            transition="all 0.3s ease"
-            cursor="pointer"
-            onClick={() => setIndex(i)}
+            position="absolute"
+            top={0}
+            left={0}
+            w="100%"
+            h="100%"
+            backgroundImage="url('/background-1.jpg')"
+            backgroundSize="cover"
+            backgroundPosition="center"
+            filter="brightness(0.6)"
+            zIndex={0}
           />
-        ))}
-      </Flex>
+          <Box
+            position="absolute"
+            top={0}
+            left={0}
+            w="100%"
+            h="100%"
+            bg="linear-gradient(135deg, rgba(1, 143, 124, 0.85) 0%, rgba(1, 105, 91, 0.95) 100%)"
+            zIndex={1}
+          />
+
+          <VStack zIndex={2} spacing={6} maxW="400px">
+            <Text fontSize={{ base: "2xl", md: "3xl" }} fontWeight="black" color="white" lineHeight="shorter">
+              Explora la lista completa de actividades
+            </Text>
+            <Text fontSize="sm" color="whiteAlpha.900">
+              Descubre talleres, conferencias, jornadas y otras actividades realizadas por los Grupos de Extensión de la UCV.
+            </Text>
+            <NextLink href="/actividades" passHref>
+              <SecondaryButton size="lg" px={8}>
+                Ver todas las actividades
+              </SecondaryButton>
+            </NextLink>
+          </VStack>
+        </Box>
+      </Grid>
     </Box>
   );
 }

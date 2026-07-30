@@ -1,7 +1,7 @@
 // app/grupo/[groupId]/GroupClientPage.tsx
 "use client";
 
-import { Box, Flex, Heading, Text, Image, VStack, Divider } from "@chakra-ui/react";
+import { Box, Flex, Heading, Text, Image, VStack, Divider, Button } from "@chakra-ui/react";
 import NextLink from "next/link";
 import React, { useState } from "react";
 
@@ -112,7 +112,7 @@ export default function GroupClientPage({ groupId, group, activities }: Props) {
           </Heading>
 
           {/* Actividades aqui*/}
-          <Flex gap={6} wrap="wrap">
+          <Flex gap={6} wrap="wrap" justify={{ base: "center", md: "flex-start" }}>
             {activities.length === 0 && (
               <Text color="gray.500">Este grupo no tiene actividades registradas actualmente.</Text>
             )}
@@ -153,6 +153,23 @@ export default function GroupClientPage({ groupId, group, activities }: Props) {
                 </Box>
               </NextLink>
             ))}
+          </Flex>
+
+          {/* Botón para redirigir a /actividades filtrado por este grupo */}
+          <Flex justify="center" mt={8}>
+            <NextLink href={`/actividades?group=${groupId}`} passHref>
+              <Button
+                colorScheme="secondary"
+                bg="secondary"
+                color="white"
+                size="md"
+                px={6}
+                _hover={{ opacity: 0.9, transform: "scale(1.02)" }}
+                transition="all 0.2s ease"
+              >
+                Ver todas las actividades
+              </Button>
+            </NextLink>
           </Flex>
         </Box>
 

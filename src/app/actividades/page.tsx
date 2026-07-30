@@ -7,29 +7,30 @@ import { apiServerRequest } from "@/utils/apiServer";
 interface ActivityBackend {
     id: string;
     group_id?: string;
+    nombre_grupo?: string;
     nombre: string;
     descripcion: string;
     fecha: string;
+    ubicacion: string;
     area_conocimiento?: string;
     aliados?: string;
     participantes_estimados?: number;
     participantes_reales?: number;
     financiamiento?: string;
     observaciones?: string;
-    imagen_url?: string;
+    cubierta?: string;
 }
 
-interface GroupBackend {
-    id: any;
-    nombre?: string;
-    name?: string;
+interface GroupOption {
+  id: string;
+  nombre: string;
 }
 
 // Traer lista de grupos para poblar el dropdown de filtro
 function formatDateDDMMYYYY(date: Date): string {
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const year = date.getUTCFullYear();
     return `${day}-${month}-${year}`;
 }
 
@@ -49,14 +50,37 @@ function formatDisplayDate(dateStr: string): string {
     return `${day}/${month}/${year}`;
 }
 
-async function getGroups(): Promise<string[]> {
+async function getAllGroups(): Promise<GroupOption[]> {
+    const allGroups: GroupOption[] = [];
+    let page = 1;
+    const perPage = 50; // Traer páginas grandes para minimizar peticiones
+    let totalPages = 1;
+
     try {
-        const responseData = await apiServerRequest('groups', { cache: 'no-store' });
-        const rawGroups: GroupBackend[] = responseData?.grupos || responseData?.Groups || [];
-        return rawGroups.map(g => g.nombre || g.name || "").filter(Boolean);
+        do {
+            const responseData = await apiServerRequest(`groups?page=${page}&per_page=${perPage}`, { cache: 'no-store' });
+            const rawGroups = responseData?.grupos || responseData?.Groups || [];
+            const pageScope = responseData?.pagina || responseData?.PageScope || {};
+
+            const count = pageScope.count || rawGroups.length;
+            totalPages = Math.ceil(count / perPage) || 1;
+
+            for (const g of rawGroups) {
+                if (g.id && (g.nombre || g.name)) {
+                    allGroups.push({
+                        id: String(g.id),
+                        nombre: g.nombre || g.name,
+                    });
+                }
+            }
+
+            page++;
+        } while (page <= totalPages);
+
+        return allGroups;
     } catch (error) {
-        console.error("ACTIVIDADES SERVER - Error obteniendo grupos:", error);
-        return [];
+        console.error("ACTIVIDADES SERVER - Error obteniendo grupos completos:", error);
+        return allGroups;
     }
 }
 
@@ -77,9 +101,14 @@ async function getActivities({
         const queryParams = new URLSearchParams();
         queryParams.set("page", page.toString());
         queryParams.set("per_page", limit.toString());
+        queryParams.set("order", "desc");
 
         if (group) {
             queryParams.set("group_id", group);
+        }
+
+        if (search) {
+            queryParams.set("name", search); 
         }
 
         // --- Manejo de Filtros por Rango de Fecha / Estado ---
@@ -120,33 +149,24 @@ async function getActivities({
         const pageScope = responseData?.pagina || responseData?.PageScope || {};
 
         // Total de páginas calculadas desde el conteo que retorna el backend
-        const totalCount = pageScope.count || rawActivities.length;
+        const totalCount = pageScope.count ?? rawActivities.length;
         const totalPages = Math.ceil(totalCount / limit) || 1;
 
         // Mapeo al formato consumido por la interfaz de usuario
-        let mappedActivities = rawActivities.map((act) => {
+        const mappedActivities = rawActivities.map((act) => {
             const formattedDate = formatDisplayDate(act.fecha);
 
             return {
                 id: String(act.id),
                 title: act.nombre || "Actividad sin título",
                 description: act.descripcion || "",
-                image: act.imagen_url || null,
+                image: act.cubierta || null,
                 date_start: formattedDate,
                 date_end: formattedDate,
-                place: "Universidad Central de Venezuela",
-                group: act.group_id ? `Grupo #${act.group_id}` : ""
+                place: act.ubicacion || "Universidad Central de Venezuela",
+                group: act.nombre_grupo || (act.group_id ? `Grupo #${act.group_id}` : "")
             };
         });
-
-        // Filtrado cliente secundario (Búsqueda por texto si la API aún no la procesa en DB)
-        if (search.trim() !== "") {
-            const query = search.toLowerCase();
-            mappedActivities = mappedActivities.filter(act =>
-                act.title.toLowerCase().includes(query) ||
-                act.description.toLowerCase().includes(query)
-            );
-        }
 
         return {
             activities: mappedActivities,
@@ -181,7 +201,7 @@ export default async function ActividadesPage({ searchParams }: ActividadesPageP
 
     // Obtención paralela de grupos y actividades
     const [allGroups, { activities, totalPages }] = await Promise.all([
-        getGroups(),
+        getAllGroups(),
         getActivities({ page, limit, search, group, status })
     ]);
 

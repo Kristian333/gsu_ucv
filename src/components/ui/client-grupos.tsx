@@ -25,7 +25,7 @@ interface ClientGroupsProps {
 }
 
 const GroupCard = ({ title, faculty, image }: Omit<GroupProps, 'id'>) => {
-    const placeholderImage = "https://placehold.co/400x200/cccccc/ffffff/png?text=Imagen+no+encontrada";
+    const placeholderImage = "/imagen-no-disponible.jpg";
     return (
         <Card overflow="hidden" variant="unstyled" display="flex" flexDirection="column" justifyContent="center" alignItems="center" role="group">
             <Box overflow="hidden" display="flex" justifyContent="center" alignItems="center" width="100%" height="268px" borderRadius="full" mx="auto">
@@ -116,9 +116,7 @@ export function ClientGroups({ groups, currentPage, totalPages, currentSearch = 
         }
 
         if (newFaculty) {
-            // Reemplazamos espacios por guiones bajos para que la URL quede limpia (ej: Ciencias_Económicas_y_Sociales)
-            const formattedFaculty = newFaculty.replace(/ /g, "_");
-            query.set("faculty", formattedFaculty);
+            query.set("faculty", newFaculty);
         }
 
         router.push(`/grupos?${query.toString()}`);

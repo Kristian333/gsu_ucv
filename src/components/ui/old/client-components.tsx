@@ -104,11 +104,11 @@ export function ClientContent({ groups, activities }: ClientContentProps) {
                 my={0} 
                 borderRadius="full" 
             />
-            <Box >
+            <Box bg="linear-gradient(to bottom, white 30%, var(--chakra-colors-primary) 100%)">
 
                 <VStack spacing={4} py={12} px={6} textAlign="center">
                     
-                    <Heading size="xl" color="gray.800">Nuestras Proximas Actividades</Heading>
+                    <Heading size="xl" color="gray.800">Conoce las Actividades de Extensión</Heading>
                     {/*<Paragraph fontSize="lg">Aprende nuevas habilidades con el respaldo de la universidad.</Paragraph>*/}
                 </VStack>
 

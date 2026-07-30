@@ -5,40 +5,31 @@ import React from "react";
 import { Box, Flex, Heading, Text, Image, VStack, Divider, Link as ChakraLink } from "@chakra-ui/react";
 import NextLink from "next/link";
 
-interface ActivityFile {
-  id: string;
-  nombre: string;
-  url: string;
-  proposito: string;
-}
-
 interface ActivityBackend {
   id: string;
   group_id: string;
+  nombre_grupo?: string;
   nombre: string;
   descripcion: string;
   fecha: string;
+  ubicacion?: string;
   area_conocimiento: string;
   aliados?: string;
+  participantes_grupo?: number;
   participantes_estimados?: number;
   participantes_reales?: number;
   financiamiento?: string;
   observaciones?: string;
-  archivos?: ActivityFile[];
-}
-
-interface LinkedGroup {
-  id: string;
-  title: string;
+  cubierta?: string;
+  gallery_url?: string;
 }
 
 interface Props {
   activityId: string;
   activity: ActivityBackend | null;
-  linkedGroup: LinkedGroup | null;
 }
 
-// Función auxiliar para transformar la fecha "2025-12-03T00:00:00Z" -> "03/12/2025"
+// Función auxiliar para transformar la fecha "YYYY-MM-DD" o ISO -> "DD/MM/YYYY"
 function formatBackendDate(isoString: string): string {
   if (!isoString) return "";
   try {
@@ -55,8 +46,8 @@ function formatBackendDate(isoString: string): string {
   }
 }
 
-export default function ActivityClientPage({ activityId, activity, linkedGroup }: Props) {
-  const placeholderImage = "https://placehold.co/450x300/cccccc/ffffff/png?text=Imagen+Principal+no+encontrada";
+export default function ActivityClientPage({ activityId, activity }: Props) {
+  const placeholderImage = "/imagen-no-disponible.jpg";
 
   // Actividad no Encontrada
   if (!activity) {
@@ -68,14 +59,16 @@ export default function ActivityClientPage({ activityId, activity, linkedGroup }
     );
   }
 
-  // Buscar la imagen cuyo propósito sea "Imagen Princpal" (o fallback si no se ha renombrado en tu BD aún)
-  const mainImageFile = activity.archivos?.find(
-    (f) => f.proposito === "Imagen Princpal" || f.proposito === "background"
-  );
-  const finalImageUrl = mainImageFile ? mainImageFile.url : placeholderImage;
+  // Usar la imagen de cubierta entregada por la API o el fallback
+  const finalImageUrl = activity.cubierta && activity.cubierta.trim() !== "" 
+    ? activity.cubierta 
+    : placeholderImage;
 
-  // Formatear la fecha única del backend
+  // Formatear la fecha
   const fechaFormateada = formatBackendDate(activity.fecha);
+
+  // Lógica futura para la galería (falsa de momento)
+  const showDriveGallery = Boolean(activity.gallery_url && activity.gallery_url.trim() !== "");
 
   {/* Pagina del Actividad */}
   return (
@@ -106,17 +99,17 @@ export default function ActivityClientPage({ activityId, activity, linkedGroup }
               {activity.nombre}
             </Heading>
 
-            {/* Enlace o Fallback del Grupo */}
+            {/* Enlace o Nombre del Grupo */}
               <Text fontSize="xl" color="gray.600">
                 <strong>Grupo:</strong>{" "}
-                {linkedGroup ? (
+                {activity.group_id ? (
                   <ChakraLink
                     as={NextLink}
-                    href={`/grupo/${linkedGroup.id}`}
+                    href={`/grupo/${activity.group_id}`}
                     color="primary"
                     _hover={{ textDecoration: "underline", color: "primary.600" }}
                   >
-                    {linkedGroup.title}
+                    {activity.nombre_grupo || `Grupo #${activity.group_id}`}
                   </ChakraLink>
                 ) : (
                 <Text as="span" color="red.400" fontStyle="italic">
@@ -125,36 +118,53 @@ export default function ActivityClientPage({ activityId, activity, linkedGroup }
               )}
             </Text>
 
-            {/* Fecha formateada en base a un solo campo */}
+            {/* Fecha */}
             {activity.fecha && (
               <Text fontSize="lg" color="gray.500">
-                📅 Fecha: {fechaFormateada}
+                📅 <strong>Fecha:</strong> {fechaFormateada}
               </Text>
             )}
 
-            {/* Campo Área de Conocimiento */}
+            {/* Ubicación */}
+            {activity.ubicacion && activity.ubicacion.trim() !== "" && (
+              <Text fontSize="lg" color="gray.500">
+                📍 <strong>Ubicación:</strong> {activity.ubicacion}
+              </Text>
+            )}
+
+            {/* Área de Conocimiento */}
             {activity.area_conocimiento && (
               <Text fontSize="lg" color="gray.500">
-                Actividad: {activity.area_conocimiento}
+                📚 <strong>Área:</strong> {activity.area_conocimiento}
               </Text>
             )}
 
-            {/* Campos adicionales condicionales (uno abajo del otro) */}
+            {/* Campos adicionales condicionales post reporte */}
+            {/* Aliados */}
             {activity.aliados && activity.aliados.trim() !== "" && (
               <Text fontSize="md" color="gray.600">
-                <strong>Aliados:</strong> {activity.aliados}
+                🤝 <strong>Aliados:</strong> {activity.aliados}
               </Text>
             )}
 
+            {/* Miembros / Participantes del Grupo */}
+            {activity.participantes_grupo !== undefined && activity.participantes_grupo > 0 && (
+              <Text fontSize="md" color="gray.600">
+                👥 <strong>Miembros del Grupo Participantes:</strong> {activity.participantes_grupo}
+              </Text>
+            )}
+
+            {/* Participantes Estimados */}
             {activity.participantes_estimados !== undefined && activity.participantes_estimados > 0 && (
               <Text fontSize="md" color="gray.600">
-                <strong>Participantes Estimados:</strong> {activity.participantes_estimados}
+                🎯 <strong>Participantes Estimados:</strong> {activity.participantes_estimados}
               </Text>
             )}
 
+            {/* Participantes Reales */}
             {activity.participantes_reales !== undefined && activity.participantes_reales > 0 && (
               <Text fontSize="md" color="gray.600">
-                <strong>Participantes Reales:</strong> {activity.participantes_reales}
+                ✅ <strong>Participantes Reales:</strong> {activity.participantes_reales}
               </Text>
             )}
           </VStack>
@@ -168,20 +178,22 @@ export default function ActivityClientPage({ activityId, activity, linkedGroup }
             Descripción
           </Heading>
 
-          <Text fontSize="lg" color="gray.700">
+          <Text fontSize="lg" color="gray.700" whiteSpace="pre-line">
             {activity.descripcion}
           </Text>
         </Box>
 
         {/* Galería */}
-        <Box>
-          <Heading size="lg" mb={4} color="primary">
-            Galería
-          </Heading>
+        {showDriveGallery && (
+          <Box>
+            <Heading size="lg" mb={4} color="primary">
+              Galería
+            </Heading>
 
-          {/* Galeria aqui */}
-
-        </Box>
+            {/* Galeria aqui */}
+            
+          </Box>
+        )}
 
       </VStack>
     </Box>

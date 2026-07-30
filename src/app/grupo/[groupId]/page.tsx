@@ -1,5 +1,6 @@
 // app/grupo/[groupId]/page.tsx
 import React from 'react';
+import { Metadata } from 'next';
 import GroupClientPage from "@/components/ui/grupo";
 import { apiServerRequest } from "@/utils/apiServer";
 import { notFound } from "next/navigation";
@@ -9,7 +10,7 @@ interface GroupBackendResponse {
   nombre?: string;
   descripcion?: string;
   ubicacion?: string;
-  imagen_url?: string;
+  cubierta?: string;
   email?: string;
   telefono?: string;
   facultad?: string;
@@ -20,7 +21,11 @@ interface GroupBackendResponse {
 interface ActivityBackend {
   id: string | number;
   nombre?: string;
-  imagen_url?: string;
+  cubierta?: string;
+}
+
+interface Props {
+  params: { groupId: string };
 }
 
 async function getGroupData(groupId: string) {
@@ -49,7 +54,7 @@ async function getGroupActivities(groupId: string) {
     return rawActivities.map((act) => ({
       id: act.id,
       title: act.nombre || "Actividad sin título",
-      image: act.imagen_url || "/imagen-no-disponible.jpg", 
+      image: act.cubierta || "/imagen-no-disponible.jpg", 
       group: groupId
     }));
   } catch (error) {
@@ -73,7 +78,23 @@ function formatDisplayDate(dateStr: string | undefined): string {
     return `${day}/${month}/${year}`;
 }
 
-export default async function GroupDetailPage({ params }: { params: { groupId: string } }) {
+// Generación de Metadata Dinámica para la pestaña del navegador
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const group = await getGroupData(params.groupId);
+  
+  if (!group) {
+    return {
+      title: "Grupo no encontrado | GSU",
+    };
+  }
+
+  return {
+    title: `${group.nombre || "Detalle del Grupo"} | GSU`,
+    description: group.descripcion?.slice(0, 160) || "Información del grupo de extensión universitaria.",
+  };
+}
+
+export default async function GroupDetailPage({ params }: Props) {
   const groupId = params.groupId;
 
   // Consultas en paralelo
@@ -90,7 +111,7 @@ export default async function GroupDetailPage({ params }: { params: { groupId: s
   const groupFormatted = {
     id: String(rawGroup.id),
     title: rawGroup.nombre || "Grupo sin nombre",
-    image: rawGroup.imagen_url || "/imagen-no-disponible.jpg",
+    image: rawGroup.cubierta || "/imagen-no-disponible.jpg",
     objetive: rawGroup.descripcion || "No hay una descripción u objetivo registrado para este grupo.",
     faculty: rawGroup.facultad || "Facultad no especificada",
     email: rawGroup.email || undefined, 

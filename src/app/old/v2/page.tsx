@@ -2,7 +2,7 @@
 import React from 'react';
 import { Box } from "@chakra-ui/react";
 import { Heading, Paragraph } from "@/components/ui/tipografia";
-import { ClientContent } from '../components/ui/client-components';
+import { ClientContent } from '../../../components/ui/old/client-components';
 import { apiServerRequest } from "@/utils/apiServer"; 
 
 interface GroupBackend {
@@ -14,7 +14,6 @@ interface GroupBackend {
 interface ActivityBackend {
     id: string;
     group_id?: string;
-    nombre_grupo?: string;
     nombre: string;
     descripcion: string;
     fecha: string;
@@ -25,7 +24,7 @@ interface ActivityBackend {
     participantes_reales?: number;
     financiamiento?: string;
     observaciones?: string;
-    cubierta?: string;
+    imagen_url?: string;
 }
 
 async function getRandomGroups(): Promise<GroupBackend[]> {
@@ -64,8 +63,7 @@ async function getActivities() {
         const queryParams = new URLSearchParams({
             per_page: "10",
             start_date: startDateStr,
-            end_date: endDateStr,
-            order: "asc" 
+            end_date: endDateStr
         });
 
         const responseData = await apiServerRequest(`activities?${queryParams.toString()}`, {
@@ -91,11 +89,11 @@ async function getActivities() {
                 id: Number(act.id) || act.id,
                 title: act.nombre || "Actividad de Extensión",
                 description: act.descripcion || "Sin descripción disponible.",
-                image: act.cubierta || "/imagen-no-disponible.jpg",
+                image: act.imagen_url || "/imagen-no-disponible.jpg",
                 date_start: formattedDate,
                 date_end: formattedDate,
                 place: act.ubicacion || "Universidad Central de Venezuela",
-                group: act.nombre_grupo || `Grupo #${act.group_id}`,
+                group: act.group_id ? `Grupo #${act.group_id}` : "General",
                 area: act.area_conocimiento ? [act.area_conocimiento] : []
             };
         });
