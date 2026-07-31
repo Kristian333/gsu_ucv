@@ -45,6 +45,10 @@ export function LoginForm() {
         localStorage.setItem("token", data.token);
       }
 
+      if (data.facultad) {
+        localStorage.setItem("facultad", data.facultad);
+      }
+
       const infoUsuario = data.usuario;
       if (!infoUsuario) {
         throw new Error("No se recibieron datos del perfil del usuario.");
@@ -59,7 +63,8 @@ export function LoginForm() {
         correo: infoUsuario.correo || "",
         avatar: infoUsuario.avatar || "",
         roles: infoUsuario.roles || [],
-        groupId: "" 
+        groupId: "",
+        facultad: data.facultad || "" 
       };
 
       // Resolución inmediata si maneja roles de grupo operativo

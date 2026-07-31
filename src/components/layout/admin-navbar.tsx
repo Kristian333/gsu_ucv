@@ -8,13 +8,14 @@ import { usePathname } from 'next/navigation';
 export function AdminNavbar() {
   const pathname = usePathname();
   const linkColor = useColorModeValue('gray.600', 'gray.300');
-  const activeLinkColor = 'blue.500';
+  const activeLinkColor = 'secondary.500';
   const activeLinkBg = useColorModeValue('gray.100', 'gray.700');
 
   const links = [
     { name: 'Dashboard', href: '/admin/dashboard' },
     { name: 'Solicitudes', href: '/admin/solicitudes' },
     { name: 'Grupos', href: '/admin/grupos' },
+    { name: 'Reportes de Actividad', href: '/admin/reportes' },
     //{ name: 'Usuarios', href: '/admin/usuarios' },
     { name: 'Estadisticas', href: '/admin/estadisticas' },
     { name: 'Formatos de Solicitudes', href: '/admin/formatos' },

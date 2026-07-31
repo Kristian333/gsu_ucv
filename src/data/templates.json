@@ -2,7 +2,7 @@
   {
     "id": 1,
     "tipo_solicitud": "Constancia de Registro de Grupo",
-    "modelo_carta": "<p style=\"text-align: right\">Caracas, {{fecha_actual}}</p><p></p><p><strong>PARA QUIEN PUEDA INTERESAR</strong></p><p></p><p>Por medio de la presente se hace constar que el grupo de extensión denominado <strong>{{nombre_grupo}}</strong>, con correo electrónico {{correo_grupo}}, se encuentra registrado oficialmente desde la fecha {{fecha_fundacion}}.</p><p></p><p>Sin más a qué hacer referencia,</p><p></p><p>Dirección de Extensión Universitaria.</p>",
+    "modelo_carta": "<p><strong>PARA QUIEN PUEDA INTERESAR</strong></p><p></p><p>Por medio de la presente se hace constar que el grupo de extensión denominado <strong>{{nombre_grupo}}</strong>, con correo electrónico {{correo_grupo}}, se encuentra registrado oficialmente desde la fecha {{fecha_fundacion}}.</p><p></p><p>Sin más a qué hacer referencia,</p><p></p><p>Dirección de Extensión Universitaria.</p>",
     "notas": ""
   },
   {

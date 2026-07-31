@@ -13,6 +13,7 @@ export interface AuthUser {
     roles: string[];
     group?: string;
     groupId?: string;
+    facultad?: string;
 }
 
 interface AuthContextType {
@@ -75,6 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem("auth-user");
         localStorage.removeItem("token");
         localStorage.removeItem("group_id");
+        localStorage.removeItem("facultad");
     };
 
     return (

@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   description: "Administración de solicitudes de grupos de extensión y recursos.",
 };
 
-export default async function SolicitudesPage() {
+export default async function SolicitudesAdminPage() {
   await checkAdminRole();
 
   return (
@@ -26,7 +26,7 @@ export default async function SolicitudesPage() {
       </Text>
       
       {/* Componente cliente con la lógica dinámica */}
-      <SolicitudesTable />
+      <SolicitudesTable mode="admin" />
     </Box>
   );
 }
