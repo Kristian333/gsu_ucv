@@ -3,6 +3,7 @@ import React from 'react';
 import { Metadata } from "next";
 import { ClientActivities } from '@/components/ui/client-actividades';
 import { apiServerRequest } from "@/utils/apiServer";
+import { formatDateToClient } from "@/utils/common";
 
 interface ActivityBackend {
     id: string;
@@ -10,7 +11,8 @@ interface ActivityBackend {
     nombre_grupo?: string;
     nombre: string;
     descripcion: string;
-    fecha: string;
+    fecha_inicio?: string;
+    fecha_fin?: string;
     ubicacion: string;
     area_conocimiento?: string;
     aliados?: string;
@@ -28,26 +30,10 @@ interface GroupOption {
 
 // Traer lista de grupos para poblar el dropdown de filtro
 function formatDateDDMMYYYY(date: Date): string {
-    const day = String(date.getUTCDate()).padStart(2, '0');
-    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-    const year = date.getUTCFullYear();
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
     return `${day}-${month}-${year}`;
-}
-
-// Para formatear la fecha a mostrar en pantalla (DD/MM/YYYY) sin desfase por zona horaria
-function formatDisplayDate(dateStr: string): string {
-    if (!dateStr) return "";
-    
-    // Si viene en formato YYYY-MM-DD o ISO (2026-07-27T00:00:00Z)
-    const dateObj = new Date(dateStr);
-    if (isNaN(dateObj.getTime())) return dateStr;
-
-    // Usamos los métodos UTC para evitar que el timezone local cambie el día
-    const day = String(dateObj.getUTCDate()).padStart(2, '0');
-    const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
-    const year = dateObj.getUTCFullYear();
-
-    return `${day}/${month}/${year}`;
 }
 
 async function getAllGroups(): Promise<GroupOption[]> {
@@ -113,7 +99,6 @@ async function getActivities({
 
         // --- Manejo de Filtros por Rango de Fecha / Estado ---
         const now = new Date();
-        const todayStr = formatDateDDMMYYYY(now);
 
         if (status === "futura") {
             // Actividades con fecha posterior a hoy
@@ -128,8 +113,10 @@ async function getActivities({
             
         } else if (status === "en_curso") {
             // Actividades en el día de hoy
+            const todayStr = formatDateDDMMYYYY(now);
             queryParams.set("start_date", todayStr);
             queryParams.set("end_date", todayStr);
+
         } else if (status === "finalizada") {
             // Actividades anteriores a hoy
             const yesterday = new Date(now);
@@ -154,15 +141,16 @@ async function getActivities({
 
         // Mapeo al formato consumido por la interfaz de usuario
         const mappedActivities = rawActivities.map((act) => {
-            const formattedDate = formatDisplayDate(act.fecha);
+            const rawStart = act.fecha_inicio || "";
+            const rawEnd = act.fecha_fin || act.fecha_inicio || "";
 
             return {
                 id: String(act.id),
                 title: act.nombre || "Actividad sin título",
                 description: act.descripcion || "",
                 image: act.cubierta || null,
-                date_start: formattedDate,
-                date_end: formattedDate,
+                date_start: formatDateToClient(rawStart),
+                date_end: formatDateToClient(rawEnd),
                 place: act.ubicacion || "Universidad Central de Venezuela",
                 group: act.nombre_grupo || (act.group_id ? `Grupo #${act.group_id}` : "")
             };

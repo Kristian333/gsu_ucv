@@ -4,6 +4,7 @@
 import React from "react";
 import { Box, Flex, Heading, Text, Image, VStack, Divider, Link as ChakraLink } from "@chakra-ui/react";
 import NextLink from "next/link";
+import { formatActivityDateRange } from "@/utils/common";
 
 interface ActivityBackend {
   id: string;
@@ -11,7 +12,8 @@ interface ActivityBackend {
   nombre_grupo?: string;
   nombre: string;
   descripcion: string;
-  fecha: string;
+  fecha_inicio?: string;
+  fecha_fin?: string;
   ubicacion?: string;
   area_conocimiento: string;
   aliados?: string;
@@ -27,23 +29,6 @@ interface ActivityBackend {
 interface Props {
   activityId: string;
   activity: ActivityBackend | null;
-}
-
-// Función auxiliar para transformar la fecha "YYYY-MM-DD" o ISO -> "DD/MM/YYYY"
-function formatBackendDate(isoString: string): string {
-  if (!isoString) return "";
-  try {
-    const dateObj = new Date(isoString);
-    if (isNaN(dateObj.getTime())) return isoString;
-    
-    const day = String(dateObj.getUTCDate()).padStart(2, '0');
-    const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
-    const year = dateObj.getUTCFullYear();
-    
-    return `${day}/${month}/${year}`;
-  } catch (e) {
-    return isoString;
-  }
 }
 
 export default function ActivityClientPage({ activityId, activity }: Props) {
@@ -65,9 +50,11 @@ export default function ActivityClientPage({ activityId, activity }: Props) {
     : placeholderImage;
 
   // Formatear la fecha
-  const fechaFormateada = formatBackendDate(activity.fecha);
+  const rawStart = activity.fecha_inicio || "";
+  const rawEnd = activity.fecha_fin || activity.fecha_inicio || "";
+  const fechaFormateada = formatActivityDateRange(rawStart, rawEnd);
 
-  // Lógica futura para la galería (falsa de momento)
+  // Lógica para la galería
   const showDriveGallery = Boolean(activity.gallery_url && activity.gallery_url.trim() !== "");
 
   {/* Pagina del Actividad */}
@@ -119,7 +106,7 @@ export default function ActivityClientPage({ activityId, activity }: Props) {
             </Text>
 
             {/* Fecha */}
-            {activity.fecha && (
+            {fechaFormateada && (
               <Text fontSize="lg" color="gray.500">
                 📅 <strong>Fecha:</strong> {fechaFormateada}
               </Text>
@@ -190,7 +177,7 @@ export default function ActivityClientPage({ activityId, activity }: Props) {
               Galería
             </Heading>
 
-            {/* Galeria aqui */}
+            {/* Galería */}
             
           </Box>
         )}

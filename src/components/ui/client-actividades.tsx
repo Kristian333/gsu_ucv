@@ -7,6 +7,7 @@ import React from 'react';
 import { Heading, Paragraph } from "@/components/ui/tipografia";
 import { Pagination } from "@/components/ui/pagination";
 import { useRouter } from 'next/navigation';
+import { formatActivityDateRange } from "@/utils/common";
 
 interface ActivityProps {
     id: string;
@@ -38,7 +39,7 @@ const ActivityCard = ({ title, description, image, date_start, date_end, place, 
     const placeholderImage = "/imagen-no-disponible.jpg";
 
     // Formato de fecha
-    const displayDate = date_start === date_end ? date_start : `${date_start} al ${date_end}`;
+    const displayDate = formatActivityDateRange(date_start, date_end);
 
     return (
         <Card
@@ -73,7 +74,7 @@ const ActivityCard = ({ title, description, image, date_start, date_end, place, 
             <CardBody flex="2" display="flex" flexDirection="column" justifyContent="flex-start">
                 <Stack spacing={3}>
                     <Heading size="lg">{title}</Heading>
-                    <Text fontSize="md" color="gray.600">📅 {displayDate}</Text>
+                    {displayDate && <Text fontSize="md" color="gray.600">📅 {displayDate}</Text>}
                     <Text fontSize="md" color="gray.600">📍 {place}</Text>
                     {group && <Text fontSize="md" color="gray.600">👥 {group}</Text>}
                     <Paragraph>

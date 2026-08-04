@@ -140,7 +140,7 @@ export function GroupsTable({
           <Flex wrap="wrap" gap={4} flex={1} w="full">
             {/* Filtro por Facultad */}
             <Box minW="220px">
-              <Text mb={1} fontSize="xs" fontWeight="bold" color="gray.700">Filtrar por Facultad (UCV):</Text>
+              <Text mb={1} fontSize="sm" fontWeight="bold">Filtrar por Facultad (UCV):</Text>
               <Select 
                 bg="white" 
                 size="sm"
@@ -156,7 +156,7 @@ export function GroupsTable({
 
             {/* Filtro por Estado */}
             <Box minW="180px">
-              <Text mb={1} fontSize="xs" fontWeight="bold" color="gray.600">ESTADO DE GRUPO</Text>
+              <Text mb={1} fontSize="sm" fontWeight="bold">ESTADO DE GRUPO</Text>
               <Select 
                 bg="white" 
                 size="sm"

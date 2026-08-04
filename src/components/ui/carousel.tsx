@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Box, Flex, Image, Text, VStack, Grid, Badge, Stack } from "@chakra-ui/react";
+import { Box, Flex, Image, Text, VStack, Grid, Badge } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
 import NextLink from "next/link";
 import { PrimaryButton, SecondaryButton } from "@/components/ui/buttons";
+import { formatActivityDateRange, normalizeDate, parseDate } from "@/utils/common";
 
 interface Activity {
   id: number;
@@ -27,31 +28,20 @@ export default function Carousel({ activities }: CarouselProps) {
   const [paused, setPaused] = useState(false);
   const router = useRouter();
 
-  function normalizeDate(date: Date) {
-    const d = new Date(date);
-    d.setHours(0, 0, 0, 0);
-    return d;
-  }
-
-  function parseLocalDate(dateStr: string) {
-    if (!dateStr) return new Date();
-    if (dateStr.includes("/")) {
-      const [d, m, y] = dateStr.split("/").map(Number);
-      return new Date(y, m - 1, d);
-    }
-    return new Date(dateStr);
-  }
-
   const today = normalizeDate(new Date());
 
   const upcomingOrOngoing = activities.filter((item) => {
-    const start = normalizeDate(parseLocalDate(item.date_start));
-    const end = normalizeDate(parseLocalDate(item.date_end));
+    const start = normalizeDate(parseDate(item.date_start));
+    const end = normalizeDate(parseDate(item.date_end));
     return start > today || (start <= today && end >= today);
   });
 
-  // Ordenamiento adicional defensivo por fecha
-  upcomingOrOngoing.sort((a, b) => (a.date_start > b.date_start ? 1 : -1));
+  // Ordenamiento cronológico
+  upcomingOrOngoing.sort((a, b) => {
+    const dateA = parseDate(a.date_start).getTime();
+    const dateB = parseDate(b.date_start).getTime();
+    return dateA - dateB;
+  });
 
   let items = upcomingOrOngoing.slice(0, 5);
 
@@ -95,6 +85,8 @@ export default function Carousel({ activities }: CarouselProps) {
         >
           {items.map((item, i) => {
             const isActive = i === index;
+            const dateRangeLabel = formatActivityDateRange(item.date_start, item.date_end);
+
             return (
               <Box
                 key={item.id !== -1 ? item.id : `placeholder-${i}`}
@@ -149,7 +141,7 @@ export default function Carousel({ activities }: CarouselProps) {
                   <VStack align="flex-start" spacing={2} w="100%">
                     {item.id !== -1 && (
                       <Text fontSize="xs" fontWeight="bold" color="secondary" textTransform="uppercase" letterSpacing="wider">
-                        📅 {item.date_start === item.date_end ? item.date_start : `${item.date_start} al ${item.date_end}`} — 📍 {item.place}
+                        📅 {dateRangeLabel} — 📍 {item.place}
                       </Text>
                     )}
 

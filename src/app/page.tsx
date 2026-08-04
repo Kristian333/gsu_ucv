@@ -3,7 +3,8 @@ import React from 'react';
 import { Box } from "@chakra-ui/react";
 import { Heading, Paragraph } from "@/components/ui/tipografia";
 import { ClientContent } from '../components/ui/client-components';
-import { apiServerRequest } from "@/utils/apiServer"; 
+import { apiServerRequest } from "@/utils/apiServer";
+import { formatDateToClient } from "@/utils/common";
 
 interface GroupBackend {
     id: any;
@@ -17,7 +18,9 @@ interface ActivityBackend {
     nombre_grupo?: string;
     nombre: string;
     descripcion: string;
-    fecha: string;
+    fecha?: string;
+    fecha_inicio?: string;
+    fecha_fin?: string;
     ubicacion: string;
     area_conocimiento?: string;
     aliados?: string;
@@ -41,7 +44,7 @@ async function getRandomGroups(): Promise<GroupBackend[]> {
 }
 
 // Función auxiliar para formatear la fecha a DD-MM-YYYY (lo que exige Go)
-function formatDateToClient(date: Date): string {
+function formatDateForApiQuery(date: Date): string {
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
@@ -51,14 +54,11 @@ function formatDateToClient(date: Date): string {
 async function getActivities() {
     try {
         const now = new Date();
+        const startDateStr = formatDateForApiQuery(now);
         
-        // Fecha de ayer en formato DD-MM-YYYY
-        const startDateStr = formatDateToClient(now);
-
-        // Fecha a 5 años en el futuro para abarcar todas las actividades futuras
         const farFuture = new Date(now);
         farFuture.setFullYear(now.getFullYear() + 5);
-        const endDateStr = formatDateToClient(farFuture);
+        const endDateStr = formatDateForApiQuery(farFuture);
 
         // Construimos la URL con los parámetros que la API de Go requiere
         const queryParams = new URLSearchParams({
@@ -76,24 +76,17 @@ async function getActivities() {
 
         // Mapear la respuesta del backend al formato que consume el componente Carousel
         return rawActivities.map((act) => {
-            // Formateo sencillo de la fecha ISO "2025-11-30T00:00:00Z" -> "30/11/2025"
-            let formattedDate = "";
-            if (act.fecha) {
-                const dateObj = new Date(act.fecha);
-                formattedDate = dateObj.toLocaleDateString('es-ES', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric'
-                });
-            }
+            // Evaluamos las propiedades que envíe la API
+            const rawStart = act.fecha_inicio || act.fecha || "";
+            const rawEnd = act.fecha_fin || act.fecha || act.fecha_inicio || "";
 
             return {
                 id: Number(act.id) || act.id,
                 title: act.nombre || "Actividad de Extensión",
                 description: act.descripcion || "Sin descripción disponible.",
                 image: act.cubierta || "/imagen-no-disponible.jpg",
-                date_start: formattedDate,
-                date_end: formattedDate,
+                date_start: formatDateToClient(rawStart),
+                date_end: formatDateToClient(rawEnd),
                 place: act.ubicacion || "Universidad Central de Venezuela",
                 group: act.nombre_grupo || `Grupo #${act.group_id}`,
                 area: act.area_conocimiento ? [act.area_conocimiento] : []
