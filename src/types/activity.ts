@@ -6,7 +6,8 @@ export interface ActivityBackend {
   nombre_grupo?: string
   nombre: string
   descripcion?: string
-  fecha?: string
+  fecha_inicio?: string
+  fecha_fin?: string
   ubicacion?: string
   area_conocimiento?: string
   aliados?: string

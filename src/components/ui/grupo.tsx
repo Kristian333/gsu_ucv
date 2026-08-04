@@ -114,7 +114,7 @@ export default function GroupClientPage({ groupId, group, activities }: Props) {
           {/* Actividades aqui*/}
           <Flex gap={6} wrap="wrap" justify={{ base: "center", md: "flex-start" }}>
             {activities.length === 0 && (
-              <Text color="gray.500">Este grupo no tiene actividades registradas actualmente.</Text>
+              <Text color="gray.500">Este grupo no tiene actividades destacadas actualmente.</Text>
             )}
 
             {activities.map((activity) => (

@@ -97,6 +97,7 @@ export const Navbar = () => {
                                             objectFit="cover"
                                             border="3px solid"
                                             borderColor="secondary"
+                                            fallbackSrc="/imagen-no-disponible.jpg"
                                         />
                                     ) : (
                                         <FaUserCircle size="28px" />

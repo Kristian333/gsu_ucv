@@ -41,9 +41,10 @@ async function getGroupData(groupId: string) {
 
 async function getGroupActivities(groupId: string) {
   try {
-    // Pedimos las primeras 4 actividades asociadas a este grupo
+    // Pedimos las primeras 4 actividades destacadas asociadas a este grupo
     const queryParams = new URLSearchParams({
       group_id: groupId,
+      is_featured: "true",
       per_page: "4",
       page: "1"
     });
@@ -58,7 +59,7 @@ async function getGroupActivities(groupId: string) {
       group: groupId
     }));
   } catch (error) {
-    console.error(`Error obteniendo actividades para el grupo ${groupId}:`, error);
+    console.error(`Error obteniendo actividades destacadas para el grupo ${groupId}:`, error);
     return [];
   }
 }

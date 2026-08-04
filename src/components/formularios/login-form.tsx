@@ -10,10 +10,12 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/auth-context";
 import { apiRequest } from "@/components/formularios/api";
 import { getDashboardRouteByRoles } from "@/utils/redirectByRole";
+import { getFacultyImagePath } from "@/utils/common";
 
 interface GroupBackendItem {
   id: any;
   propietario?: { id: any };
+  imagen_url?: string;
 }
 
 export function LoginForm() {
@@ -55,13 +57,24 @@ export function LoginForm() {
       }
 
       const roles = (infoUsuario.roles || []).map((r: string) => r.toLowerCase().trim());
+      const esAdminGlobal = roles.includes("root") || roles.includes("deu_admin");
       const esGrupo = roles.includes("group_admin") || roles.includes("group_helper");
+      const esFacultad = roles.includes("faculty_admin");
+
+      let userAvatar = infoUsuario.avatar || "";
+
+      // Asignación de avatar según rol:
+      if (esAdminGlobal) {
+        userAvatar = "/logo.png";
+      } else if (esFacultad) {
+        userAvatar = getFacultyImagePath(data.facultad || infoUsuario.facultad);
+      }
 
       const usuarioCompleto = {
         id: String(infoUsuario.id),
         name: infoUsuario.nombre || infoUsuario.name || "",
         correo: infoUsuario.correo || "",
-        avatar: infoUsuario.avatar || "",
+        avatar: userAvatar,
         roles: infoUsuario.roles || [],
         groupId: "",
         facultad: data.facultad || "" 
@@ -80,7 +93,12 @@ export function LoginForm() {
           if (miGrupoAsociado) {
             const idEncontrado = String(miGrupoAsociado.id);
             localStorage.setItem("group_id", idEncontrado);
-            usuarioCompleto.groupId = idEncontrado; 
+            usuarioCompleto.groupId = idEncontrado;
+
+            // Si el backend trajo la imagen del grupo, se la asignamos como avatar
+            if (miGrupoAsociado.imagen_url) {
+              usuarioCompleto.avatar = miGrupoAsociado.imagen_url;
+            }
           }
         } catch (errGroup) {
           console.error("No se pudo pre-cargar el ID del grupo en el login:", errGroup);

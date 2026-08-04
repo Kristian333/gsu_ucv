@@ -1,3 +1,6 @@
+// /app/admin/reportes/page.tsx
+import { Box, Heading, Text } from '@chakra-ui/react'
+import { Metadata } from 'next'
 import { ActivitiesReportsTable } from '@/components/ui/activities-reports-table'
 import { ActivityBackend, GetActivitiesBackendResponse } from '@/types/activity'
 
@@ -54,6 +57,11 @@ async function getActivitiesReports(
   }
 }
 
+export const metadata: Metadata = {
+  title: 'Reportes de Actividades | GSU',
+  description: 'Administra y revisa los reportes de actividades registradas.',
+}
+
 export default async function ReportsPage({ searchParams }: PageProps) {
   const resolvedSearchParams = await searchParams
   const reportCheckedFilter = resolvedSearchParams.report_checked
@@ -65,13 +73,20 @@ export default async function ReportsPage({ searchParams }: PageProps) {
   )
 
   return (
-    <main style={{ padding: '2rem' }}>
+    <Box maxW="container.xl" mx="auto" py={10} px={6}>
+      <Heading as="h1" size="xl" mb={2}>
+        Reportes de Actividades
+      </Heading>
+      <Text fontSize="lg" color="gray.500" mb={8}>
+        Revisa y gestiona los reportes de cada actividad.
+      </Text>
+
       <ActivitiesReportsTable
         activities={activities}
         currentReportCheckedFilter={reportCheckedFilter || ''}
         currentPage={currentPage}
         totalPages={totalPages}
       />
-    </main>
+    </Box>
   )
 }
