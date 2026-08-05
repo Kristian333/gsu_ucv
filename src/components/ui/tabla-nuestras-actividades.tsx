@@ -1,6 +1,5 @@
 "use client";
-
-import React from "react";
+import React, { useState } from "react";
 import NextLink from "next/link";
 import {
   Box,
@@ -14,9 +13,12 @@ import {
   Tooltip,
   Link,
   Text,
+  Checkbox,
+  useToast,
 } from "@chakra-ui/react";
 import { FiEdit } from "react-icons/fi";
 import { FaRegFileAlt } from "react-icons/fa";
+import { apiRequest } from "@/components/formularios/api";
 
 interface Actividad {
   id: number | string;
@@ -24,21 +26,30 @@ interface Actividad {
   nombre?: string; 
   place?: string;
   location?: string; 
-  date_start?: string;
-  fecha?: string; 
+  fecha_inicio?: string; 
+  fecha_fin?: string;    
   group?: string;
+  reporte_completado?: boolean;
+  destacado?: boolean; 
+  participantes_reales?: number | string | null;
 }
 
 interface TablaProps {
   actividades: Actividad[];
-  permitirEditar?: boolean; 
+  permitirEditar?: boolean;
+  mostrarDestacados?: boolean; 
+  onRefresh?: () => void;      
 }
 
 export default function TablaNuestrasActividades({
   actividades,
   permitirEditar = false,
+  mostrarDestacados = false,
+  onRefresh,
 }: TablaProps) {
-  
+  const toast = useToast();
+  const [loadingId, setLoadingId] = useState<string | number | null>(null);
+
   function parseLocalDate(dateStr?: string | null): Date | null {
     if (!dateStr) return null;
     
@@ -65,18 +76,77 @@ export default function TablaNuestrasActividades({
 
   const today = normalizeToMidnight(new Date())!;
 
-  const listaProcesada = actividades.map((a) => {
-    const fechaString = a.fecha || a.date_start;
-    const start = parseLocalDate(fechaString);
+  const listaProcesada = (actividades || []).map((a) => {
+    const start = parseLocalDate(a.fecha_inicio);
+    const end = parseLocalDate(a.fecha_fin);
 
     return {
       ...a,
       _start: normalizeToMidnight(start),
+      _end: normalizeToMidnight(end),
     };
   });
 
   const format = (d?: Date | null) =>
-    d ? d.toLocaleDateString("es-ES") : "/";
+    d ? d.toLocaleDateString("es-ES") : "-";
+
+  const handleToggleDestacada = async (act: Actividad, isChecked: boolean) => {
+    const totalDestacadasActuales = (actividades || []).filter(a => a.destacado).length;
+
+    if (isChecked && totalDestacadasActuales >= 4) {
+      toast({
+        title: "Límite alcanzado",
+        description: "Solo puedes tener un máximo de 4 actividades destacadas por grupo.",
+        status: "warning",
+        duration: 4000,
+        isClosable: true,
+        position: "top"
+      });
+      return;
+    }
+
+    setLoadingId(act.id);
+    try {
+      const token = localStorage.getItem("token") || "";
+      const idString = String(act.id);
+
+      const response = await apiRequest(`activities/feature`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          id: idString,
+          activity_id: idString,
+          activityId: idString,
+          destacado: isChecked,
+          is_featured: isChecked
+        }),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+      });
+
+      if (response && !response.error) {
+        toast({
+          title: isChecked ? "Actividad destacada" : "Destacado removido",
+          status: "success",
+          duration: 2000,
+          position: "top"
+        });
+        if (onRefresh) onRefresh(); 
+      } else {
+        throw new Error(response?.message || "Error devuelto por el servidor.");
+      }
+    } catch (err: any) {
+      toast({
+        title: "Error de servidor",
+        description: err.message || "No se pudo actualizar el estado destacado.",
+        status: "error",
+        position: "top"
+      });
+    } finally {
+      setLoadingId(null);
+    }
+  };
 
   return (
     <Box bg="white" p={6} rounded="md" shadow="sm" overflowX="auto">
@@ -85,7 +155,9 @@ export default function TablaNuestrasActividades({
           <Tr>
             <Th>Nombre</Th>
             <Th>Lugar</Th>
-            <Th>Fecha</Th>
+            <Th>Fecha Inicio</Th>
+            <Th>Fecha Fin</Th>
+            {mostrarDestacados && <Th textAlign="center">Destacada</Th>}
             <Th isNumeric>Acción</Th>
           </Tr>
         </Thead>
@@ -93,9 +165,15 @@ export default function TablaNuestrasActividades({
         <Tbody>
           {listaProcesada.map((act) => {
             const start = act._start;
+            const end = act._end;
 
-            // Al haber una sola fecha, la comparación de "pasado" se hace con el inicio
-            const isPast = !!start && start.getTime() < today.getTime();
+            const calificaParaReporte = !!end && today.getTime() >= end.getTime();
+
+            const tieneReporteSubido = act.reporte_completado || 
+                                       (act.participantes_reales !== undefined && 
+                                        act.participantes_reales !== null && 
+                                        act.participantes_reales !== "" && 
+                                        Number(act.participantes_reales) > 0);
 
             const nombreActividad = act.nombre || act.title || "Actividad sin título";
             const lugarActividad = act.location || act.place || "-";
@@ -116,6 +194,19 @@ export default function TablaNuestrasActividades({
 
                 <Td>{lugarActividad}</Td>
                 <Td>{format(start)}</Td>
+                <Td>{format(end)}</Td>
+
+                {/* Columna interactiva libre de Destacadas */}
+                {mostrarDestacados && (
+                  <Td textAlign="center">
+                    <Checkbox
+                      colorScheme="teal"
+                      isChecked={!!act.destacado}
+                      isDisabled={loadingId === act.id} 
+                      onChange={(e) => handleToggleDestacada(act, e.target.checked)}
+                    />
+                  </Td>
+                )}
 
                 <Td isNumeric>
                   {permitirEditar && (
@@ -132,8 +223,8 @@ export default function TablaNuestrasActividades({
                     </Tooltip>
                   )}
 
-                  {isPast && (
-                    <Tooltip label="Hacer reporte">
+                  {calificaParaReporte && !tieneReporteSubido && (
+                    <Tooltip label="Hacer reporte final">
                       <IconButton
                         as={NextLink}
                         href={`/admingroup/reporte/${act.id}`}
@@ -142,14 +233,14 @@ export default function TablaNuestrasActividades({
                         size="sm"
                         variant="ghost"
                         colorScheme="orange"
-                        ml={2}
+                        ml={permitirEditar ? 2 : 0}
                       />
                     </Tooltip>
                   )}
 
-                  {!permitirEditar && !isPast && (
+                  {(!permitirEditar && tieneReporteSubido) || (!permitirEditar && !calificaParaReporte) ? (
                     <Text fontSize="xs" color="gray.400" fontStyle="italic">Sin acciones</Text>
-                  )}
+                  ) : null}
                 </Td>
               </Tr>
             );

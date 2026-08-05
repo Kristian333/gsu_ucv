@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState, useEffect, ChangeEvent } from "react";
 import {
   Box,
@@ -43,18 +42,17 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
   const [esBloqueada, setEsBloqueada] = useState(false);
   const [loading, setLoading] = useState(false);
 
-
   const [form, setForm] = useState({
     nombre: "",
     location: "",
-    fecha: "",
+    fecha_inicio: "", 
+    fecha_fin: "",    
     descripcion: "",
     area_conocimiento: [] as string[],
     financiamiento: "",
     financing_org: "",
   });
 
-  // Estado idéntico para dividir la ubicación geográfica en partes
   const [locationParts, setLocationParts] = useState({
     pais: "",
     estado: "",
@@ -65,8 +63,8 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [newImageFile, setNewImageFile] = useState<File | null>(null);
 
-  // --- VALIDACIÓN DE FECHA LÍMITE ---
   const verificarSiYaPasoOHoy = (fechaString: string): boolean => {
+    if (!fechaString) return false;
     const fechaActividadFormateada = fechaString.substring(0, 10);
     const hoy = new Date();
     const anio = hoy.getFullYear();
@@ -77,7 +75,6 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
     return fechaActividadFormateada <= fechaHoyFormateada;
   };
 
-  // --- CONSULTA AUTOMÁTICA AL BACKEND AL MONTAR LA PANTALLA ---
   useEffect(() => {
     if (!id) {
       setErrorCarga("No se recibió el identificador de la actividad.");
@@ -90,37 +87,40 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
         const data = await apiRequest(`activities/${id}`, { method: "GET" });
 
         if (data && !data.error) {
-          // 1. Cargamos el estado general del formulario
+          let areasArray: string[] = [];
+          if (data.area_conocimiento) {
+            areasArray = data.area_conocimiento.split(",").map((a: string) => a.trim().toUpperCase());
+          }
+
+          const esSi = data.financiamiento && data.financiamiento !== "NO" && data.financiamiento !== "";
+
           setForm({
             nombre: data.nombre || "",
-            location: data.location || "",
-            fecha: data.fecha ? data.fecha.substring(0, 10) : "",
+            location: data.ubicacion || "",
+            fecha_inicio: data.fecha_inicio ? data.fecha_inicio.substring(0, 10) : "", 
+            fecha_fin: data.fecha_fin ? data.fecha_fin.substring(0, 10) : "",       
             descripcion: data.descripcion || "",
-            area_conocimiento: Array.isArray(data.area_conocimiento)
-              ? data.area_conocimiento
-              : data.area_conocimiento
-              ? JSON.parse(data.area_conocimiento)
-              : [],
-            financiamiento: data.financiamiento || "",
-            financing_org: data.financing_org || "",
+            area_conocimiento: areasArray,
+            financiamiento: esSi ? "SI" : "NO",
+            financing_org: esSi ? data.financiamiento : "",
           });
 
-          setPreviewImage(data.image || null);
+          setPreviewImage(data.reporte_url || data.reporte || null);
 
-          if (data.location && data.location.includes(",")) {
-            const partes = data.location.split(",").map((p: string) => p.trim());
+          if (data.ubicacion && data.ubicacion.includes(",")) {
+            const partes = data.ubicacion.split(",").map((p: string) => p.trim());
             setLocationParts({
               pais: partes[0] || "",
               estado: partes[1] || "",
               municipio: partes[2] || "",
-              detalle: partes[3] || "",
+              detalle: partes.slice(3).join(", ") || "",
             });
-          } else if (data.location) {
-            setLocationParts(prev => ({ ...prev, detalle: data.location }));
+          } else if (data.ubicacion) {
+            setLocationParts(prev => ({ ...prev, detalle: data.ubicacion }));
           }
 
-          if (data.fecha) {
-            setEsBloqueada(verificarSiYaPasoOHoy(data.fecha));
+          if (data.fecha_inicio) {
+            setEsBloqueada(verificarSiYaPasoOHoy(data.fecha_inicio));
           }
         } else {
           throw new Error("La actividad solicitada no existe en el sistema.");
@@ -142,6 +142,7 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
       setForm((prev) => ({ ...prev, location: fullAddress }));
     }
   }, [locationParts]);
+
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -193,34 +194,35 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
     setLoading(true);
     const formData = new FormData();
 
-    Object.keys(form).forEach((key) => {
-      let value = form[key as keyof typeof form];
-      
-      if (key === "financiamiento") {
-        if (form.financiamiento === "SI") {
-          value = form.financing_org || "SI";
-        }
-      }
+    formData.append("nombre", form.nombre);
+    formData.append("descripcion", form.descripcion);
+    formData.append("fecha_inicio", form.fecha_inicio); 
+    formData.append("fecha_fin", form.fecha_fin);       
 
-      if (key !== "financing_org" && value !== "" && value !== null) {
-        if (Array.isArray(value)) {
-          formData.append(key, JSON.stringify(value));
-        } else {
-          formData.append(key, String(value));
-        }
-      }
-    });
+    const { pais, estado, municipio, detalle } = locationParts;
+    const direccionCompleta = `${pais}, ${estado}, ${municipio}, ${detalle}`;
+    formData.append("ubicacion", direccionCompleta);
+
+    if (form.area_conocimiento && form.area_conocimiento.length > 0) {
+      const areasString = form.area_conocimiento.join(", ").toUpperCase();
+      formData.append("area_conocimiento", areasString);
+    } else {
+      formData.append("area_conocimiento", "OTROS");
+    }
+
+    if (form.financiamiento === "SI") {
+      formData.append("financiamiento", (form.financing_org || "SI").toUpperCase());
+    } else {
+      formData.append("financiamiento", "NO");
+    }
 
     formData.append("group_id", String(user.groupId));
     if (user?.id) {
       formData.append("uploaded_by", String(user.id));
     }
 
-    // Estructura idéntica de archivos multimedia para tu backend en Go
     if (newImageFile) {
       formData.append("reporte", newImageFile);
-    } else if (previewImage) {
-      formData.append("image_url", previewImage);
     }
 
     try {
@@ -237,7 +239,6 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
       if (response && (response.error || response.status === 500 || response.status === 400)) {
         throw new Error(response.message || "El servidor backend rechazó la actualización.");
       }
-
       toast({
         title: "Actividad actualizada",
         description: "Los cambios han sido guardados exitosamente.",
@@ -299,7 +300,7 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
           />
         </FormControl>
 
-        <FormControl isRequired isDisabled={esBloqueada}>
+        <FormControl isDisabled={esBloqueada}>
           <FormLabel mb={1}>Imagen Referencial de la Actividad</FormLabel>
           <Text fontSize="xs" color="gray.500" mb={3} lineHeight="tall" bg="teal.50/50" p={2} borderRadius="md" borderLeft="3px solid" borderColor="teal.400">
             <strong>Nota sobre la imagen:</strong> Al finalizar la jornada y rellenar el reporte final de la actividad, podrás sustituir esta imagen por los registros fotográficos reales capturados durante el evento.
@@ -363,15 +364,30 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
           </SimpleGrid>
         </Box>
 
-        <FormControl isRequired isDisabled={esBloqueada}>
-          <FormLabel>Fecha</FormLabel>
-          <Input
-            type="date"
-            name="fecha"
-            value={form.fecha}
-            onChange={handleChange}
-          />
-        </FormControl>
+        <Box width="100%" height="1px" bg="gray.200" mx="auto" my={2} borderRadius="full" />
+
+        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+          <FormControl isRequired isDisabled={esBloqueada}>
+            <FormLabel>Fecha de Inicio</FormLabel>
+            <Input
+              type="date"
+              name="fecha_inicio"
+              value={form.fecha_inicio}
+              onChange={handleChange}
+            />
+          </FormControl>
+
+          <FormControl isRequired isDisabled={esBloqueada}>
+            <FormLabel>Fecha de Finalización</FormLabel>
+            <Input
+              type="date"
+              name="fecha_fin"
+              value={form.fecha_fin}
+              onChange={handleChange}
+              min={form.fecha_inicio}
+            />
+          </FormControl>
+        </SimpleGrid>
 
         <FormControl isRequired isDisabled={esBloqueada}>
           <FormLabel>ÁREA DE CONOCIMIENTO</FormLabel>
@@ -385,7 +401,7 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
                 "ACCIÓN SOCIAL",
                 "CULTURAL",
                 "DEPORTIVA",
-                "AMBIENTE/CONSERVACIÓN",
+                "AMBIENTE / CONSERVACIÓN",
                 "INVESTIGACIÓN",
                 "RECREACIÓN",
                 "DEBATE",
@@ -433,20 +449,21 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
 
         <Flex justify="space-between" mt={7}>
           <Button colorScheme="gray" onClick={() => router.back()}>
-                      Cancelar
-                    </Button>
-          
-                    <Button 
-                      colorScheme="teal" 
-                      onClick={handleSave} 
-                      isLoading={loading || !isHydrated}
-                      loadingText="Guardando..."
-                    >
-                      Guardar Cambios
-                    </Button>
-                  </Flex>
-          
-                </VStack>
-              </Box>
-            );
-          }
+            Cancelar
+          </Button>
+
+          <Button 
+            colorScheme="teal" 
+            onClick={handleSave} 
+            isLoading={loading}
+            loadingText="Guardando..."
+            isDisabled={esBloqueada}
+          >
+            Guardar Cambios
+          </Button>
+        </Flex>
+
+      </VStack>
+    </Box>
+  );
+}

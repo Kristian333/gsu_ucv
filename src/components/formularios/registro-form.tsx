@@ -1,6 +1,4 @@
-// /components/formularios/registro-form.tsx
 "use client";
-
 import React, { useState, useEffect } from 'react';
 import {
   Box,
@@ -44,7 +42,6 @@ export const RegisterForm = () => {
   const formBgColor = useColorModeValue("white", "gray.700");
   const inputBorderColor = useColorModeValue("gray.300", "gray.600");
 
-  // Si hay sesión iniciada, reedirige
   useEffect(() => {
     if (user && user.roles) {
       const targetRoute = getDashboardRouteByRoles(user.roles);
@@ -70,21 +67,23 @@ export const RegisterForm = () => {
     setError('');
     setIsLoading(true);
 
-    try {
+  try {
       const formattedDate = formatDateToBackend(birthDate);
+
+      const formData = new FormData();
+      formData.append('cedula', cedula);
+      formData.append('email', email);
+      formData.append('nombres', firstName);
+      formData.append('apellidos', lastName);
+      formData.append('fecha_de_nacimiento', formattedDate);
+      formData.append('genero', genero);
+      formData.append('nivel_educativo', nivelEducativo);
+      formData.append('direccion', direccion);
+      formData.append('password', password);
+
       const data = await apiRequest('/users', {
         method: 'POST',
-        body: JSON.stringify({
-          cedula: cedula,
-          email: email,
-          nombres: firstName,
-          apellidos: lastName,
-          fecha_de_nacimiento: formattedDate,
-          genero: genero,
-          nivel_educativo: nivelEducativo,
-          direccion: direccion,
-          password: password
-        }),
+        body: formData,
       });
 
       toast({
@@ -98,7 +97,6 @@ export const RegisterForm = () => {
         localStorage.setItem('token', data.token);
         login(data.user);
         
-        // Redirigir según el rol del nuevo usuario (visitante)
         const targetRoute = getDashboardRouteByRoles(data.user?.roles || []);
         window.location.href = targetRoute;
       } else {
@@ -111,7 +109,6 @@ export const RegisterForm = () => {
     }
   };
 
-  // Si tenemos sesión iniciada, no mostramos el formulario
   if (user) {
     return null;
   }

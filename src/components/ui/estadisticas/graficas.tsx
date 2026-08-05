@@ -18,11 +18,12 @@ interface ChartProps {
   valorx?: string;
   valory?: string;
   valory2?: string;
+  nombreLeyenda?: string;
+  nombreLeyenda2?: string;
 }
 
 const COLORS = ['#6b48ff', '#1ee3cf', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
-// Contenedor estandarizado para todas las gráficas
 const ChartWrapper = ({ children }: { children: React.ReactNode }) => (
   <div style={{ width: '100%', height: '400px', minHeight: '400px' }}>
     <ResponsiveContainer width="100%" height="100%">
@@ -31,7 +32,9 @@ const ChartWrapper = ({ children }: { children: React.ReactNode }) => (
   </div>
 );
 
-export const SimpleBarCharts: React.FC<ChartProps> = ({ datos, valorx, valory, valory2 }) => (
+export const SimpleBarCharts: React.FC<ChartProps> = ({ 
+  datos, valorx, valory, valory2, nombreLeyenda, nombreLeyenda2 
+}) => (
   <ChartWrapper>
     <BarChart data={datos} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
       <CartesianGrid strokeDasharray="4 1 2" />
@@ -39,8 +42,8 @@ export const SimpleBarCharts: React.FC<ChartProps> = ({ datos, valorx, valory, v
       <YAxis />
       <Tooltip />
       <Legend />
-      <Bar dataKey={valory} fill="#6b48ff" name={valory} />
-      <Bar dataKey={valory2} fill="#1ee3cf" name={valory2} />
+      <Bar dataKey={valory} fill="#6b48ff" name={nombreLeyenda || valory} />
+      <Bar dataKey={valory2} fill="#1ee3cf" name={nombreLeyenda2 || valory2} />
     </BarChart>
   </ChartWrapper>
 );
@@ -61,10 +64,7 @@ export const StackedAreaCharts: React.FC<ChartProps> = ({ datos, valorx, valory,
 export const SimpleRadarChart: React.FC<ChartProps> = ({ datos, valorx, valory, valory2 }) => (
   <ChartWrapper>
     <RadarChart outerRadius="80%" data={datos}>
-      <PolarGrid />
-      <PolarAngleAxis dataKey={valorx} />
-      <PolarRadiusAxis />
-      <Tooltip />
+      <PolarGrid /><PolarAngleAxis dataKey={valorx} /><PolarRadiusAxis /><Tooltip />
       <Radar name="Real" dataKey={valory} stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
       <Radar name="Meta" dataKey={valory2} stroke="#82caed" fill="#82caed" fillOpacity={0.6} />
       <Legend />
@@ -72,14 +72,15 @@ export const SimpleRadarChart: React.FC<ChartProps> = ({ datos, valorx, valory, 
   </ChartWrapper>
 );
 
-export const SimpleBarCharts1: React.FC<ChartProps> = ({ datos, valorx, valory }) => (
+export const SimpleBarCharts1: React.FC<ChartProps> = ({ datos, valorx, valory, nombreLeyenda }) => (
   <ChartWrapper>
-    <BarChart data={datos}>
+    <BarChart data={datos} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
       <CartesianGrid strokeDasharray="4 1 2" />
       <XAxis dataKey={valorx} />
       <YAxis />
       <Tooltip />
-      <Bar dataKey={valory} fill="#6b48ff" />
+      <Legend />
+      <Bar dataKey={valory} fill="#6b48ff" name={nombreLeyenda || valory} />
     </BarChart>
   </ChartWrapper>
 );
@@ -90,11 +91,39 @@ export const DoublePieChart: React.FC<ChartProps> = ({ datos, valorx, valory, va
       <Pie data={datos} dataKey={valory} nameKey={valorx} cx="50%" cy="50%" outerRadius={80} fill="#8884d8" label>
         {datos.map((_, index) => <Cell key={`c1-${index}`} fill={COLORS[index % COLORS.length]} />)}
       </Pie>
-      {valory2 && (
-        <Pie data={datos} dataKey={valory2} nameKey={valorx} cx="50%" cy="50%" innerRadius={100} outerRadius={130} fill="#82ca9d" label fillOpacity={0.4} />
-      )}
-      <Tooltip />
-      <Legend />
+      {valory2 && <Pie data={datos} dataKey={valory2} nameKey={valorx} cx="50%" cy="50%" innerRadius={100} outerRadius={130} fill="#82ca9d" label fillOpacity={0.4} />}
+      <Tooltip /><Legend />
     </PieChart>
   </ChartWrapper>
 );
+
+export const GraficaAreasPorAnio: React.FC<{ datos: any[]; valorx: string; areas: string[] }> = ({ 
+  datos, 
+  valorx, 
+  areas 
+}) => {
+  const PALETA_COLORES = [
+    '#6b48ff', '#1ee3cf', '#FFBB28', '#FF8042', '#ff427f', 
+    '#3298dc', '#48c774', '#718096', '#a0aec0'
+  ];
+
+  return (
+    <ChartWrapper>
+      <BarChart data={datos} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+        <CartesianGrid strokeDasharray="4 1 2" />
+        <XAxis dataKey={valorx} />
+        <YAxis allowDecimals={false} />
+        <Tooltip />
+        <Legend />
+        {areas.map((nombreArea, index) => (
+          <Bar 
+            key={nombreArea} 
+            dataKey={nombreArea} 
+            fill={PALETA_COLORES[index % PALETA_COLORES.length]} 
+            name={nombreArea} 
+          />
+        ))}
+      </BarChart>
+    </ChartWrapper>
+  );
+};

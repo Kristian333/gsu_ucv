@@ -32,7 +32,8 @@ export default function CrearActividadForm() {
   const [form, setForm] = useState({
     nombre: "",
     location: "",
-    fecha: "",
+    fecha_inicio: "", 
+    fecha_fin: "",    
     descripcion: "",
     area_conocimiento: [] as string[],
     financiamiento: "",
@@ -49,7 +50,6 @@ export default function CrearActividadForm() {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   
- 
   useEffect(() => {
     const { pais, estado, municipio, detalle } = locationParts;
     if (pais || estado || municipio || detalle) {
@@ -61,7 +61,6 @@ export default function CrearActividadForm() {
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
-
 
   const handleLocationChange = (e: ChangeEvent<HTMLInputElement>) => {
     setLocationParts({ ...locationParts, [e.target.name]: e.target.value });
@@ -76,13 +75,12 @@ export default function CrearActividadForm() {
   };
 
   const handleCreate = async () => {
-  
     if (!isHydrated) return;
 
     if (!user?.groupId) {
       toast({
         title: "Identificación de Grupo Requerida",
-        description: "La actividad no se pudo crear, ¡no pudimos identificar tu grupo! Por favor contacta al administrador para solucionar este problema.",
+        description: "La actividad no se pudo crear, ¡no pudimos identificar tu grupo! Por favor contacta al administrador.",
         status: "error",
         duration: 9000,
         isClosable: true,
@@ -94,31 +92,38 @@ export default function CrearActividadForm() {
     setLoading(true);
     const formData = new FormData();
     
-    Object.keys(form).forEach(key => {
-      let value = form[key as keyof typeof form];
 
-      if (key === "financiamiento") {
-        if (form.financiamiento === "SI") {
-          value = form.financing_org || "SI";
-        }
-      }
+    formData.append("nombre", form.nombre);
+    formData.append("descripcion", form.descripcion);
+    formData.append("fecha_inicio", form.fecha_inicio); 
+    formData.append("fecha_fin", form.fecha_fin);       
 
-      if (key !== "financing_org" && value !== "" && value !== null) {
-        if (Array.isArray(value)) {
-          formData.append(key, JSON.stringify(value));
-        } else {
-          formData.append(key, String(value));
-        }
-      }
-    });
+    
+    const { pais, estado, municipio, detalle } = locationParts;
+    const direccionCompleta = `${pais}, ${estado}, ${municipio}, ${detalle}`;
+    formData.append("ubicacion", direccionCompleta);
+
+    if (form.area_conocimiento && form.area_conocimiento.length > 0) {
+      const areasString = form.area_conocimiento.join(", ").toUpperCase();
+      formData.append("area_conocimiento", areasString);
+    } else {
+      formData.append("area_conocimiento", "OTROS");
+    }
+
+    if (form.financiamiento === "SI") {
+      formData.append("financiamiento", (form.financing_org || "SI").toUpperCase());
+    } else {
+      formData.append("financiamiento", "NO");
+    }
 
     formData.append("group_id", String(user.groupId));
-
     if (user?.id) {
       formData.append("uploaded_by", String(user.id));
     }       
 
-    if (imageFile) formData.append("reporte", imageFile);
+    if (imageFile) {
+      formData.append("reporte", imageFile);
+    }
 
     try {
       const token = localStorage.getItem("token") || ""; 
@@ -151,7 +156,6 @@ export default function CrearActividadForm() {
   return (
     <Box maxW="700px" mx="auto" mt={10} p={8} borderRadius="lg" bg="white" shadow="md">
       <Heading mb={6}>Planificar Actividad</Heading>
-
       <VStack spacing={5} align="stretch">
 
         <FormControl isRequired>
@@ -166,7 +170,6 @@ export default function CrearActividadForm() {
 
         <FormControl isRequired>
           <FormLabel mb={1}>Imagen Referencial de la Actividad</FormLabel>
-          
           <Text fontSize="xs" color="gray.500" mb={3} lineHeight="tall" bg="teal.50/50" p={2} borderRadius="md" borderLeft="3px solid" borderColor="teal.400">
             💡 <strong>Nota sobre la imagen:</strong> Puedes subir una foto temporal o general que ilustre la actividad que planean ejecutar (por ejemplo, de un evento similar anterior). Posteriormente, al finalizar la jornada y rellenar el reporte final de la actividad, podrás sustituirla por los registros fotográficos reales capturados durante el evento.
           </Text>
@@ -181,14 +184,13 @@ export default function CrearActividadForm() {
               mb={3}
             />
           )}
-
           <Input type="file" accept="image/*" onChange={handleImageChange} />
         </FormControl>
 
-        {/* Bloque de ubicación */}
+
         <Box border="1px" borderColor="gray.100" p={4} borderRadius="md" bg="gray.50">
           <Heading size="sm" mb={4}>Ubicación de la Actividad*</Heading>
-            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
             <FormControl isRequired>
               <FormLabel fontSize="sm">País</FormLabel>
               <Input 
@@ -235,27 +237,33 @@ export default function CrearActividadForm() {
           </SimpleGrid>
         </Box>
 
-        <Box 
-            width="100%" 
-            height="1px" 
-            bg="gray.200" 
-            mx="auto" 
-            my={2} 
-            borderRadius="full" 
-        />
+        <Box width="100%" height="1px" bg="gray.200" mx="auto" my={2} borderRadius="full" />
+
+        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+          <FormControl isRequired>
+            <FormLabel>Fecha de Inicio</FormLabel>
+            <Input
+              type="date"
+              name="fecha_inicio"
+              value={form.fecha_inicio}
+              onChange={handleChange}
+            />
+          </FormControl>
+
+          <FormControl isRequired>
+            <FormLabel>Fecha de Finalización</FormLabel>
+            <Input
+              type="date"
+              name="fecha_fin"
+              value={form.fecha_fin}
+              onChange={handleChange}
+              min={form.fecha_inicio}
+            />
+          </FormControl>
+        </SimpleGrid>
 
         <FormControl isRequired>
-          <FormLabel>Fecha</FormLabel>
-          <Input
-            type="date"
-            name="fecha"
-            value={form.fecha}
-            onChange={handleChange}
-          />
-        </FormControl>
-
-        <FormControl isRequired>
-          <FormLabel>ÁREA DE CONOCIMIENTO </FormLabel>
+          <FormLabel>ÁREA DE CONOCIMIENTO</FormLabel>
           <CheckboxGroup
             value={form.area_conocimiento}
             onChange={(val) => setForm({ ...form, area_conocimiento: val as string[] })}
@@ -286,19 +294,19 @@ export default function CrearActividadForm() {
             <option value="">Seleccione...</option>
             <option value="SI">SI</option>
             <option value="NO">NO</option>
-        </Select>
+          </Select>
         </FormControl>
 
         {form.financiamiento === "SI" && (
-            <FormControl isRequired>
+          <FormControl isRequired>
             <FormLabel>Organización Financiadora</FormLabel>
             <Input
-                name="financing_org"
-                value={form.financing_org}
-                onChange={handleChange}
-                placeholder="Nombre de la organización"
+              name="financing_org"
+              value={form.financing_org}
+              onChange={handleChange}
+              placeholder="Nombre de la organización"
             />
-            </FormControl>
+          </FormControl>
         )}
 
         <FormControl isRequired>
