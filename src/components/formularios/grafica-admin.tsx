@@ -33,7 +33,7 @@ const CONFIG_GRAFICAS: Record<number, ConfigGrafica> = {
     } 
   },
   2: { 
-    titulo: "Volumen de Actividades por Estado", 
+    titulo: "Volumen de Actividades Consolidadas por Estado", 
     Componente: SimpleBarCharts1, 
     dataKey: "porEstado", 
     props: { valorx: "lugar", valory: "CantidadReal", nombreLeyenda: "Cantidad de Actividades" } 
@@ -57,7 +57,7 @@ const CONFIG_GRAFICAS: Record<number, ConfigGrafica> = {
     props: { valorx: "lugar", valory: "CantidadReal", nombreLeyenda: "Cantidad de Actividades" } 
   },
   5: { 
-    titulo: "Histórico de Actividades Ejecutadas por Año", 
+    titulo: "Histórico de Actividades Ejecutadas por Año ", 
     Componente: SimpleBarCharts1, 
     dataKey: "porAnio", 
     props: { valorx: "lugar", valory: "CantidadReal", nombreLeyenda: "Cantidad de Actividades" } 
@@ -156,18 +156,17 @@ export default function DashboardAdmin() {
 
   return (
     <Box p={{ base: 4, md: 10 }} maxW="1400px" mx="auto">
-      {/* Encabezado del Panel Superior */}
       <Box mb={10}>
         <Flex align="center" gap={3}>
           <Heading size="2xl" fontWeight="black" letterSpacing="tight">
-            Panel de Control Maestro
+            Estadisticas Generales de los Grupos || GSU
           </Heading>
           <Badge colorScheme="red" fontSize="0.8em" borderRadius="full" px={3} py={0.5}>
             ADMIN
           </Badge>
         </Flex>
         <Text fontSize="lg" color="gray.500" mt={1}>
-          Visualizando métricas consolidadas e históricas de todos los grupos y sedes a nivel nacional.
+          Visualizando métricas consolidadas de todos los grupos, áreas y sedes universitarias a nivel nacional.
         </Text>
       </Box>
 

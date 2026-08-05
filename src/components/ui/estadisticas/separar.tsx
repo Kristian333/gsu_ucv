@@ -1,13 +1,15 @@
 "use client";
 import { useMemo } from 'react';
 
+// Interfaz adaptada al nuevo tipado del Backend (fecha_inicio y fecha_fin)
 export interface ActividadBackend {
   id: string;
   group_id: string;
   nombre_grupo: string;
   nombre: string;
   descripcion: string;
-  fecha: string;
+  fecha_inicio: string; 
+  fecha_fin: string;    
   ubicacion: string;
   area_conocimiento: string;
   aliados?: string;
@@ -40,7 +42,6 @@ export const useActividades = (actividadesRaw: ActividadBackend[] | undefined | 
       return { porActividad: [], porEstado: [], porCiudad: [], porAnio: [], porAreaAnio: [], porGrupo: [], todasLasAreas: AREAS_MAESTRAS };
     }
 
-
     const porActividad: any[] = [];
     const mapaEstado: Record<string, number> = {};
     const mapaCiudad: Record<string, number> = {};
@@ -65,16 +66,16 @@ export const useActividades = (actividadesRaw: ActividadBackend[] | undefined | 
       });
     }
 
-  
     actividadesRaw.forEach((item) => {
       const partes = item.ubicacion ? item.ubicacion.split(',').map(p => p.trim()) : [];
       const estado = partes[1] || "Sin Estado";    
       const ciudad = partes[2] || "Sin Ciudad";    
       const grupoNombre = item.nombre_grupo || "Grupo No Definido";
 
+
       let anio = "Sin Año";
-      if (item.fecha) {
-        const fechaStr = String(item.fecha).trim();
+      if (item.fecha_fin) {
+        const fechaStr = String(item.fecha_fin).trim();
         if (fechaStr.length >= 4) {
           const posibleAnio = fechaStr.substring(0, 4);
           if (!isNaN(Number(posibleAnio))) {

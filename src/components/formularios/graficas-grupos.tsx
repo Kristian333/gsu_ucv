@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Box, Heading, Flex, Button, Text, Center, Spinner, Badge, useToast } from "@chakra-ui/react";
+import { Box, Heading, Flex, Button, Text, Center, Spinner, useToast } from "@chakra-ui/react";
 import { useAuth } from "@/app/context/auth-context";
 import { apiRequest } from "@/components/formularios/api";
 import { useActividades, ActividadBackend } from "@/components/ui/estadisticas/separar";
@@ -21,7 +21,7 @@ interface ConfigGrafica {
 
 const CONFIG_GRAFICAS: Record<number, ConfigGrafica> = {
   1: { 
-    titulo: "Participantes Reales vs Estimados a Nivel Global", 
+    titulo: "Participantes Reales vs Estimados por Actividad", 
     Componente: SimpleBarCharts, 
     dataKey: "porActividad", 
     props: { 
@@ -33,22 +33,16 @@ const CONFIG_GRAFICAS: Record<number, ConfigGrafica> = {
     } 
   },
   2: { 
-    titulo: "Volumen de Actividades por Estado", 
+    titulo: "Cantidad de Actividades por Estado", 
     Componente: SimpleBarCharts1, 
     dataKey: "porEstado", 
     props: { valorx: "lugar", valory: "CantidadReal", nombreLeyenda: "Cantidad de Actividades" } 
   },
   3: { 
-    titulo: "Desempeño Analítico y Rendimiento por Grupos", 
-    Componente: SimpleBarCharts, 
-    dataKey: "porGrupo", 
-    props: { 
-      valorx: "lugar", 
-      valory: "cantidadEsperada", 
-      valory2: "CantidadReal",
-      nombreLeyenda: "Meta Estimada",
-      nombreLeyenda2: "Resultado Real"
-    } 
+    titulo: "Miembros del Grupo que Participaron en las Actividades", 
+    Componente: SimpleBarCharts1, 
+    dataKey: "porActividad", 
+    props: { valorx: "lugar", valory: "integrantes", nombreLeyenda: "Miembros Activos" } 
   },
   4: { 
     titulo: "Cantidad de Actividades por Municipio / Ciudad", 
@@ -57,38 +51,63 @@ const CONFIG_GRAFICAS: Record<number, ConfigGrafica> = {
     props: { valorx: "lugar", valory: "CantidadReal", nombreLeyenda: "Cantidad de Actividades" } 
   },
   5: { 
-    titulo: "Histórico de Actividades Ejecutadas por Año", 
+    titulo: "Cantidad de Actividades por Año", 
     Componente: SimpleBarCharts1, 
     dataKey: "porAnio", 
     props: { valorx: "lugar", valory: "CantidadReal", nombreLeyenda: "Cantidad de Actividades" } 
   },
   6: { 
-    titulo: "Evolución de Áreas de Conocimiento por Año", 
+    titulo: "Distribución de Áreas de Conocimiento por Año", 
     Componente: GraficaAreasPorAnio, 
     dataKey: "porAreaAnio", 
     props: { valorx: "lugar" } 
   }
 };
 
-export default function DashboardAdmin() {
+export default function GraficaGrupos() {
   const toast = useToast();
-  const { isHydrated } = useAuth();
+  const { isHydrated, user } = useAuth();
   
   const [graficaActiva, setGraficaActiva] = useState<number>(1);
   const [loadingBackend, setLoadingBackend] = useState<boolean>(true);
   const [actividadesRaw, setActividadesRaw] = useState<ActividadBackend[]>([]);
-
-  const datosCalculados = useActividades(actividadesRaw);
+  const [grupoIdDetectado, setGrupoIdDetectado] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isHydrated) return;
 
-    const cargarMétricasGlobales = async () => {
+    if (user?.groupId || user?.group_id || user?.group || user?.nombre_grupo) {
+      setGrupoIdDetectado(String(user.groupId || user.group_id || user.group || user.nombre_grupo));
+    } else {
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          const payloadBase64 = token.split('.');
+          if (payloadBase64 && payloadBase64[1]) {
+            const payloadDecodificado = JSON.parse(atob(payloadBase64[1]));
+            const idDesdeToken = payloadDecodificado.groupId || payloadDecodificado.group_id || payloadDecodificado.group || payloadDecodificado.nombre_grupo;
+            if (idDesdeToken) {
+              setGrupoIdDetectado(String(idDesdeToken));
+            }
+          }
+        } catch (e) {
+          console.error("Error al decodificar token", e);
+        }
+      }
+    }
+  }, [isHydrated, user]);
+
+  const datosCalculados = useActividades(actividadesRaw);
+
+  useEffect(() => {
+    if (!isHydrated || !grupoIdDetectado) return;
+
+    const cargarEstadisticasDelGrupo = async () => {
       try {
         setLoadingBackend(true);
         const token = localStorage.getItem("token") || "";
 
-        const response = await apiRequest("activities?disablePaging=true", {
+        const response = await apiRequest(`activities?group_id=${grupoIdDetectado}&disablePaging=true`, {
           method: 'GET',
           headers: {
             "Authorization": `Bearer ${token}`
@@ -96,7 +115,7 @@ export default function DashboardAdmin() {
         });
 
         if (response && (response.error || response.status === 500 || response.status === 400)) {
-          throw new Error(response.message || "Error al recopilar los registros consolidados del servidor.");
+          throw new Error(response.message || "Error al recopilar los registros del servidor.");
         }
 
         if (response && response.actividades) {
@@ -106,25 +125,24 @@ export default function DashboardAdmin() {
         }
       } catch (error: any) {
         toast({
-          title: "Fallo de sincronización general",
-          description: error.message || "No se pudieron obtener las métricas globales del sistema.",
+          title: "Error de sincronización",
+          description: error.message || "Fallo al conectar con las métricas del servidor.",
           status: "error",
-          duration: 6000,
-          isClosable: true,
-          position: "top"
+          duration: 5000,
+          isClosable: true
         });
       } finally {
         setLoadingBackend(false);
       }
     };
 
-    cargarMétricasGlobales();
-  }, [isHydrated, toast]);
+    cargarEstadisticasDelGrupo();
+  }, [isHydrated, grupoIdDetectado, toast]);
 
-  if (!isHydrated || loadingBackend) {
+  if (!isHydrated || !grupoIdDetectado || loadingBackend) {
     return (
       <Center h="100vh">
-        <Spinner size="xl" color="red.500" thickness="4px" />
+        <Spinner size="xl" color="blue.500" thickness="4px" />
       </Center>
     );
   }
@@ -136,7 +154,7 @@ export default function DashboardAdmin() {
     if (datosFinales.length === 0) {
       return (
         <Center h="400px">
-          <Text color="gray.500">No hay datos históricos en la base de datos para generar este reporte.</Text>
+          <Text color="gray.500">No se encontraron actividades registradas para tu grupo.</Text>
         </Center>
       );
     }
@@ -156,17 +174,13 @@ export default function DashboardAdmin() {
 
   return (
     <Box p={{ base: 4, md: 10 }} maxW="1400px" mx="auto">
+      {/* Encabezado Dinámico */}
       <Box mb={10}>
-        <Flex align="center" gap={3}>
-          <Heading size="2xl" fontWeight="black" letterSpacing="tight">
-            Panel de Control Maestro
-          </Heading>
-          <Badge colorScheme="red" fontSize="0.8em" borderRadius="full" px={3} py={0.5}>
-            ADMIN
-          </Badge>
-        </Flex>
+        <Heading size="2xl" fontWeight="black" letterSpacing="tight">
+          Panel de Estadísticas de la Sección
+        </Heading>
         <Text fontSize="lg" color="gray.500" mt={1}>
-          Visualizando métricas consolidadas de todos los grupos y sedes a nivel nacional.
+          Visualizando datos exclusivos del grupo: <Text as="span" fontWeight="bold" color="blue.500">{user?.nombre_grupo || user?.group || grupoIdDetectado}</Text>
         </Text>
       </Box>
 
@@ -176,7 +190,7 @@ export default function DashboardAdmin() {
             key={id}
             onClick={() => setGraficaActiva(Number(id))}
             variant={graficaActiva === Number(id) ? "solid" : "outline"}
-            colorScheme="red"
+            colorScheme="blue"
             borderRadius="full"
             px={6}
             size="sm"
@@ -188,7 +202,7 @@ export default function DashboardAdmin() {
         ))}
       </Flex>
 
-      <Box bg="white" p={{ base: 4, md: 8 }} borderRadius="3xl" shadow="2xl" border="2px solid" borderColor="red.50">
+      <Box bg="white" p={{ base: 4, md: 8 }} borderRadius="3xl" shadow="2xl" border="1px solid" borderColor="gray.100">
         <Heading size="lg" mb={8} color="gray.700">
           {CONFIG_GRAFICAS[graficaActiva]?.titulo}
         </Heading>
