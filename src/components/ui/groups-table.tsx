@@ -23,7 +23,7 @@ import {
   Stack,
   Flex,
 } from '@chakra-ui/react';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { SearchIcon, CloseIcon } from '@chakra-ui/icons';
 import { Pagination } from "@/components/ui/pagination";
@@ -49,6 +49,9 @@ interface GroupsTableProps {
   currentFaculty: string;
   currentSearch: string;
   currentActive: string;
+  hideFacultyFilter?: boolean;
+  basePath?: string;
+  showFacultyColumn?: boolean;
 }
 
 export function GroupsTable({ 
@@ -58,6 +61,9 @@ export function GroupsTable({
   currentFaculty,
   currentSearch,
   currentActive,
+  hideFacultyFilter = false,
+  basePath = "/admin",
+  showFacultyColumn = true,
 }: GroupsTableProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -131,6 +137,8 @@ export function GroupsTable({
     }
   };
 
+  const colSpanCount = showFacultyColumn ? 5 : 4;
+
   return (
     <Box>
       {/* Sección de Filtros y Búsqueda */}
@@ -139,20 +147,22 @@ export function GroupsTable({
           
           <Flex wrap="wrap" gap={4} flex={1} w="full">
             {/* Filtro por Facultad */}
-            <Box minW="220px">
-              <Text mb={1} fontSize="sm" fontWeight="bold">Filtrar por Facultad (UCV):</Text>
-              <Select 
-                bg="white" 
-                size="sm"
-                borderRadius="md"
-                value={selectedFaculty} 
-                onChange={handleFacultyChange}
-              >
-                {facultadesUCV.map(fac => (
-                  <option key={fac} value={fac}>{fac}</option>
-                ))}
-              </Select>
-            </Box>
+            {!hideFacultyFilter && (
+              <Box minW="220px">
+                <Text mb={1} fontSize="sm" fontWeight="bold">Filtrar por Facultad (UCV):</Text>
+                <Select 
+                  bg="white" 
+                  size="sm"
+                  borderRadius="md"
+                  value={selectedFaculty} 
+                  onChange={handleFacultyChange}
+                >
+                  {facultadesUCV.map(fac => (
+                    <option key={fac} value={fac}>{fac}</option>
+                  ))}
+                </Select>
+              </Box>
+            )}
 
             {/* Filtro por Estado */}
             <Box minW="180px">
@@ -214,7 +224,7 @@ export function GroupsTable({
           <Thead bg="gray.50">
             <Tr>
               <Th>Grupo</Th>
-              <Th>Facultad</Th>
+              {showFacultyColumn && <Th>Facultad</Th>}
               <Th>Contacto</Th>
               <Th>Estado</Th>
               <Th textAlign="center">Acciones</Th>
@@ -222,7 +232,7 @@ export function GroupsTable({
           </Thead>
           <Tbody>
             {initialGroups.length > 0 ? (
-              initialGroups.map((grupo, index) => {
+              initialGroups.map((grupo) => {
                 const nombreGrupo = grupo.nombre || "Nombre no disponible";
                 const facultadGrupo = grupo.facultad || "Facultad no disponible";
                 const estaActivo = grupo.activo !== undefined ? grupo.activo : (grupo.is_active !== undefined ? grupo.is_active : true);
@@ -234,6 +244,8 @@ export function GroupsTable({
                 // Mapeo exhaustivo de contacto
                 const emailContacto = grupo.email || "Sin correo";
                 const telefonoContacto = grupo.telefono || "Sin teléfono";
+
+                const detailUrl = `${basePath}/grupo/${grupoId}`;
 
                 return (
                   <Tr key={grupoId} _hover={{ bg: "gray.50" }}>
@@ -254,7 +266,7 @@ export function GroupsTable({
                           color="teal.600" 
                           cursor="pointer"
                           _hover={{ textDecoration: "underline" }}
-                          onClick={() => router.push(`/admin/grupo/${grupoId}`)}
+                          onClick={() => router.push(detailUrl)}
                         >
                           {nombreGrupo}
                         </Text>
@@ -262,11 +274,13 @@ export function GroupsTable({
                     </Td>
                     
                     {/* Facultad */}
-                    <Td>
-                      <Badge colorScheme="secondary" variant="subtle" px={2} py={1} borderRadius="sm">
-                        {facultadGrupo}
-                      </Badge>
-                    </Td>
+                    {showFacultyColumn && (
+                      <Td>
+                        <Badge colorScheme="secondary" variant="subtle" px={2} py={1} borderRadius="sm">
+                          {facultadGrupo}
+                        </Badge>
+                      </Td>
+                    )}
 
                     {/* Contacto */}
                     <Td>
@@ -287,7 +301,7 @@ export function GroupsTable({
                         size="sm"
                         colorScheme="teal"
                         variant="outline"
-                        onClick={() => router.push(`/admin/grupo/${grupoId}`)}
+                        onClick={() => router.push(detailUrl)}
                       >
                         Ver Detalles
                       </Button>
@@ -297,8 +311,10 @@ export function GroupsTable({
               })
             ) : (
               <Tr>
-                <Td colSpan={5} textAlign="center" py={12}>
-                  <Text color="gray.500" fontSize="md">No se encontraron grupos registrados para los criterios seleccionados.</Text>
+                <Td colSpan={colSpanCount} textAlign="center" py={12}>
+                  <Text color="gray.500" fontSize="md">
+                    No se encontraron grupos registrados para los criterios seleccionados.
+                  </Text>
                 </Td>
               </Tr>
             )}
@@ -310,9 +326,9 @@ export function GroupsTable({
       <Pagination 
         currentPage={currentPage} 
         totalPages={totalPages} 
-        basePath="/admin/grupos"
+        basePath={basePath === "/admin" ? "/admin/grupos" : basePath+"/grupos"}
         queryParams={{
-          ...(selectedFaculty !== 'Todos' && { faculty: selectedFaculty }),
+          ...(!hideFacultyFilter && selectedFaculty !== 'Todos' && { faculty: selectedFaculty }),
           ...(selectedActive !== 'Todos' && { active: selectedActive }),
           ...(currentSearch && { q: currentSearch }),
         }}

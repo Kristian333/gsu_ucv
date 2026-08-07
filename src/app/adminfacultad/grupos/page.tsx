@@ -1,19 +1,20 @@
 // app/adminfacultad/page.tsx
 import { Metadata } from "next";
-import { mockGroupItems } from "@/data/gruposMock";
-import TablaGruposFacultad from "@/components/ui/TablaGruposFacultad";
+import { AdminFacultadContent } from "@/components/ui/AdminFacultadContent";
+
+interface AdminFacultadPageProps {
+  searchParams: { 
+    page?: string;
+    q?: string;
+    active?: string;
+  };
+}
 
 export const metadata: Metadata = {
   title: "Grupos de Extensión de esta Facultad | GSU",
-  description: "Lista de Grupos de Extensión asociado a esta Facultad.",
+  description: "Lista de Grupos de Extensión asociados a esta Facultad.",
 };
 
-export default function AdminFacultadPage() {
-  const faculty = "ciencias";
-
-  const gruposFacultad = mockGroupItems.filter(
-    (g) => g.faculty?.toLowerCase() === faculty
-  );
-
-  return <TablaGruposFacultad grupos={gruposFacultad} faculty={faculty} />;
+export default function AdminFacultadPage({ searchParams }: AdminFacultadPageProps) {
+  return <AdminFacultadContent searchParams={searchParams} />;
 }
