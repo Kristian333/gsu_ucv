@@ -10,7 +10,7 @@ interface GroupBackendResponse {
   nombre?: string;
   descripcion?: string;
   ubicacion?: string;
-  cubierta?: string;
+  imagen_url?: string;
   email?: string;
   telefono?: string;
   facultad?: string;
@@ -112,7 +112,7 @@ export default async function GroupDetailPage({ params }: Props) {
   const groupFormatted = {
     id: String(rawGroup.id),
     title: rawGroup.nombre || "Grupo sin nombre",
-    image: rawGroup.cubierta || "/imagen-no-disponible.jpg",
+    image: rawGroup.imagen_url || "/imagen-no-disponible.jpg",
     objetive: rawGroup.descripcion || "No hay una descripción u objetivo registrado para este grupo.",
     faculty: rawGroup.facultad || "Facultad no especificada",
     email: rawGroup.email || undefined, 

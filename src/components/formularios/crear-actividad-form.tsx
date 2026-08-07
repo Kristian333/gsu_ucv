@@ -117,9 +117,14 @@ export default function CrearActividadForm() {
     }
 
     formData.append("group_id", String(user.groupId));
-    if (user?.id) {
-      formData.append("uploaded_by", String(user.id));
-    }       
+
+    const userIdNum = user?.id ? parseInt(String(user.id), 10) : NaN;
+    
+    if (!isNaN(userIdNum)) {
+      formData.append("uploaded_by", String(userIdNum));
+    } else {
+      console.warn("Advertencia: user.id no es un entero válido:", user?.id);
+    }
 
     if (imageFile) {
       formData.append("reporte", imageFile);
