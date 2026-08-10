@@ -34,7 +34,7 @@ export default function SolicitudesList() {
           leftIcon={<Plus size={18} />}
           _hover={{ bg: "primary.700" }}
         >
-          + Realizar nueva solicitud
+          Realizar nueva solicitud
         </Button>
       </Flex>
 

@@ -1,6 +1,9 @@
+// @/components/ui/activity-detail-view.tsx
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useAuth } from '@/app/context/auth-context'
+import { validateGroupAccess } from '@/utils/auth-guards'
 import {
   Box,
   Heading,
@@ -12,17 +15,19 @@ import {
   SimpleGrid,
   Image,
   Divider,
-  Icon,
   useToast,
   HStack,
   Card,
   CardBody,
-  Link as ChakraLink,
+  Tooltip,
+  Center,
+  Spinner,
 } from '@chakra-ui/react'
 import { keyframes } from '@emotion/react'
 import { SiGoogledrive } from 'react-icons/si'
-import { ArrowBackIcon, CheckCircleIcon, ExternalLinkIcon } from '@chakra-ui/icons'
+import { ArrowBackIcon, CheckCircleIcon, ExternalLinkIcon, StarIcon } from '@chakra-ui/icons'
 import { useRouter } from 'next/navigation'
+import NextLink from 'next/link'
 import { ActivityBackend } from '@/types/activity'
 import { formatActivityDateRange, getActivityStatus } from '@/utils/common'
 import { apiRequest } from '@/components/formularios/api'
@@ -34,26 +39,67 @@ const pulseDots = keyframes`
   100% { opacity: 0.2; }
 `
 
+export type UserRole = 'admin' | 'admingroup'
+
 interface ActivityDetailViewProps {
   initialActivity: ActivityBackend
+  userRole?: UserRole
 }
 
-export function ActivityDetailView({ initialActivity }: ActivityDetailViewProps) {
+export function ActivityDetailView({ initialActivity, userRole = 'admin' }: ActivityDetailViewProps) {
   const router = useRouter()
   const toast = useToast()
+  const { user, isHydrated } = useAuth()
 
   const [activity, setActivity] = useState<ActivityBackend>(initialActivity)
   const [isUpdating, setIsUpdating] = useState<boolean>(false)
+  const [isAuthorized, setIsAuthorized] = useState<boolean>(userRole !== 'admingroup')
+
+  // Validación de acceso por grupo (Client Side Guard)
+  useEffect(() => {
+    if (!isHydrated || userRole !== 'admingroup') return;
+
+    const { hasAccess, reason } = validateGroupAccess(activity, user);
+
+    if (!hasAccess) {
+      toast({
+        title: 'Acceso Denegado',
+        description: reason || 'No tienes permisos para ver esta actividad.',
+        status: 'error',
+        duration: 4000,
+        isClosable: true,
+        position: 'top',
+      });
+      router.push('/admingroup/nuestras_actividades');
+    } else {
+      setIsAuthorized(true);
+    }
+  }, [isHydrated, user, userRole, activity, router, toast]);
+
+  // Si no se ha hidratado o no tiene autorización para admingroup, mostrar un loader o pantalla limpia
+  if (!isHydrated || !isAuthorized) {
+    return (
+      <Center h="50vh">
+        <Spinner size="xl" color="primary.500" thickness="4px" />
+      </Center>
+    )
+  }
 
   const dateRangeStr = formatActivityDateRange(activity.fecha_inicio, activity.fecha_fin)
   const statusInfo = getActivityStatus(activity)
 
-  // Condición para mostrar el botón de acción del reporte
-  const canToggleReportStatus =
-    statusInfo.label === 'Reporte Pendiente de Revisión' ||
-    statusInfo.label === 'Reporte Revisado'
+  // Condición para evaluar si la actividad ya finalizó
+  const esFutura = statusInfo.label === 'Actividad Futura'
+  const enCurso = statusInfo.label === 'Actividad En Curso'
+  const esFinalizada = !esFutura && !enCurso
 
-  // Manejar el toggle para marcar o desmarcar la revisión del reporte
+  // Condición para mostrar el botón de acción del reporte (Solo Administrador)
+  const canToggleReportStatus =
+    userRole === 'admin' &&
+    (statusInfo.label === 'Reporte Pendiente de Revisión' ||
+    statusInfo.label === 'Reporte Revisado')
+
+  // Manejar el toggle de revisión del reporte (ADMIN)
   const handleToggleReportCheck = async () => {
     setIsUpdating(true)
     const nextStatus = !activity.reporte_revisado
@@ -74,6 +120,7 @@ export function ActivityDetailView({ initialActivity }: ActivityDetailViewProps)
         status: nextStatus ? 'success' : 'info',
         duration: 3000,
         isClosable: true,
+        position: 'top',
       })
     } catch (error: any) {
       console.error('Error al actualizar reporte:', error)
@@ -83,6 +130,56 @@ export function ActivityDetailView({ initialActivity }: ActivityDetailViewProps)
         status: 'error',
         duration: 4000,
         isClosable: true,
+        position: 'top',
+      })
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  // Manejar el toggle para destacar actividad (ADMIN GROUP)
+  const handleToggleFeatured = async () => {
+    setIsUpdating(true)
+    const nextFeaturedState = !activity.destacado
+
+    try {
+      const token = localStorage.getItem('token') || ''
+      const idString = String(activity.id)
+
+      const response = await apiRequest('activities/feature', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          id: idString,
+          activity_id: idString,
+          is_featured: nextFeaturedState,
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (response && !response.error) {
+        setActivity((prev) => ({ ...prev, destacado: nextFeaturedState }))
+        toast({
+          title: nextFeaturedState ? 'Actividad destacada' : 'Destacado removido',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+          position: 'top',
+        })
+      } else {
+        throw new Error(response?.message || 'Error al actualizar el estado destacado.')
+      }
+    } catch (error: any) {
+      console.error('Error al destacar actividad:', error)
+      toast({
+        title: 'Error de Servidor',
+        description: error.message || 'No se pudo actualizar el estado destacado.',
+        status: 'error',
+        duration: 4000,
+        isClosable: true,
+        position: 'top',
       })
     } finally {
       setIsUpdating(false)
@@ -94,7 +191,7 @@ export function ActivityDetailView({ initialActivity }: ActivityDetailViewProps)
     if (window.history.length > 2) {
       router.back()
     } else {
-      router.push('/admin/reportes')
+      router.push(userRole === 'admin' ? '/admin/reportes' : '/admingroup/actividades')
     }
   }
 
@@ -105,7 +202,11 @@ export function ActivityDetailView({ initialActivity }: ActivityDetailViewProps)
     return (
         <Button
         leftIcon={<CheckCircleIcon />}
-        colorScheme={activity.reporte_revisado ? 'yellow' : 'green'}
+        bg={activity.reporte_revisado ? 'warning' : 'success'}
+        color="white"
+        _hover={{
+          bg: activity.reporte_revisado ? 'orange.600' : 'green.600',
+        }}
         size={size}
         isLoading={isUpdating}
         onClick={handleToggleReportCheck}
@@ -129,7 +230,53 @@ export function ActivityDetailView({ initialActivity }: ActivityDetailViewProps)
         </Button>
 
         <HStack spacing={3}>
-          {renderToggleButton('sm')}
+          {/* Botón Ver en Sitio Público */}
+          <Button
+            as={NextLink}
+            href={`/actividad/${activity.id}`}
+            rightIcon={<ExternalLinkIcon />}
+            colorScheme="primary"
+            variant="outline"
+            size="sm"
+          >
+            Ver en página pública
+          </Button>
+
+          {/* Botón de Estrella para Destacar (Solo Admin Group) */}
+          {userRole === 'admingroup' && (
+            <Tooltip
+              label={
+                !esFinalizada
+                  ? 'Solo se pueden destacar actividades que ya hayan finalizado'
+                  : activity.destacado
+                  ? 'Quitar de destacadas'
+                  : 'Marcar como destacada'
+              }
+              placement="top"
+            >
+              <Box display="inline-block">
+                <Button
+                  leftIcon={
+                    <StarIcon 
+                      color={activity.destacado ? 'yellow.400' : 'gray.400'} 
+                      filter="drop-shadow(0px 0px 1px rgba(0, 0, 0, 0.9))"
+                    />
+                  }
+                  colorScheme={activity.destacado ? 'yellow' : 'gray'}
+                  variant="solid"
+                  size="sm"
+                  isLoading={isUpdating}
+                  isDisabled={!esFinalizada}
+                  onClick={handleToggleFeatured}
+                >
+                  {activity.destacado ? 'Destacada' : 'Destacar'}
+                </Button>
+              </Box>
+            </Tooltip>
+          )}
+
+          {/* Botón de Revisión (Solo Admin) */}
+          {canToggleReportStatus && renderToggleButton('sm')}
         </HStack>
       </Flex>
 
@@ -168,7 +315,7 @@ export function ActivityDetailView({ initialActivity }: ActivityDetailViewProps)
                       ★ Destacada por el Grupo
                     </Badge>
                   )}
-                  {activity.nombre_grupo && (
+                  {userRole !== 'admingroup' && activity.nombre_grupo && (
                     <Badge colorScheme="primary" variant="subtle" px={2.5} py={0.5}>
                       {activity.nombre_grupo}
                     </Badge>
@@ -206,7 +353,7 @@ export function ActivityDetailView({ initialActivity }: ActivityDetailViewProps)
                 Participantes y Asistencia
               </Text>
               <SimpleGrid columns={{ base: 1, sm: 3 }} spacing={4}>
-                <Box p={4} bg="gray.50" borderRadius="lg" borderLeft="4px solid" borderColor="teal.500">
+                <Box p={4} bg="gray.50" borderRadius="lg" borderLeft="4px solid" borderColor="primary.500">
                   <Text fontSize="xs" color="gray.600">
                     Miembros del Grupo
                   </Text>
@@ -214,7 +361,7 @@ export function ActivityDetailView({ initialActivity }: ActivityDetailViewProps)
                     {activity.participantes_grupo ?? 0}
                   </Text>
                 </Box>
-                <Box p={4} bg="gray.50" borderRadius="lg" borderLeft="4px solid" borderColor="blue.400">
+                <Box p={4} bg="gray.50" borderRadius="lg" borderLeft="4px solid" borderColor="secondary.500">
                   <Text fontSize="xs" color="gray.600">
                     Beneficiados Estimados
                   </Text>
@@ -222,11 +369,11 @@ export function ActivityDetailView({ initialActivity }: ActivityDetailViewProps)
                     {activity.participantes_estimados ?? 0}
                   </Text>
                 </Box>
-                <Box p={4} bg="gray.50" borderRadius="lg" borderLeft="4px solid" borderColor="green.500">
+                <Box p={4} bg="gray.50" borderRadius="lg" borderLeft="4px solid" borderColor="success">
                   <Text fontSize="xs" color="gray.600">
                     Beneficiados Reales (Reporte)
                   </Text>
-                  <Text fontSize="2xl" fontWeight="bold" color="teal.700">
+                  <Text fontSize="2xl" fontWeight="bold" color="primary.700">
                     {activity.participantes_reales ?? 0}
                   </Text>
                 </Box>
@@ -247,11 +394,11 @@ export function ActivityDetailView({ initialActivity }: ActivityDetailViewProps)
               </Box>
 
               {activity.observaciones && (
-                <Box p={4} bg="amber.50" borderLeft="4px solid" borderColor="amber.400" borderRadius="md">
-                  <Text fontSize="xs" fontWeight="bold" color="amber.800" textTransform="uppercase" mb={1}>
+                <Box p={4} bg="orange.50" borderLeft="4px solid" borderColor="warning" borderRadius="md">
+                  <Text fontSize="xs" fontWeight="bold" color="warning" textTransform="uppercase" mb={1}>
                     Observaciones / Comentarios Adicionales
                   </Text>
-                  <Text fontSize="sm" color="amber.900" whiteSpace="pre-wrap">
+                  <Text fontSize="sm" color="gray.800" whiteSpace="pre-wrap">
                     {activity.observaciones}
                   </Text>
                 </Box>
@@ -349,7 +496,7 @@ export function ActivityDetailView({ initialActivity }: ActivityDetailViewProps)
                         target="_blank"
                         rel="noopener noreferrer"
                         leftIcon={<ExternalLinkIcon />}
-                        colorScheme="teal"
+                        colorScheme="primary"
                         variant="outline"
                     >
                         Ver Lista de Participantes
@@ -362,7 +509,7 @@ export function ActivityDetailView({ initialActivity }: ActivityDetailViewProps)
         </CardBody>
       </Card>
 
-      {/* Botón de Marcar como Revisado */}
+      {/* Botón de Marcar como Revisado (Solo Admin)*/}
       {canToggleReportStatus && (
         <Flex justify="flex-end">
           {renderToggleButton('md')}

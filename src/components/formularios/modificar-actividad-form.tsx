@@ -17,16 +17,13 @@ import {
   useToast,
   SimpleGrid,
   Text,
-  Alert,
-  AlertIcon,
-  AlertTitle,
-  AlertDescription,
   Center,
   Spinner,
 } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
 import { apiRequest } from "@/components/formularios/api";
 import { useAuth } from "@/app/context/auth-context";
+import { validateGroupAccess } from "@/utils/auth-guards";
 
 interface ModificarActividadFormProps {
   id: string;
@@ -42,6 +39,8 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
   const [loading, setLoading] = useState(false);
   
   const [permisoConcedido, setPermisoConcedido] = useState(false);
+  const [esMultidia, setEsMultidia] = useState(false);
+  const [inicialEsMultidia, setInicialEsMultidia] = useState(false);
 
   const [form, setForm] = useState({
     nombre: "",
@@ -89,12 +88,12 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
         const data = await apiRequest(`activities/${id}`, { method: "GET" });
 
         if (data && !data.error) {
-          const grupoActividad = data.group_id || data.groupId;
+          const { hasAccess, reason } = validateGroupAccess(data, user);
           
-          if (!user?.groupId || String(grupoActividad) !== String(user.groupId)) {
+          if (!hasAccess) {
             toast({
               title: "Acceso denegado",
-              description: "Esta actividad pertenece a otro grupo.",
+              description: reason || "No tienes permisos para esta actividad.",
               status: "error",
               duration: 4000,
               isClosable: true,
@@ -103,7 +102,6 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
             router.push("/admingroup/nuestras_actividades");
             return;
           }
-
 
           if (data.fecha_inicio && verificarSiYaIniciOOPaso(data.fecha_inicio)) {
             toast({
@@ -125,11 +123,19 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
 
           const esSi = data.financiamiento && data.financiamiento !== "NO" && data.financiamiento !== "";
 
+          const fInicio = data.fecha_inicio ? data.fecha_inicio.substring(0, 10) : "";
+          const fFin = data.fecha_fin ? data.fecha_fin.substring(0, 10) : "";
+
+          // Comprobamos si vino con fechas distintas desde la BD
+          const tieneFechasDiferentes = Boolean(fInicio && fFin && fInicio !== fFin);
+          setEsMultidia(tieneFechasDiferentes);
+          setInicialEsMultidia(tieneFechasDiferentes);
+
           setForm({
             nombre: data.nombre || "",
             location: data.ubicacion || "",
-            fecha_inicio: data.fecha_inicio ? data.fecha_inicio.substring(0, 10) : "", 
-            fecha_fin: data.fecha_fin ? data.fecha_fin.substring(0, 10) : "",       
+            fecha_inicio: fInicio,
+            fecha_fin: fFin || fInicio,
             descripcion: data.descripcion || "",
             area_conocimiento: areasArray,
             financiamiento: esSi ? "SI" : "NO",
@@ -147,11 +153,10 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
               detalle: partes.slice(3).join(", ") || "",
             });
           } else if (data.ubicacion) {
-            setLocationParts(prev => ({ ...prev, detalle: data.ubicacion }));
+            setLocationParts((prev) => ({ ...prev, detalle: data.ubicacion }));
           }
 
           setPermisoConcedido(true);
-
         } else {
           throw new Error("La actividad solicitada no existe en el sistema.");
         }
@@ -174,7 +179,28 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
   }, [locationParts]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    // Si no es multidía y cambia la fecha de inicio, mantenemos fecha_fin alineada
+    if (!esMultidia && name === "fecha_inicio") {
+      setForm((prev) => ({
+        ...prev,
+        fecha_inicio: value,
+        fecha_fin: value,
+      }));
+    } else {
+      setForm((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleMultidiaChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const isChecked = e.target.checked;
+    setEsMultidia(isChecked);
+
+    // Al desactivar multidía, igualamos fecha_fin con fecha_inicio
+    if (!isChecked && form.fecha_inicio) {
+      setForm((prev) => ({ ...prev, fecha_fin: prev.fecha_inicio }));
+    }
   };
 
   const handleLocationChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -199,7 +225,7 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
   if (!isHydrated || loadingActividad || !permisoConcedido) {
     return (
       <Center h="70vh" flexDirection="column" gap={4}>
-        <Spinner size="xl" color="teal.500" thickness="4px" />
+        <Spinner size="xl" color="primary.500" thickness="4px" />
         <Text fontSize="lg" color="gray.600">Validando credenciales de acceso y cronograma...</Text>
       </Center>
     );
@@ -236,7 +262,7 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
     formData.append("nombre", form.nombre);
     formData.append("descripcion", form.descripcion);
     formData.append("fecha_inicio", form.fecha_inicio); 
-    formData.append("fecha_fin", form.fecha_fin);       
+    formData.append("fecha_fin", esMultidia ? form.fecha_fin : form.fecha_inicio);
     const { pais, estado, municipio, detalle } = locationParts;
     const direccionCompleta = `${pais}, ${estado}, ${municipio}, ${detalle}`;
     formData.append("ubicacion", direccionCompleta);
@@ -289,6 +315,18 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
       setLoading(false);
     }
   };
+  
+  const getCheckboxLabel = () => {
+    if (inicialEsMultidia) {
+      return esMultidia
+        ? "La actividad dura varios días"
+        : "Establecer un solo día de realización";
+    } else {
+      return esMultidia
+        ? "Cambiar a rango de varios días"
+        : "Establecer un solo día de realización";
+    }
+  };
 
   return (
     <Box maxW="700px" mx="auto" mt={10} p={8} borderRadius="lg" bg="white" shadow="md">
@@ -307,8 +345,8 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
 
         <FormControl>
           <FormLabel mb={1}>Imagen Referencial de la Actividad</FormLabel>
-          <Text fontSize="xs" color="gray.500" mb={3} lineHeight="tall" bg="teal.50/50" p={2} borderRadius="md" borderLeft="3px solid" borderColor="teal.400">
-            <strong>Nota sobre la imagen:</strong> Al finalizar la jornada y rellenar el reporte final de la actividad, podrás sustituir esta imagen por los registros fotográficos reales capturados durante el evento.
+          <Text fontSize="xs" color="gray.500" mb={3} lineHeight="tall" bg="primary.50/50" p={2} borderRadius="md" borderLeft="3px solid" borderColor="primary.400">
+            💡 <strong>Nota sobre la imagen:</strong> Puedes subir una foto temporal o general que ilustre la actividad que planean ejecutar (por ejemplo, de un evento similar anterior). Posteriormente, al finalizar la jornada y rellenar el reporte final de la actividad, podrás sustituirla por los registros fotográficos reales capturados durante el evento.
           </Text>
           {previewImage && (
             <Image
@@ -368,9 +406,18 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
           </SimpleGrid>
         </Box>
         <Box width="100%" height="1px" bg="gray.200" mx="auto" my={2} borderRadius="full" />
-        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+
+        {/* Checkbox con texto adaptativo según el origen de la data */}
+        <FormControl>
+          <Checkbox isChecked={esMultidia} onChange={handleMultidiaChange} colorScheme="primary">
+            {getCheckboxLabel()}
+          </Checkbox>
+        </FormControl>
+
+        {/* Renderizado condicional de los campos de fecha */}
+        {!esMultidia ? (
           <FormControl isRequired>
-            <FormLabel>Fecha de Inicio</FormLabel>
+            <FormLabel>Fecha de Realización</FormLabel>
             <Input
               type="date"
               name="fecha_inicio"
@@ -378,18 +425,31 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
               onChange={handleChange}
             />
           </FormControl>
+        ) : (
+          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+            <FormControl isRequired>
+              <FormLabel>Fecha de Inicio</FormLabel>
+              <Input
+                type="date"
+                name="fecha_inicio"
+                value={form.fecha_inicio}
+                onChange={handleChange}
+              />
+            </FormControl>
 
-          <FormControl isRequired>
-            <FormLabel>Fecha de Finalización</FormLabel>
-            <Input
-              type="date"
-              name="fecha_fin"
-              value={form.fecha_fin}
-              onChange={handleChange}
-              min={form.fecha_inicio}
-            />
-          </FormControl>
-        </SimpleGrid>
+            <FormControl isRequired>
+              <FormLabel>Fecha de Finalización</FormLabel>
+              <Input
+                type="date"
+                name="fecha_fin"
+                value={form.fecha_fin}
+                onChange={handleChange}
+                min={form.fecha_inicio}
+              />
+            </FormControl>
+          </SimpleGrid>
+        )}
+        
         <FormControl isRequired>
           <FormLabel>ÁREA DE CONOCIMIENTO</FormLabel>
           <CheckboxGroup
@@ -398,15 +458,15 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
           >
             <VStack align="stretch">
               {[
-                "SALUD",
-                "ACCIÓN SOCIAL",
-                "CULTURAL",
-                "DEPORTIVA",
-                "AMBIENTE / CONSERVACIÓN",
-                "INVESTIGACIÓN",
-                "RECREACIÓN",
-                "DEBATE",
-                "OTROS",
+                "Salud",
+                "Acción Social",
+                "Cultural",
+                "Deportiva",
+                "Ambiente / Conservación",
+                "Investigación",
+                "Recreación",
+                "Debate",
+                "Otros",
               ].map((a) => (
                 <Checkbox key={a} value={a}>
                   {a}
@@ -449,7 +509,7 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
             Cancelar
           </Button>
           <Button 
-            colorScheme="teal" 
+            colorScheme="primary" 
             onClick={handleSave} 
             isLoading={loading}
             loadingText="Guardando..."

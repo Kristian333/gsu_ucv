@@ -28,6 +28,7 @@ export default function CrearActividadForm() {
   const toast = useToast();
   const { user, isHydrated } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [esMultidia, setEsMultidia] = useState(false);
 
   const [form, setForm] = useState({
     nombre: "",
@@ -54,12 +55,33 @@ export default function CrearActividadForm() {
     const { pais, estado, municipio, detalle } = locationParts;
     if (pais || estado || municipio || detalle) {
       const fullAddress = `${pais}, ${estado}, ${municipio}, ${detalle}`;
-      setForm(prev => ({ ...prev, location: fullAddress }));
+      setForm((prev) => ({ ...prev, location: fullAddress }));
     }
   }, [locationParts]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    // Si no es multidía y cambia la fecha de inicio, asignamos la misma fecha a fecha_fin
+    if (!esMultidia && name === "fecha_inicio") {
+      setForm((prev) => ({
+        ...prev,
+        fecha_inicio: value,
+        fecha_fin: value,
+      }));
+    } else {
+      setForm((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleMultidiaChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const isChecked = e.target.checked;
+    setEsMultidia(isChecked);
+
+    // Si se desmarca, aseguramos que la fecha_fin se iguale a la fecha_inicio
+    if (!isChecked && form.fecha_inicio) {
+      setForm((prev) => ({ ...prev, fecha_fin: prev.fecha_inicio }));
+    }
   };
 
   const handleLocationChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -91,12 +113,14 @@ export default function CrearActividadForm() {
 
     setLoading(true);
     const formData = new FormData();
-    
 
     formData.append("nombre", form.nombre);
     formData.append("descripcion", form.descripcion);
     formData.append("fecha_inicio", form.fecha_inicio); 
-    formData.append("fecha_fin", form.fecha_fin);       
+    formData.append(
+      "fecha_fin",
+      esMultidia ? form.fecha_fin : form.fecha_inicio
+    );      
 
     
     const { pais, estado, municipio, detalle } = locationParts;
@@ -162,7 +186,6 @@ export default function CrearActividadForm() {
     <Box maxW="700px" mx="auto" mt={10} p={8} borderRadius="lg" bg="white" shadow="md">
       <Heading mb={6}>Planificar Actividad</Heading>
       <VStack spacing={5} align="stretch">
-
         <FormControl isRequired>
           <FormLabel>Título de la Actividad</FormLabel>
           <Input
@@ -175,7 +198,7 @@ export default function CrearActividadForm() {
 
         <FormControl isRequired>
           <FormLabel mb={1}>Imagen Referencial de la Actividad</FormLabel>
-          <Text fontSize="xs" color="gray.500" mb={3} lineHeight="tall" bg="teal.50/50" p={2} borderRadius="md" borderLeft="3px solid" borderColor="teal.400">
+          <Text fontSize="xs" color="gray.500" mb={3} lineHeight="tall" bg="primary.50/50" p={2} borderRadius="md" borderLeft="3px solid" borderColor="primary.400">
             💡 <strong>Nota sobre la imagen:</strong> Puedes subir una foto temporal o general que ilustre la actividad que planean ejecutar (por ejemplo, de un evento similar anterior). Posteriormente, al finalizar la jornada y rellenar el reporte final de la actividad, podrás sustituirla por los registros fotográficos reales capturados durante el evento.
           </Text>
 
@@ -191,7 +214,6 @@ export default function CrearActividadForm() {
           )}
           <Input type="file" accept="image/*" onChange={handleImageChange} />
         </FormControl>
-
 
         <Box border="1px" borderColor="gray.100" p={4} borderRadius="md" bg="gray.50">
           <Heading size="sm" mb={4}>Ubicación de la Actividad*</Heading>
@@ -243,10 +265,18 @@ export default function CrearActividadForm() {
         </Box>
 
         <Box width="100%" height="1px" bg="gray.200" mx="auto" my={2} borderRadius="full" />
+        
+        {/* Checkbox para controlar la duración multidía */}
+        <FormControl>
+          <Checkbox isChecked={esMultidia} onChange={handleMultidiaChange} colorScheme="primary">
+            La actividad se realizará durante varios días
+          </Checkbox>
+        </FormControl>
 
-        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+        {/* Renderizado condicional de las fechas */}
+        {!esMultidia ? (
           <FormControl isRequired>
-            <FormLabel>Fecha de Inicio</FormLabel>
+            <FormLabel>Fecha de Realización</FormLabel>
             <Input
               type="date"
               name="fecha_inicio"
@@ -254,18 +284,30 @@ export default function CrearActividadForm() {
               onChange={handleChange}
             />
           </FormControl>
+        ) : (
+          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+            <FormControl isRequired>
+              <FormLabel>Fecha de Inicio</FormLabel>
+              <Input
+                type="date"
+                name="fecha_inicio"
+                value={form.fecha_inicio}
+                onChange={handleChange}
+              />
+            </FormControl>
 
-          <FormControl isRequired>
-            <FormLabel>Fecha de Finalización</FormLabel>
-            <Input
-              type="date"
-              name="fecha_fin"
-              value={form.fecha_fin}
-              onChange={handleChange}
-              min={form.fecha_inicio}
-            />
-          </FormControl>
-        </SimpleGrid>
+            <FormControl isRequired>
+              <FormLabel>Fecha de Finalización</FormLabel>
+              <Input
+                type="date"
+                name="fecha_fin"
+                value={form.fecha_fin}
+                onChange={handleChange}
+                min={form.fecha_inicio}
+              />
+            </FormControl>
+          </SimpleGrid>
+        )}
 
         <FormControl isRequired>
           <FormLabel>ÁREA DE CONOCIMIENTO</FormLabel>
@@ -275,15 +317,15 @@ export default function CrearActividadForm() {
           >
             <VStack align="stretch">
               {[
-                "SALUD",
-                "ACCIÓN SOCIAL",
-                "CULTURAL",
-                "DEPORTIVA",
-                "AMBIENTE / CONSERVACIÓN",
-                "INVESTIGACIÓN",
-                "RECREACIÓN",
-                "DEBATE",
-                "OTROS",
+                "Salud",
+                "Acción Social",
+                "Cultural",
+                "Deportiva",
+                "Ambiente / Conservación",
+                "Investigación",
+                "Recreación",
+                "Debate",
+                "Otros",
               ].map((a) => (
                 <Checkbox key={a} value={a}>
                   {a}
@@ -331,7 +373,7 @@ export default function CrearActividadForm() {
           </Button>
 
           <Button 
-            colorScheme="green" 
+            colorScheme="primary" 
             onClick={handleCreate} 
             isLoading={loading || !isHydrated}
             loadingText="Creando..."
@@ -339,7 +381,6 @@ export default function CrearActividadForm() {
             Crear Actividad
           </Button>
         </Flex>
-
       </VStack>
     </Box>
   );

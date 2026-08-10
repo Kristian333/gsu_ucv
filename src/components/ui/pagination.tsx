@@ -81,7 +81,7 @@ export function Pagination({ currentPage, totalPages, basePath = "", queryParams
                             key={index}
                             onClick={() => handlePageClick(page)}
                             variant={page === currentPage ? 'solid' : 'outline'}
-                            colorScheme={page === currentPage ? 'blue' : 'gray'}
+                            colorScheme={page === currentPage ? 'secondary' : 'gray'}
                         >
                             {page}
                         </Button>

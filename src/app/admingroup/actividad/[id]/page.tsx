@@ -7,7 +7,9 @@ import { apiServerRequest } from '@/utils/apiServer'
 import { ActivityBackend } from '@/types/activity'
 
 interface ActivityPageProps {
-  params: Promise<{ id: string }>
+  params: Promise<{
+    id: string
+  }>
 }
 
 async function getActivity(id: string): Promise<ActivityBackend | null> {
@@ -32,7 +34,7 @@ export async function generateMetadata({ params }: ActivityPageProps): Promise<M
   }
 }
 
-export default async function AdminActivityPage({ params }: ActivityPageProps) {
+export default async function AdminGroupActivityPage({ params }: ActivityPageProps) {
   const resolvedParams = await params
   const activity = await getActivity(resolvedParams.id)
 
@@ -42,7 +44,7 @@ export default async function AdminActivityPage({ params }: ActivityPageProps) {
 
   return (
     <Box maxW="container.xl" mx="auto" py={8} px={6}>
-      <ActivityDetailView initialActivity={activity} userRole="admin" />
+      <ActivityDetailView initialActivity={activity} userRole="admingroup" />
     </Box>
   )
 }

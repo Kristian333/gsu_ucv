@@ -6,6 +6,10 @@ export const metadata: Metadata = {
   description: "Lista completa de las actividades del Grupo de Extensión.",
 };
 
-export default function NuestrasActividadesPage() {
-  return <VistaNuestrasActividadesForm />;
+interface PageProps {
+  searchParams: { [key: string]: string | string[] | undefined };
+}
+
+export default function NuestrasActividadesPage({ searchParams }: PageProps) {
+  return <VistaNuestrasActividadesForm searchParams={searchParams} />;
 }

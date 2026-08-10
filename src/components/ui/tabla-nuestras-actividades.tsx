@@ -1,3 +1,4 @@
+// components/ui/tabla-nuestras-actividades
 "use client";
 import React, { useState } from "react";
 import NextLink from "next/link";
@@ -13,88 +14,43 @@ import {
   Tooltip,
   Link,
   Text,
-  Checkbox,
   useToast,
 } from "@chakra-ui/react";
-import { FiEdit, FiEye } from "react-icons/fi"; 
+import { StarIcon } from "@chakra-ui/icons";
+import { FiEdit, FiEye, FiInfo } from "react-icons/fi"; 
 import { FaRegFileAlt } from "react-icons/fa";
 import { apiRequest } from "@/components/formularios/api";
+import { formatActivityDateRange, getActivityStatus } from "@/utils/common";
 
-interface Actividad {
+export interface Actividad {
   id: number | string;
-  title?: string;
-  nombre?: string; 
-  place?: string;
-  location?: string; 
-  fecha_inicio?: string; 
-  fecha_fin?: string;    
-  group?: string;
-  reporte_completado?: boolean;
+  nombre?: string;
+  ubicacion?: string;
+  fecha_inicio?: string;
+  fecha_fin?: string;
   reporte_revisado?: boolean;
-  destacado?: boolean; 
+  destacado?: boolean;
   participantes_reales?: number | string | null;
 }
 
 interface TablaProps {
   actividades: Actividad[];
-  permitirEditar?: boolean;
-  mostrarDestacados?: boolean; 
   onRefresh?: () => void;      
 }
 
 export default function TablaNuestrasActividades({
   actividades,
-  permitirEditar = false,
-  mostrarDestacados = false,
   onRefresh,
 }: TablaProps) {
   const toast = useToast();
   const [loadingId, setLoadingId] = useState<string | number | null>(null);
 
-  function parseLocalDate(dateStr?: string | null): Date | null {
-    if (!dateStr) return null;
-    
-    if (dateStr.includes("-")) {
-      return new Date(dateStr.substring(0, 10) + "T00:00:00");
-    }
-
-    const parts = dateStr.split("/");
-    if (parts.length < 3) return null;
-
-    return new Date(
-      Number(parts[2]),
-      Number(parts[1]) - 1,
-      Number(parts[0]),
-    );
-  }
-
-  function normalizeToMidnight(d?: Date | null) {
-    if (!d) return null;
-    const nd = new Date(d);
-    nd.setHours(0, 0, 0, 0);
-    return nd;
-  }
-
-  const today = normalizeToMidnight(new Date())!;
-
-  const listaProcesada = (actividades || []).map((a) => {
-    const start = parseLocalDate(a.fecha_inicio);
-    const end = parseLocalDate(a.fecha_fin);
-
-    return {
-      ...a,
-      _start: normalizeToMidnight(start),
-      _end: normalizeToMidnight(end),
-    };
-  });
-
-  const format = (d?: Date | null) =>
-    d ? d.toLocaleDateString("es-ES") : "-";
-
-  const handleToggleDestacada = async (act: Actividad, isChecked: boolean) => {
+  const handleToggleDestacada = async (act: Actividad) => {
+    const isCurrentlyFeatured = !!act.destacado;
+    const newFeaturedState = !isCurrentlyFeatured;
     const totalDestacadasActuales = (actividades || []).filter(a => a.destacado).length;
 
-    if (isChecked && totalDestacadasActuales >= 4) {
+    if (newFeaturedState && totalDestacadasActuales >= 4) {
       toast({
         title: "Límite alcanzado",
         description: "Solo puedes tener un máximo de 4 actividades destacadas por grupo.",
@@ -116,26 +72,24 @@ export default function TablaNuestrasActividades({
         body: JSON.stringify({
           id: idString,
           activity_id: idString,
-          activityId: idString,
-          destacado: isChecked,
-          is_featured: isChecked
+          destacado: newFeaturedState,
         }),
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
       if (response && !response.error) {
         toast({
-          title: isChecked ? "Actividad destacada" : "Destacado removido",
+          title: newFeaturedState ? "Actividad destacada" : "Destacado removido",
           status: "success",
           duration: 2000,
           position: "top"
         });
         if (onRefresh) onRefresh(); 
       } else {
-        throw new Error(response?.message || "Error devuelto por el servidor.");
+        throw new Error(response?.message || "Error al actualizar estado destacado.");
       }
     } catch (err: any) {
       toast({
@@ -148,122 +102,169 @@ export default function TablaNuestrasActividades({
       setLoadingId(null);
     }
   };
+
   return (
-    <Box bg="white" p={6} rounded="md" shadow="sm" overflowX="auto">
-      <Table variant="simple">
+    <Box border="1px solid" borderColor="gray.200" borderRadius="md" bg="white" w="full">
+      <Table variant="simple" size="md" w="full" layout="auto">
         <Thead bg="gray.50">
           <Tr>
-            <Th>Nombre</Th>
-            <Th>Lugar</Th>
-            <Th>Fecha Inicio</Th>
-            <Th>Fecha Fin</Th>
-            {mostrarDestacados && <Th textAlign="center">Destacada</Th>}
-            <Th isNumeric>Acción</Th>
+            <Th fontSize="sm" py={3}>Nombre</Th>
+            <Th fontSize="sm" py={3}>Lugar</Th>
+            <Th fontSize="sm" py={3}>Fecha</Th>
+            <Th fontSize="sm" py={3} textAlign="center">Destacada</Th>
+            <Th fontSize="sm" py={3} isNumeric>Acciones</Th>
           </Tr>
         </Thead>
 
         <Tbody>
-          {listaProcesada.map((act) => {
-            const start = act._start;
-            const end = act._end;
+          {actividades.length === 0 ? (
+            <Tr>
+              <Td colSpan={5} textAlign="center" py={8}>
+                <Text color="gray.500" fontSize="md">No se encontraron actividades.</Text>
+              </Td>
+            </Tr>
+          ) : (
+            actividades.map((act) => {
+              // Parseo numérico para participantes_reales antes de evaluar status
+              const numParticipants = act.participantes_reales !== null && act.participantes_reales !== undefined
+                ? Number(act.participantes_reales)
+                : null;
 
-            const calificaParaReporte = !!end && today.getTime() >= end.getTime();
-            const enCurso = !!start && !!end && today.getTime() >= start.getTime() && today.getTime() <= end.getTime();
+              const statusInfo = getActivityStatus({
+                fecha_inicio: act.fecha_inicio,
+                fecha_fin: act.fecha_fin,
+                participantes_reales: numParticipants,
+                reporte_revisado: act.reporte_revisado,
+              });
 
-            const tieneReporteSubido = act.reporte_completado || 
-                                       act.reporte_revisado ||
-                                       (act.participantes_reales !== undefined && 
-                                        act.participantes_reales !== null && 
-                                        act.participantes_reales !== "" && 
-                                        Number(act.participantes_reales) > 0);
+              // Determinar la lógica de UI por etiquetas exactas de getActivityStatus
+              const esFutura = statusInfo.label === 'Actividad Futura';
+              const enCurso = statusInfo.label === 'Actividad En Curso';
+              const esperaReporte = statusInfo.label === 'A la Espera de Reporte';
+              
+              // Solo se pueden destacar las actividades que ya pasaron de fecha
+              const esFinalizada = !esFutura && !enCurso;
 
-            const nombreActividad = act.nombre || act.title || "Actividad sin título";
-            const lugarActividad = act.location || act.place || "-";
+              const nombreActividad = act.nombre || "Actividad sin título";
+              const lugarActividad = act.ubicacion || "-";
+              const fechaRango = formatActivityDateRange(act.fecha_inicio, act.fecha_fin);
+              const esDestacado = !!act.destacado;
 
-            return (
-              <Tr key={act.id}>
-                <Td>
-                  <Link
-                    as={NextLink}
-                    href={`/actividad/${act.id}`}
-                    color="teal.600"
-                    fontWeight="bold"
-                    _hover={{ textDecoration: "underline", color: "teal.800" }}
-                  >
-                    {nombreActividad}
-                  </Link>
-                </Td>
-
-                <Td>{lugarActividad}</Td>
-                <Td>{format(start)}</Td>
-                <Td>{format(end)}</Td>
-
-                {/* Columna de Destacadas */}
-                {mostrarDestacados && (
-                  <Td textAlign="center">
-                    <Checkbox
-                      colorScheme="teal"
-                      isChecked={!!act.destacado}
-                      isDisabled={loadingId === act.id} 
-                      onChange={(e) => handleToggleDestacada(act, e.target.checked)}
-                    />
+              return (
+                <Tr key={act.id}>
+                    {/* Nombre */}
+                  <Td fontWeight="medium" fontSize="md">
+                    <Link
+                      as={NextLink}
+                      href={`/admingroup/actividad/${act.id}`}
+                      color="teal.600"
+                      fontWeight="bold"
+                      _hover={{ textDecoration: "underline", color: "teal.800" }}
+                    >
+                      {nombreActividad}
+                    </Link>
                   </Td>
-                )}
 
-                <Td isNumeric>
-                  {/* Si la actividad está en curso, bloqueamos la edición y mostramos el botón de Ver */}
-                  {enCurso ? (
-                    <Tooltip label="Ver actividad en curso">
-                      <IconButton
-                        as={NextLink}
-                        href={`/actividad/${act.id}`}
-                        aria-label="Ver Actividad"
-                        icon={<FiEye />}
-                        size="sm"
-                        variant="ghost"
-                        colorScheme="blue"
-                      />
+                  {/* Lugar */}
+                  <Td color="gray.700" fontSize="md">{lugarActividad}</Td>
+                  
+                  {/* Fecha */}
+                  <Td fontSize="sm" color="gray.700">
+                    {fechaRango}
+                  </Td>
+
+                  {/* Columna de Destacadas */}
+                  <Td textAlign="center">
+                    <Tooltip 
+                      label={
+                        !esFinalizada
+                        ? "Solo se pueden destacar actividades que ya hayan finalizado"
+                          : esDestacado 
+                            ? "Quitar de destacadas" 
+                            : "Marcar como destacada"
+                      }
+                      placement="top"
+                    >
+                      <Box display="inline-block">
+                        <IconButton
+                          aria-label="Destacar actividad"
+                          icon={<StarIcon color={esDestacado ? "yellow.400" : "gray.300"} />}
+                          variant="ghost"
+                          fontSize="xl"
+                          size="sm"
+                          isLoading={loadingId === act.id}
+                          isDisabled={!esFinalizada}
+                          onClick={() => handleToggleDestacada(act)}
+                          _hover={{ transform: esFinalizada ? "scale(1.2)" : "none" }}
+                          transition="all 0.2s"
+                        />
+                      </Box>
                     </Tooltip>
-                  ) : (
-                    permitirEditar && (
+                  </Td>
+
+                  {/* Acciones */}
+                  <Td isNumeric>
+                    {/* Actividad Futura: Permite Editar */}
+                    {esFutura && (
                       <Tooltip label="Editar actividad planificada">
                         <IconButton
                           as={NextLink}
-                          href={`/admingroup/modificar_actividad/${act.id}`} 
+                          href={`/admingroup/modificar_actividad/${act.id}`}
                           aria-label="Editar"
                           icon={<FiEdit />}
-                          size="sm"
+                          size="md"
                           variant="ghost"
                           colorScheme="teal"
                         />
                       </Tooltip>
-                    )
-                  )}
-
-                  {/* Botón exclusivo para rellenar reporte una vez culminado  */}
-                  {calificaParaReporte && !tieneReporteSubido && (
-                    <Tooltip label="Hacer reporte final">
-                      <IconButton
-                        as={NextLink}
-                        href={`/admingroup/reporte/${act.id}`}
-                        aria-label="Reporte"
-                        icon={<FaRegFileAlt />}
-                        size="sm"
-                        variant="ghost"
-                        colorScheme="orange"
-                        ml={2}
-                      />
-                    </Tooltip>
-                  )}
-
-                  {/* Leyenda en caso de no calificar para ninguna acción inmediata */}
-                  {(!permitirEditar && tieneReporteSubido && !enCurso) || (!permitirEditar && !calificaParaReporte && !enCurso) ? (
-                    <Text fontSize="xs" color="gray.400" fontStyle="italic">Sin acciones</Text>
-                  ) : null}
-                </Td>
-              </Tr>
-            );
-          })}
+                    )}
+                    {/* Actividad En Curso: Ver actividad */}
+                    {enCurso && (
+                      <Tooltip label="Ver actividad en curso">
+                        <IconButton
+                          as={NextLink}
+                          href={`/actividad/${act.id}`}
+                          aria-label="Ver Actividad"
+                          icon={<FiEye />}
+                          size="md"
+                          variant="ghost"
+                          colorScheme="blue"
+                        />
+                      </Tooltip>
+                    )}
+                    {/* Finalizada sin reporte: Llenar reporte */}
+                    {esperaReporte && (
+                      <Tooltip label="Hacer reporte final">
+                        <IconButton
+                          as={NextLink}
+                          href={`/admingroup/reporte/${act.id}`}
+                          aria-label="Reporte"
+                          icon={<FaRegFileAlt />}
+                          size="md"
+                          variant="ghost"
+                          colorScheme="orange"
+                        />
+                      </Tooltip>
+                    )}
+                    {/* Finalizada con reporte completado: Ver información completa */}
+                    {!esFutura && !enCurso && !esperaReporte && (
+                      <Tooltip label="Ver Información Completa">
+                        <IconButton
+                          as={NextLink}
+                          href={`/admingroup/actividad/${act.id}`}
+                          aria-label="Ver Información Completa"
+                          icon={<FiInfo />}
+                          size="md"
+                          variant="ghost"
+                          colorScheme="teal"
+                        />
+                      </Tooltip>
+                    )}
+                  </Td>
+                </Tr>
+              );
+            })
+          )}
         </Tbody>
       </Table>
     </Box>

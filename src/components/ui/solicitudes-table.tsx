@@ -78,7 +78,7 @@ const getBadgeColorScheme = (estado: string) => {
   switch (estado?.toLowerCase()) {
     case 'under_review':
     case 'pendiente':
-      return 'yellow';
+      return 'orange';
     case 'approved':
     case 'aprobada':
       return 'green';

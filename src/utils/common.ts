@@ -99,12 +99,12 @@ export function getActivityStatus(activity: {
 
   // 1. Actividad Futura
   if (now < startDate) {
-    return { label: 'Actividad Futura', colorScheme: 'blue' }
+    return { label: 'Actividad Futura', colorScheme: 'secondary' }
   }
 
   // 2. Actividad En Curso
   if (now >= startDate && now <= endDate) {
-    return { label: 'Actividad En Curso', colorScheme: 'teal' }
+    return { label: 'Actividad En Curso', colorScheme: 'primary' }
   }
 
   // 3. Actividad Finalizada (now > endDate)

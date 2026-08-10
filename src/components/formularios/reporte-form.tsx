@@ -11,8 +11,6 @@ import {
   FormLabel,
   FormControl,
   Button,
-  Divider,
-  Stack,
   FormHelperText,
   Image,
   useToast,
@@ -22,6 +20,8 @@ import {
 import { useRouter } from "next/navigation";
 import { apiRequest } from "@/components/formularios/api";
 import { useAuth } from "@/app/context/auth-context";
+import { validateGroupAccess } from "@/utils/auth-guards";
+import { getActivityStatus, formatActivityDateRange } from "@/utils/common";
 
 interface ReporteFormProps {
   id: string;
@@ -53,25 +53,12 @@ export default function ReporteClientPage({ id }: ReporteFormProps) {
   const [allies, setAllies] = useState<string>("");
   const [expectedBeneficiaries, setExpectedBeneficiaries] = useState<number | "">("");
   const [actualBeneficiaries, setActualBeneficiaries] = useState<number | "">("");
-  const [photoFiles, setPhotoFiles] = useState<FileList | null>(null);
+  const [galleryUrl, setGalleryUrl] = useState<string>("");
   const [attendeeFile, setAttendeeFile] = useState<File | null>(null);
   const [observations, setObservations] = useState<string>("");
 
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
-
-  const verificarSiNoHaTerminado = (fechaFinString: string): boolean => {
-    if (!fechaFinString) return false;
-    const fechaFinFormateada = fechaFinString.substring(0, 10); 
-    
-    const hoy = new Date();
-    const anio = hoy.getFullYear();
-    const mes = String(hoy.getMonth() + 1).padStart(2, "0");
-    const dia = String(hoy.getDate()).padStart(2, "0");
-    const fechaHoyFormateada = `${anio}-${mes}-${dia}`;
-
-    return fechaHoyFormateada < fechaFinFormateada;
-  };
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -87,12 +74,12 @@ export default function ReporteClientPage({ id }: ReporteFormProps) {
         const data = await apiRequest(`activities/${id}`, { method: "GET" });
 
         if (data && !data.error) {
-          const grupoActividad = data.group_id || data.groupId;
+          const { hasAccess, reason } = validateGroupAccess(data, user);
 
-          if (!user?.groupId || String(grupoActividad) !== String(user.groupId)) {
+          if (!hasAccess) {
             toast({
               title: "Acceso denegado",
-              description: "Esta actividad pertenece a otro grupo.",
+              description: reason || "No tienes permisos para esta actividad.",
               status: "error",
               duration: 4000,
               isClosable: true,
@@ -102,11 +89,15 @@ export default function ReporteClientPage({ id }: ReporteFormProps) {
             return;
           }
 
+          const statusInfo = getActivityStatus(data);
 
-          if (data.fecha_fin && verificarSiNoHaTerminado(data.fecha_fin)) {
+          if (statusInfo.label !== "A la Espera de Reporte") {
             toast({
               title: "Reporte inhabilitado",
-              description: "No se puede rellenar el reporte de una actividad que no ha finalizado.",
+              description:
+                statusInfo.label === "Actividad Futura" || statusInfo.label === "Actividad En Curso"
+                  ? "Solo se pueden enviar reportes de actividades que ya hayan finalizado."
+                  : "Esta actividad ya cuenta con un reporte registrado.",
               status: "warning",
               duration: 5000,
               isClosable: true,
@@ -115,6 +106,8 @@ export default function ReporteClientPage({ id }: ReporteFormProps) {
             router.push("/admingroup/nuestras_actividades");
             return;
           }
+
+          const grupoActividad = data.group_id ?? data.groupId;
 
           setActividadBase({
             nombre: data.nombre || "",
@@ -133,11 +126,10 @@ export default function ReporteClientPage({ id }: ReporteFormProps) {
           setAllies(data.aliados || "");
           setExpectedBeneficiaries(data.participantes_estimados || "");
           setActualBeneficiaries(data.participantes_reales || "");
+          setGalleryUrl(data.galeria_url || "");
           setObservations(data.observaciones || "");
-
           
           setPermisoConcedido(true);
-
         } else {
           throw new Error("La actividad solicitada no existe en el sistema.");
         }
@@ -169,10 +161,10 @@ export default function ReporteClientPage({ id }: ReporteFormProps) {
 
   if (!isHydrated || loadingActividad || !permisoConcedido) {
     return (
-      <Center h="80vh" flexDirection="column" gap={4}>
-        <Spinner size="xl" color="teal.500" thickness="4px" />
-        <Text fontSize="lg" fontWeight="medium" color="gray.600">
-          Verificando permisos y cronograma del evento...
+      <Center h="70vh" flexDirection="column" gap={4}>
+        <Spinner size="xl" color="primary.500" thickness="4px" />
+        <Text fontSize="lg" color="gray.600">
+          Verificando permisos y estado del reporte...
         </Text>
       </Center>
     );
@@ -180,7 +172,7 @@ export default function ReporteClientPage({ id }: ReporteFormProps) {
 
   if (errorCarga) {
     return (
-      <Center h="80vh">
+      <Center h="70vh">
         <Box p={6} textAlign="center" borderRadius="lg" bg="red.50" color="red.600" shadow="sm" maxW="450px">
           <Heading size="md" mb={2}>Error de Entrada</Heading>
           <Text mb={4}>{errorCarga}</Text>
@@ -189,6 +181,7 @@ export default function ReporteClientPage({ id }: ReporteFormProps) {
       </Center>
     );
   }
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isHydrated || !permisoConcedido) return;
@@ -220,19 +213,14 @@ export default function ReporteClientPage({ id }: ReporteFormProps) {
     formData.append("aliados", allies || "");
     formData.append("participantes_estimados", String(expectedBeneficiaries || 0));
     formData.append("participantes_reales", String(actualBeneficiaries || 0));
+    formData.append("galeria_url", galleryUrl || "");
     formData.append("observaciones", observations || "");
-    formData.append("reporte_revisado", "true"); 
 
     if (imageFile) {
-      formData.append("reporte", imageFile);
+      formData.append("cubierta", imageFile);
     }
     if (attendeeFile) {
-      formData.append("documento_asistencia", attendeeFile);
-    }
-    if (photoFiles && photoFiles.length > 0) {
-      for (let i = 0; i < photoFiles.length; i++) {
-        formData.append("galeria_fotos", photoFiles[i]);
-      }
+      formData.append("lista_participantes", attendeeFile);
     }
 
     try {
@@ -273,32 +261,34 @@ export default function ReporteClientPage({ id }: ReporteFormProps) {
   };
 
   return (
-    <Box maxW="6xl" mx="auto" p={8} my={8} bg="white" rounded="lg" shadow="xl">
-      <Heading size="2xl" mb={6} textAlign="center" color="teal.500">
-        Reporte de Actividad
-      </Heading>
+    <Box maxW="700px" mx="auto" mt={10} p={8} borderRadius="lg" bg="white" shadow="md">
+      <Heading mb={6}>Reporte de Actividad</Heading>
+
+      {/* Resumen incrustado de la Actividad */}
+      <Box p={5} mb={6} borderRadius="md" bg="gray.50" borderLeft="4px solid" borderColor="primary.500">
+        <Flex justify="space-between" align="flex-start" mb={2}>
+          <Heading size="md" color="gray.800">
+            {actividadBase.nombre}
+          </Heading>
+        </Flex>
+
+        <VStack align="stretch" spacing={1} fontSize="sm" color="gray.600" mt={3}>
+          <Text>
+            <strong>Fecha:</strong> {formatActivityDateRange(actividadBase.fecha_inicio, actividadBase.fecha_fin)}
+          </Text>
+          <Text>
+            <strong>Ubicación:</strong> {actividadBase.ubicacion || "No especificada"}
+          </Text>
+        </VStack>
+      </Box>
 
       <form onSubmit={handleSubmit}>
-        <VStack spacing={6} align="stretch">
-
-          {/* Información Protegida */}
-          <FormControl isDisabled>
-            <FormLabel>Nombre de la Actividad Realizada</FormLabel>
-            <Input value={actividadBase.nombre} readOnly />
-          </FormControl>
-
-          <FormControl isDisabled>
-            <FormLabel>Fecha de Inicio de la Actividad</FormLabel>
-            <Input value={actividadBase.fecha_inicio ? actividadBase.fecha_inicio.substring(0, 10) : ""} readOnly />
-          </FormControl>
-
-          <FormControl isDisabled>
-            <FormLabel>Fecha de Fin de la Actividad</FormLabel>
-            <Input value={actividadBase.fecha_fin ? actividadBase.fecha_fin.substring(0, 10) : ""} readOnly />
-          </FormControl>
-
+        <VStack spacing={5} align="stretch">
           <FormControl isRequired>
-            <FormLabel>Imagen de la Actividad</FormLabel>
+            <FormLabel mb={1}>Imagen de la Actividad</FormLabel>
+            <FormHelperText mb={3}>
+              Sube la imagen representativa del evento ejecutado para actualizar el registro visual.
+            </FormHelperText>
             {previewImage && (
               <Image
                 src={previewImage}
@@ -328,14 +318,14 @@ export default function ReporteClientPage({ id }: ReporteFormProps) {
           <FormControl>
             <FormLabel>Si la actividad fue realizada con algún(os) aliado(s)</FormLabel>
             <Input
-              placeholder="Indique nombre(s) y aporte(s)"
+              placeholder="Indique nombre(s) y aporte(s) si los hubo"
               value={allies}
               onChange={(e) => setAllies(e.target.value)}
             />
           </FormControl>
 
           <FormControl isRequired>
-            <FormLabel>Número de personas que pensaban beneficiar con la actividad</FormLabel>
+            <FormLabel>Número de personas que estimaban beneficiar con la actividad</FormLabel>
             <Input
               type="number"
               value={expectedBeneficiaries}
@@ -355,19 +345,18 @@ export default function ReporteClientPage({ id }: ReporteFormProps) {
           <FormControl isRequired>
             <FormLabel>Reporte Fotográfico</FormLabel>
             <Input
-              type="file"
-              multiple
-              accept="image/*,video/*"
-              onChange={(e) => setPhotoFiles(e.target.files)}
-              pt={1}
+              type="url"
+              placeholder="https://drive.google.com/drive/folders/..."
+              value={galleryUrl}
+              onChange={(e) => setGalleryUrl(e.target.value)}
             />
             <FormHelperText>
-              Por favor, subir las 5 fotos que mejor representen la actividad realizada. Formato imagen y vídeo corto. Total máximo: 10 MB.
+              Por favor, subir las fotos que mejor representen la actividad realizada a drive y compartir link. La carpeta de drive debe ser especifica para la actividad y el acceso debe ser publico.
             </FormHelperText>
           </FormControl>
 
           <FormControl isRequired>
-            <FormLabel>Listado del Público Asistente</FormLabel>
+            <FormLabel>Listado de Asistencia (.pdf, .xlsx, .xls)</FormLabel>
             <Input
               type="file"
               accept=".pdf,.xlsx,.xls"
@@ -386,12 +375,12 @@ export default function ReporteClientPage({ id }: ReporteFormProps) {
             />
           </FormControl>
 
-          <Flex justify="flex-end" gap={4}>
+          <Flex justify="space-between" mt={7}>
             <Button colorScheme="gray" type="button" onClick={() => router.back()}>
               Cancelar
             </Button>
             <Button 
-              colorScheme="teal" 
+              colorScheme="primary" 
               type="submit"
               isLoading={loading}
               loadingText="Enviando..."
@@ -399,7 +388,6 @@ export default function ReporteClientPage({ id }: ReporteFormProps) {
               Enviar Reporte
             </Button>
           </Flex>
-
         </VStack>
       </form>
     </Box>

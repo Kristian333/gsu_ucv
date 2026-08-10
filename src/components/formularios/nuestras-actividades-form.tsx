@@ -1,231 +1,302 @@
+// components/formularios/nuestras-actividades-form
 "use client";
 import React, { useEffect, useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { 
   Box, 
   Heading, 
-  Tabs, 
-  TabList, 
-  TabPanels, 
-  Tab, 
-  TabPanel, 
   Center, 
   Spinner, 
   Text,
-  Badge,
+  Select,
+  Flex,
+  Stack,
   useToast
 } from "@chakra-ui/react";
 import { apiRequest } from "@/components/formularios/api";
 import { useAuth } from "@/app/context/auth-context";
 import TablaNuestrasActividades from "@/components/ui/tabla-nuestras-actividades";
+import { Pagination } from "@/components/ui/pagination";
+import { getActivityStatus } from "@/utils/common";
 
-interface Actividad {
+export interface Actividad {
   id: number | string;
   nombre?: string;
   ubicacion?: string; 
-  location?: string;
-  fecha_inicio: string; 
-  fecha_fin: string;    
+  fecha_inicio?: string; 
+  fecha_fin?: string;    
   descripcion?: string;
-  financiamiento?: string;
-  financing_org?: string;
-  image?: string;
-  reporte_completado?: boolean;
-  beneficiados_reales?: number | string | null;
-  destacada?: boolean;
+  participantes_reales?: number | string | null;
+  destacado?: boolean;
   is_featured?: boolean;
 }
 
-export default function VistaNuestrasActividadesForm() {
+interface FormProps {
+  searchParams?: { [key: string]: string | string[] | undefined };
+}
+
+export default function VistaNuestrasActividadesForm({ searchParams = {} }: FormProps) {
+  const router = useRouter();
+  const pathname = usePathname();
   const toast = useToast();
   const { user, isHydrated } = useAuth();
+
+  // Leer params desde la URL
+  const currentPage = Number(searchParams.page) || 1;
+  const estadoFilter = (searchParams.estado as string) || "";
+  const yearFilter = (searchParams.year as string) || "";
+  const featuredFilter = (searchParams.is_featured as string) || "";
+
   const [actividades, setActividades] = useState<Actividad[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Paginación y Contadores
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [counts, setCounts] = useState({
+    proximamente: 0,
+    enCurso: 0,
+    esperanReporte: 0,
+    total: 0,
+  });
+
+  // Función helper para actualizar los searchParams en la URL
+  const updateQueryParams = (newParams: Record<string, string | number | undefined>) => {
+    const current = new URLSearchParams();
+
+    if (estadoFilter) current.set("estado", estadoFilter);
+    if (yearFilter) current.set("year", yearFilter);
+    if (featuredFilter) current.set("is_featured", featuredFilter);
+    current.set("page", String(currentPage));
+
+    Object.entries(newParams).forEach(([key, value]) => {
+      if (value === undefined || value === "") {
+        current.delete(key);
+      } else {
+        current.set(key, String(value));
+      }
+    });
+
+    router.push(`${pathname}?${current.toString()}`);
+  };
+
   const cargarActividades = async () => {
+    if (!user?.groupId) return;
+    setLoading(true);
+
     try {
       const storedGroupId = user?.groupId;
       const token = localStorage.getItem("token") || "";
 
-      if (!storedGroupId) {
-        throw new Error("No se detectó una sesión activa para el grupo.");
-      }
+      // Petición para la página actual
+      let url = `activities?group_id=${storedGroupId}&page=${currentPage}&per_page=10`;
+      if (featuredFilter) url += `&is_featured=${featuredFilter}`;
 
-      const response = await apiRequest(`activities?group_id=${storedGroupId}&disablePaging=true`, { 
+      const response = await apiRequest(url, {
         method: "GET",
-        headers: {
-          "Authorization": `Bearer ${token}`
-        }
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      // Petición completa (sin paginar) para calcular contadores de estado exactos
+      const allResponse = await apiRequest(`activities?group_id=${storedGroupId}&disablePaging=true`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (response && !response.error) {
-        let listaActividades: Actividad[] = [];
+        const rawList: Actividad[] = response.actividades || (Array.isArray(response) ? response : []);
 
-        if (response.actividades && Array.isArray(response.actividades)) {
-          listaActividades = response.actividades;
-        } else if (Array.isArray(response)) {
-          listaActividades = response;
+        const procesadas = rawList.map((act) => ({
+          ...act,
+          nombre: act.nombre,
+          location: act.ubicacion || "Sin ubicación registrada",
+          destacado: !!act.destacado,
+        }));
+
+        setActividades(procesadas);
+        if (response.page_scope) {
+          setTotalPages(response.page_scope.total_pages || 1);
         }
+      } else {
+        throw new Error(response?.message || "No se pudo sincronizar la información.");
+      }
 
-        const actividadesProcesadas = listaActividades.map((act) => {
-          return {
-            ...act,
-            location: act.ubicacion || "Sin ubicación registrada",
-            destacada: !!act.is_featured || !!act.destacada
-          };
+      // Procesar Contadores
+      if (allResponse && !allResponse.error) {
+        const totalList: Actividad[] = allResponse.actividades || (Array.isArray(allResponse) ? allResponse : []);
+        
+        let proximamente = 0;
+        let enCurso = 0;
+        let esperanReporte = 0;
+
+        totalList.forEach((a) => {
+          const numPart = a.participantes_reales !== null && a.participantes_reales !== undefined && a.participantes_reales !== ""
+            ? Number(a.participantes_reales)
+            : null;
+
+          const status = getActivityStatus({
+            fecha_inicio: a.fecha_inicio,
+            fecha_fin: a.fecha_fin,
+            participantes_reales: numPart,
+          });
+
+          if (status.label === "Actividad Futura") proximamente++;
+          if (status.label === "Actividad En Curso") enCurso++;
+          if (status.label === "A la Espera de Reporte") esperanReporte++;
         });
 
-        setActividades(actividadesProcesadas);
-      } else {
-        throw new Error(response?.message || "No se pudo sincronizar la información con el servidor.");
+        setCounts({
+          proximamente,
+          enCurso,
+          esperanReporte,
+          total: totalList.length,
+        });
       }
     } catch (err: any) {
-      setError(err.message || "Error al conectar con la base de datos.");
+      setError(err.message || "Error de conexión con el servidor.");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (!isHydrated) return;
-    cargarActividades();
-  }, [isHydrated, user?.groupId]);
+    if (isHydrated) {
+      cargarActividades();
+    }
+  }, [isHydrated, user?.groupId, currentPage, featuredFilter]);
 
-  const hoyStr = new Date().toISOString().substring(0, 10); 
-  const anioActual = new Date().getFullYear(); 
+  // Filtrado local en cliente (Estado y Año)
+  const actividadesFiltradas = actividades.filter((act) => {
+const numPart = act.participantes_reales !== null && act.participantes_reales !== undefined && act.participantes_reales !== ""
+      ? Number(act.participantes_reales)
+      : null;
 
-  const actividadesPendientes = actividades.filter(act => {
-    if (!act.fecha_inicio) return false;
-    const inicioAct = act.fecha_inicio.substring(0, 10);
-    return hoyStr < inicioAct;
+    const status = getActivityStatus({
+      fecha_inicio: act.fecha_inicio,
+      fecha_fin: act.fecha_fin,
+      participantes_reales: numPart,
+    });
+
+    // 1. Filtro por Estado
+    if (estadoFilter === "proximamente" && status.label !== "Actividad Futura") return false;
+    if (estadoFilter === "en_curso" && status.label !== "Actividad En Curso") return false;
+    if (estadoFilter === "espera_reporte" && status.label !== "A la Espera de Reporte") return false;
+
+    // 2. Filtro por Año
+    if (yearFilter && act.fecha_inicio) {
+      const anio = new Date(act.fecha_inicio).getFullYear().toString();
+      if (anio !== yearFilter) return false;
+    }
+
+    return true;
   });
 
-  const actividadesEnCurso = actividades.filter(act => {
-    if (!act.fecha_inicio || !act.fecha_fin) return false;
-    const inicioAct = act.fecha_inicio.substring(0, 10);
-    const finAct = act.fecha_fin.substring(0, 10);
-    return hoyStr >= inicioAct && hoyStr <= finAct;
-  });
+  const anioActual = new Date().getFullYear();
+  const opcionesAnios = Array.from({ length: 5 }, (_, i) => anioActual - i);
 
-  const actividadesEsperaReporte = actividades.filter(act => {
-    if (!act.fecha_fin) return false;
-    const finAct = act.fecha_fin.substring(0, 10);
-    const reporteVacio = !act.reporte_completado || !act.beneficiados_reales;
-    return hoyStr > finAct && reporteVacio;
-  });
-
-  const actividadesViejasAnio = actividades.filter(act => {
-    if (!act.fecha_fin) return false;
-    const finAct = act.fecha_fin.substring(0, 10);
-    const anioAct = new Date(act.fecha_fin).getFullYear();
-    const reporteCompletado = act.reporte_completado || !!act.beneficiados_reales;
-    return anioAct === anioActual && hoyStr > finAct && reporteCompletado;
-  });
-
-  const historialCompleto = actividades;
-
-  if (!isHydrated || loading) {
-    return (
-      <Center h="60vh" flexDirection="column" gap={4}>
-        <Spinner size="xl" color="teal.500" thickness="4px" />
-        <Text fontSize="lg" color="gray.600">Obteniendo el registro completo de actividades...</Text>
-      </Center>
-    );
-  }
-
-  if (error) {
+  if (!isHydrated) {
     return (
       <Center h="60vh">
-        <Box p={6} textAlign="center" borderRadius="lg" bg="red.50" color="red.600" shadow="sm" maxW="450px">
-          <Heading size="md" mb={2}>Error de Comunicación</Heading>
-          <Text>{error}</Text>
-        </Box>
+        <Spinner size="xl" color="teal.500" thickness="4px" />
       </Center>
     );
   }
 
   return (
     <Box maxW="container.xl" mx="auto" py={10} px={6}>
-      <Heading mb={6}>Nuestras Actividades </Heading>
+      <Heading mb={6}>Nuestras Actividades</Heading>
 
-      <Tabs variant="enclosed" colorScheme="teal">
-        <TabList mb={4} overflowX="auto" overflowY="hidden" whiteSpace="nowrap">
-          <Tab fontWeight="semibold">
-            Próximamente
-            <Badge ml={2} colorScheme="teal" borderRadius="full">{actividadesPendientes.length}</Badge>
-          </Tab>
-          <Tab fontWeight="semibold">
-            En Curso 🔥
-            <Badge ml={2} colorScheme="green" borderRadius="full">{actividadesEnCurso.length}</Badge>
-          </Tab>
-          <Tab fontWeight="semibold">
-            Esperan Reporte
-            <Badge ml={2} colorScheme="orange" borderRadius="full">{actividadesEsperaReporte.length}</Badge>
-          </Tab>
-          <Tab fontWeight="semibold">
-            Realizadas este año
-            <Badge ml={2} colorScheme="blue" borderRadius="full">{actividadesViejasAnio.length}</Badge>
-          </Tab>
-          <Tab fontWeight="semibold">Historial</Tab>
-        </TabList>
+      {/* Panel de Filtros */}
+      <Box mb={6} p={4} bg="gray.50" borderRadius="xl" borderWidth="1px" borderColor="gray.100">
+        <Stack direction={{ base: "column", md: "row" }} spacing={4} align="center">
+          <Flex wrap="wrap" gap={4} flex={1} w="full">
+            {/* Estado */}
+            <Box minW="220px">
+              <Text mb={1} fontSize="sm" fontWeight="bold">
+                Estado de la Actividad:
+              </Text>
+              <Select
+                bg="white"
+                size="sm"
+                borderRadius="md"
+                value={estadoFilter}
+                onChange={(e) => updateQueryParams({ estado: e.target.value, page: 1 })}
+              >
+                <option value="">Todas ({counts.total})</option>
+                <option value="proximamente">Próximamente ({counts.proximamente})</option>
+                <option value="en_curso">En Curso 🔥 ({counts.enCurso})</option>
+                <option value="espera_reporte">Esperan Reporte ({counts.esperanReporte})</option>
+              </Select>
+            </Box>
 
-        <TabPanels bg="white" borderRadius="lg" shadow="sm" border="1px" borderColor="gray.200" p={4}>
-          <TabPanel>
-            {actividadesPendientes.length === 0 ? (
-              <Text color="gray.500" py={4} textAlign="center">No hay actividades planificadas próximas.</Text>
+            {/* Año */}
+            <Box minW="140px">
+              <Text mb={1} fontSize="sm" fontWeight="bold">
+                Año:
+              </Text>
+              <Select
+                bg="white"
+                size="sm"
+                borderRadius="md"
+                value={yearFilter}
+                onChange={(e) => updateQueryParams({ year: e.target.value, page: 1 })}
+              >
+                <option value="">Todos</option>
+                {opcionesAnios.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </Select>
+            </Box>
+
+            {/* Destacado */}
+            <Box minW="140px">
+              <Text mb={1} fontSize="sm" fontWeight="bold">
+                Destacadas:
+              </Text>
+              <Select
+                bg="white"
+                size="sm"
+                borderRadius="md"
+                value={featuredFilter}
+                onChange={(e) => updateQueryParams({ is_featured: e.target.value, page: 1 })}
+              >
+                <option value="">Todas</option>
+                <option value="true">Sí</option>
+                <option value="false">No</option>
+              </Select>
+            </Box>
+          </Flex>
+        </Stack>
+      </Box>
+
+      {/* Tabla */}
+      {loading ? (
+        <Center h="300px">
+          <Spinner size="lg" color="teal.500" />
+        </Center>
             ) : (
-              <TablaNuestrasActividades actividades={actividadesPendientes} permitirEditar={true} onRefresh={cargarActividades} />
-            )}
-          </TabPanel>
+        <Box>
+          <TablaNuestrasActividades 
+            actividades={actividadesFiltradas}
+            onRefresh={cargarActividades} 
+          />
 
-          <TabPanel>
-            {actividadesEnCurso.length === 0 ? (
-              <Text color="gray.500" py={4} textAlign="center">No hay actividades ejecutándose el día de hoy.</Text>
-            ) : (
-              <TablaNuestrasActividades actividades={actividadesEnCurso} permitirEditar={true} onRefresh={cargarActividades} />
-            )}
-          </TabPanel>
-
-          <TabPanel>
-            {actividadesEsperaReporte.length === 0 ? (
-              <Text color="gray.500" py={4} textAlign="center">No hay actividades pendientes por reportar.</Text>
-            ) : (
-              <TablaNuestrasActividades 
-                actividades={actividadesEsperaReporte} 
-                permitirEditar={false} 
-                mostrarDestacados={true} 
-                onRefresh={cargarActividades} 
-              />
-            )}
-          </TabPanel>
-
-          <TabPanel>
-            {actividadesViejasAnio.length === 0 ? (
-              <Text color="gray.500" py={4} textAlign="center">No se registran actividades finalizadas este año.</Text>
-            ) : (
-              <TablaNuestrasActividades 
-                actividades={actividadesViejasAnio} 
-                permitirEditar={false} 
-                mostrarDestacados={true} 
-                onRefresh={cargarActividades} 
-              />
-            )}
-          </TabPanel>
-
-          <TabPanel>
-            {historialCompleto.length === 0 ? (
-              <Text color="gray.500" py={4} textAlign="center">El historial se encuentra vacío.</Text>
-            ) : (
-              <TablaNuestrasActividades 
-                actividades={historialCompleto} 
-                permitirEditar={false} 
-                mostrarDestacados={true} 
-                onRefresh={cargarActividades} 
-              />
-            )}
-          </TabPanel>
-        </TabPanels>
-      </Tabs>
+          <Box mt={6} display="flex" justifyContent="center">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              basePath={pathname}
+              queryParams={{
+                ...(estadoFilter ? { estado: estadoFilter } : {}),
+                ...(yearFilter ? { year: yearFilter } : {}),
+                ...(featuredFilter ? { is_featured: featuredFilter } : {}),
+              }}
+            />
+          </Box>
+        </Box>
+      )}
     </Box>
   );
 }
