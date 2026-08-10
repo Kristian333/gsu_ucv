@@ -107,11 +107,16 @@ export default function SolicitudRecursoClientPage({ requestId, generalData }: S
         method: "POST",
         headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
+
       toast({
         title: "Solicitud Aprobada",
         description: "La solicitud ha sido aprobada correctamente.",
         status: "success",
       });
+
+    // Actualizar estado local inmediatamente para cambiar la UI y ocultar botones
+    setSolicitud((prev: any) => prev ? { ...prev, estado: "approved" } : prev);
+
       await fetchSolicitud();
     } catch (error: any) {
       toast({
@@ -132,11 +137,16 @@ export default function SolicitudRecursoClientPage({ requestId, generalData }: S
         method: "POST",
         headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
+
       toast({
         title: "Solicitud Rechazada",
         description: "La solicitud ha sido rechazada.",
         status: "info",
       });
+
+    // Actualizar estado local inmediatamente
+    setSolicitud((prev: any) => prev ? { ...prev, estado: "rejected" } : prev);
+
       await fetchSolicitud();
     } catch (error: any) {
       toast({
@@ -223,7 +233,7 @@ export default function SolicitudRecursoClientPage({ requestId, generalData }: S
               </Box>
             </HStack>
             <Text fontSize="sm" color="gray.600">
-              Grupo ID: <strong>#{solicitud?.grupo_id}</strong> | Solicitud ID: #{solicitud?.id}
+              Grupo: <strong>{solicitud?.grupo_nombre || `#${solicitud?.grupo_id}`}</strong> | Solicitud ID: #{solicitud?.id}
             </Text>
           </VStack>
         </HStack>
@@ -309,7 +319,7 @@ export default function SolicitudRecursoClientPage({ requestId, generalData }: S
               color="white"
               _hover={{ filter: "brightness(0.9)" }} 
               isLoading={submitting}
-              onClick={handleConfirmApprove}
+              onClick={handleOpenApproveModal}
             >
               Aprobar
             </Button>

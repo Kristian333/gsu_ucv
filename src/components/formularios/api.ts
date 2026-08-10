@@ -31,7 +31,9 @@ export async function apiRequest(
     headers,
   });
   
-  const data = await response.json();
+  const text = await response.text();
+  
+  const data = text ? JSON.parse(text) : {};
 
   if (!response.ok) {
     

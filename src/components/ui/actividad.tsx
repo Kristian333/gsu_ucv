@@ -1,10 +1,25 @@
 // src/components/ui/actividad.tsx
 "use client";
 
-import React from "react";
-import { Box, Flex, Heading, Text, Image, VStack, Divider, Link as ChakraLink } from "@chakra-ui/react";
+import React, { useState } from "react";
+import { 
+  Box,
+  Flex,
+  Heading,
+  Text,
+  Image,
+  VStack,
+  Divider,
+  Link as ChakraLink,
+  IconButton,
+  useToast,
+  Tooltip
+} from "@chakra-ui/react";
 import NextLink from "next/link";
+import { StarIcon } from "@chakra-ui/icons";
 import { formatActivityDateRange } from "@/utils/common";
+import { useAuth } from "@/app/context/auth-context";
+import { apiRequest } from "@/components/formularios/api";
 
 interface ActivityBackend {
   id: string;
@@ -24,6 +39,7 @@ interface ActivityBackend {
   observaciones?: string;
   cubierta?: string;
   gallery_url?: string;
+  destacado?: boolean;
 }
 
 interface Props {
@@ -33,6 +49,11 @@ interface Props {
 
 export default function ActivityClientPage({ activityId, activity }: Props) {
   const placeholderImage = "/imagen-no-disponible.jpg";
+  const toast = useToast();
+  const { user } = useAuth();
+
+  const [isFeatured, setIsFeatured] = useState<boolean>(activity?.destacado ?? false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // Actividad no Encontrada
   if (!activity) {
@@ -44,7 +65,50 @@ export default function ActivityClientPage({ activityId, activity }: Props) {
     );
   }
 
-  // Usar la imagen de cubierta entregada por la API o el fallback
+  // Verificar si el usuario autenticado pertenece al grupo de la actividad y tiene rol de grupo
+  const rolesArray = (user?.roles || []).map(r => r.toLowerCase().trim());
+  const isGroupOwner =
+    rolesArray.includes("group_admin") && String(user?.groupId) === String(activity.group_id);
+
+  // Handler para conmutar el estado de destacado
+  const handleToggleFeature = async () => {
+    setIsLoading(true);
+    const newFeaturedState = !isFeatured;
+
+    try {
+      await apiRequest("/activities/feature", {
+        method: "PATCH",
+        body: JSON.stringify({
+          id: activity.id,
+          is_featured: newFeaturedState,
+        }),
+      });
+
+      setIsFeatured(newFeaturedState);
+      toast({
+        title: "Éxito",
+        description: newFeaturedState
+          ? "Actividad destacada correctamente"
+          : "Actividad quitada de destacadas",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+        position: "top-right",
+      });
+    } catch (err: any) {
+      toast({
+        title: "Atención",
+        description: err.message || "No se pudo actualizar el estado de destacada",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+        position: "top-right",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const finalImageUrl = activity.cubierta && activity.cubierta.trim() !== "" 
     ? activity.cubierta 
     : placeholderImage;
@@ -81,8 +145,30 @@ export default function ActivityClientPage({ activityId, activity }: Props) {
           />
 
           {/* Info básica */}
-          <VStack align="start" spacing={3} flex="1" alignItems="center">
-            <Heading size="2xl" color="primary" alignSelf="center" textAlign="center">
+          <VStack align="start" spacing={3} flex="1" alignItems="center" pos="relative" pt={isGroupOwner ? 8 : 0}>
+            {/* Estrella de Destacado solo visible para el grupo */}
+            {isGroupOwner && (
+              <Box pos="absolute" top={0} right={0}>
+                <Tooltip
+                  label={isFeatured ? "Quitar de destacadas" : "Marcar como destacada"}
+                  placement="top"
+                >
+                  <IconButton
+                    aria-label="Destacar actividad"
+                    icon={<StarIcon color={isFeatured ? "yellow.400" : "gray.300"} />}
+                    variant="ghost"
+                    fontSize="2xl"
+                    isLoading={isLoading}
+                    onClick={handleToggleFeature}
+                    _hover={{ transform: "scale(1.2)" }}
+                    transition="all 0.2s"
+                  />
+                </Tooltip>
+              </Box>
+            )}
+
+            {/* Título */}
+            <Heading size="2xl" color="primary" textAlign="center">
               {activity.nombre}
             </Heading>
 
@@ -181,7 +267,6 @@ export default function ActivityClientPage({ activityId, activity }: Props) {
             
           </Box>
         )}
-
       </VStack>
     </Box>
   );

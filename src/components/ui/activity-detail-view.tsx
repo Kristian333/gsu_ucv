@@ -59,7 +59,7 @@ export function ActivityDetailView({ initialActivity }: ActivityDetailViewProps)
     const nextStatus = !activity.reporte_revisado
 
     try {
-        await apiRequest('admin/activities/report-check', {
+      await apiRequest('admin/activities/report-check', {
         method: 'PATCH',
         body: JSON.stringify({
           id: activity.id,
