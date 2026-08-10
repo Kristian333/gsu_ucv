@@ -146,12 +146,12 @@ export default function VistaNuestrasActividadesForm() {
 
   return (
     <Box maxW="container.xl" mx="auto" py={10} px={6}>
-      <Heading mb={6}>Nuestras Actividades — LAMUN</Heading>
+      <Heading mb={6}>Nuestras Actividades </Heading>
 
       <Tabs variant="enclosed" colorScheme="teal">
         <TabList mb={4} overflowX="auto" overflowY="hidden" whiteSpace="nowrap">
           <Tab fontWeight="semibold">
-            Pendientes
+            Próximamente
             <Badge ml={2} colorScheme="teal" borderRadius="full">{actividadesPendientes.length}</Badge>
           </Tab>
           <Tab fontWeight="semibold">
@@ -163,10 +163,10 @@ export default function VistaNuestrasActividadesForm() {
             <Badge ml={2} colorScheme="orange" borderRadius="full">{actividadesEsperaReporte.length}</Badge>
           </Tab>
           <Tab fontWeight="semibold">
-            Pasadas ({anioActual})
+            Realizadas este año
             <Badge ml={2} colorScheme="blue" borderRadius="full">{actividadesViejasAnio.length}</Badge>
           </Tab>
-          <Tab fontWeight="semibold">Historial Total</Tab>
+          <Tab fontWeight="semibold">Historial</Tab>
         </TabList>
 
         <TabPanels bg="white" borderRadius="lg" shadow="sm" border="1px" borderColor="gray.200" p={4}>
