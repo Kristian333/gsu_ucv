@@ -1,7 +1,5 @@
 "use client";
 import { useMemo } from 'react';
-
-// Interfaz adaptada al nuevo tipado del Backend (fecha_inicio y fecha_fin)
 export interface ActividadBackend {
   id: string;
   group_id: string;
@@ -35,26 +33,22 @@ const AREAS_MAESTRAS = [
   "OTROS"
 ];
 
-
 export const useActividades = (actividadesRaw: ActividadBackend[] | undefined | null) => {
   return useMemo(() => {
     if (!actividadesRaw || !Array.isArray(actividadesRaw)) {
       return { porActividad: [], porEstado: [], porCiudad: [], porAnio: [], porAreaAnio: [], porGrupo: [], todasLasAreas: AREAS_MAESTRAS };
     }
 
+
     const porActividad: any[] = [];
     const mapaEstado: Record<string, number> = {};
     const mapaCiudad: Record<string, number> = {};
     const mapaGrupo: Record<string, Record<string, any>> = {}; 
-    
     const mapaAnio: Record<string, number> = {};
     const mapaAreaAnio: Record<string, Record<string, number>> = {};
-
     const anioActual = new Date().getFullYear(); 
-    const anioInicio = anioActual - 2;          
+    const anioInicio = anioActual - 3; 
     const rangoAniosValidos: string[] = [];
-
-
     for (let anio = anioInicio; anio <= anioActual; anio++) {
       const anioStr = anio.toString();
       rangoAniosValidos.push(anioStr);
@@ -65,25 +59,19 @@ export const useActividades = (actividadesRaw: ActividadBackend[] | undefined | 
         mapaAreaAnio[anioStr][area] = 0;
       });
     }
-
     actividadesRaw.forEach((item) => {
+      const estimados = Number(item.participantes_estimados) || 0;
+      const reales = Number(item.participantes_reales) || 0;
       const partes = item.ubicacion ? item.ubicacion.split(',').map(p => p.trim()) : [];
       const estado = partes[1] || "Sin Estado";    
       const ciudad = partes[2] || "Sin Ciudad";    
       const grupoNombre = item.nombre_grupo || "Grupo No Definido";
 
-
       let anio = "Sin Año";
-      if (item.fecha_fin) {
-        const fechaStr = String(item.fecha_fin).trim();
-        if (fechaStr.length >= 4) {
-          const posibleAnio = fechaStr.substring(0, 4);
-          if (!isNaN(Number(posibleAnio))) {
-            anio = posibleAnio;
-          }
-        }
+      if (item.fecha_fin && item.fecha_fin.length >= 4) {
+        anio = item.fecha_fin.substring(0, 4);
       }
-
+      const esAnioVigente = anio === anioActual.toString();
       if (rangoAniosValidos.includes(anio)) {
         let areas: string[] = [];
         if (item.area_conocimiento) {
@@ -120,35 +108,37 @@ export const useActividades = (actividadesRaw: ActividadBackend[] | undefined | 
 
         mapaAnio[anio] += 1;
       }
+      if (esAnioVigente) {
+        if (estimados > 0 || reales > 0) {
+          porActividad.push({
+            lugar: item.nombre || "Sin Nombre", 
+            cantidadEsperada: estimados,
+            CantidadReal: reales,
+            integrantes: Number(item.participantes_grupo) || 0
+          });
+          if (!mapaGrupo[grupoNombre]) {
+            mapaGrupo[grupoNombre] = {
+              lugar: grupoNombre,
+              cantidadDeVeces: 0,
+              cantidadEsperada: 0,
+              CantidadReal: 0,
+              integrantes: 0
+            };
+          }
+          mapaGrupo[grupoNombre].cantidadDeVeces += 1;
+          mapaGrupo[grupoNombre].cantidadEsperada += estimados;
+          mapaGrupo[grupoNombre].CantidadReal += reales;
+          mapaGrupo[grupoNombre].integrantes += Number(item.participantes_grupo) || 0;
+        }
 
-      porActividad.push({
-        lugar: item.nombre || "Sin Nombre", 
-        cantidadEsperada: Number(item.participantes_estimados) || 0,
-        CantidadReal: Number(item.participantes_reales) || 0,
-        integrantes: Number(item.participantes_grupo) || 0
-      });
-
-      mapaEstado[estado] = (mapaEstado[estado] || 0) + 1;
-      mapaCiudad[ciudad] = (mapaCiudad[ciudad] || 0) + 1;
-
-      if (!mapaGrupo[grupoNombre]) {
-        mapaGrupo[grupoNombre] = {
-          lugar: grupoNombre,
-          cantidadDeVeces: 0,
-          cantidadEsperada: 0,
-          CantidadReal: 0,
-          integrantes: 0
-        };
+        mapaEstado[estado] = (mapaEstado[estado] || 0) + 1;
+        mapaCiudad[ciudad] = (mapaCiudad[ciudad] || 0) + 1;
       }
-      mapaGrupo[grupoNombre].cantidadDeVeces += 1;
-      mapaGrupo[grupoNombre].cantidadEsperada += Number(item.participantes_estimados) || 0;
-      mapaGrupo[grupoNombre].CantidadReal += Number(item.participantes_reales) || 0;
-      mapaGrupo[grupoNombre].integrantes += Number(item.participantes_grupo) || 0;
     });
+
 
     const porEstado = Object.entries(mapaEstado).map(([estado, total]) => ({ lugar: estado, CantidadReal: total }));
     const porCiudad = Object.entries(mapaCiudad).map(([ciudad, total]) => ({ lugar: ciudad, CantidadReal: total }));
-    
     const porAnio = Object.entries(mapaAnio).map(([anio, total]) => ({ lugar: anio, CantidadReal: total })).sort((a, b) => a.lugar.localeCompare(b.lugar));
     const porAreaAnio = Object.entries(mapaAreaAnio).map(([anio, areasDelAnio]) => ({ lugar: anio, ...areasDelAnio })).sort((a, b) => a.lugar.localeCompare(b.lugar));
     const porGrupo = Object.values(mapaGrupo).sort((a, b) => b.CantidadReal - a.CantidadReal);

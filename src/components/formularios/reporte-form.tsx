@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useEffect, useState } from "react";
 import {
   Box,
@@ -13,52 +12,43 @@ import {
   FormControl,
   Button,
   Divider,
-  Checkbox,
-  CheckboxGroup,
   Stack,
   FormHelperText,
   Image,
   useToast,
+  Center,
+  Spinner,
 } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
+import { apiRequest } from "@/components/formularios/api";
+import { useAuth } from "@/app/context/auth-context";
 
-interface ActivityItem {
-  id: number;
-  title: string;
-  image: string;
-  date_start: string;
-  date_end: string;
-  place: string;
-  description: string;
-  area?: string[];
+interface ReporteFormProps {
+  id: string;
 }
 
-interface Props {
-  activity: ActivityItem | null;
-}
-
-export default function ReporteClientPage({ activity }: Props) {
-  if (!activity) {
-    return (
-      <Box maxW="4xl" mx="auto" p={10} textAlign="center">
-        <Heading size="lg">Actividad no encontrada</Heading>
-        <Text mt={4}>No existe información para esta actividad.</Text>
-      </Box>
-    );
-  }
-
+export default function ReporteClientPage({ id }: ReporteFormProps) {
   const router = useRouter();
   const toast = useToast();
+  const { user, isHydrated } = useAuth();
 
-  const [form, setForm] = useState({
-    title: "",
-    place: "",
-    date_start: "",
-    date_end: "",
-    description: "",
+  const [loadingActividad, setLoadingActividad] = useState(true);
+  const [errorCarga, setErrorCarga] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const [permisoConcedido, setPermisoConcedido] = useState(false);
+
+  const [actividadBase, setActividadBase] = useState({
+    nombre: "",
+    ubicacion: "",
+    fecha_inicio: "",
+    fecha_fin: "",
+    descripcion: "",
+    area_conocimiento: "",
+    financiamiento: "",
+    group_id: "",
   });
 
-  // Estados para campos editables
   const [numMembers, setNumMembers] = useState<number | "">("");
   const [allies, setAllies] = useState<string>("");
   const [expectedBeneficiaries, setExpectedBeneficiaries] = useState<number | "">("");
@@ -70,23 +60,96 @@ export default function ReporteClientPage({ activity }: Props) {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
 
-  useEffect(() => {
-    if (!activity) return;
+  const verificarSiNoHaTerminado = (fechaFinString: string): boolean => {
+    if (!fechaFinString) return false;
+    const fechaFinFormateada = fechaFinString.substring(0, 10); 
+    
+    const hoy = new Date();
+    const anio = hoy.getFullYear();
+    const mes = String(hoy.getMonth() + 1).padStart(2, "0");
+    const dia = String(hoy.getDate()).padStart(2, "0");
+    const fechaHoyFormateada = `${anio}-${mes}-${dia}`;
 
-    setForm({
-      title: activity.title,
-      place: activity.place,
-      date_start: activity.date_start,
-      date_end: activity.date_end,
-      description: activity.description,
-    });
-
-    setPreviewImage(activity.image);
-  }, [activity]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    return fechaHoyFormateada < fechaFinFormateada;
   };
+
+  useEffect(() => {
+    if (!isHydrated) return;
+
+    if (!id) {
+      setErrorCarga("No se recibió el identificador de la actividad.");
+      setLoadingActividad(false);
+      return;
+    }
+
+    const obtenerDatosDeBD = async () => {
+      try {
+        const data = await apiRequest(`activities/${id}`, { method: "GET" });
+
+        if (data && !data.error) {
+          const grupoActividad = data.group_id || data.groupId;
+
+          if (!user?.groupId || String(grupoActividad) !== String(user.groupId)) {
+            toast({
+              title: "Acceso denegado",
+              description: "Esta actividad pertenece a otro grupo.",
+              status: "error",
+              duration: 4000,
+              isClosable: true,
+              position: "top"
+            });
+            router.push("/admingroup/nuestras_actividades");
+            return;
+          }
+
+
+          if (data.fecha_fin && verificarSiNoHaTerminado(data.fecha_fin)) {
+            toast({
+              title: "Reporte inhabilitado",
+              description: "No se puede rellenar el reporte de una actividad que no ha finalizado.",
+              status: "warning",
+              duration: 5000,
+              isClosable: true,
+              position: "top"
+            });
+            router.push("/admingroup/nuestras_actividades");
+            return;
+          }
+
+          setActividadBase({
+            nombre: data.nombre || "",
+            ubicacion: data.ubicacion || "",
+            fecha_inicio: data.fecha_inicio || "",
+            fecha_fin: data.fecha_fin || "",
+            descripcion: data.descripcion || "",
+            area_conocimiento: data.area_conocimiento || "",
+            financiamiento: data.financiamiento || "",
+            group_id: String(grupoActividad),
+          });
+
+          setPreviewImage(data.reporte_url || data.reporte || null);
+
+          setNumMembers(data.participantes_grupo || "");
+          setAllies(data.aliados || "");
+          setExpectedBeneficiaries(data.participantes_estimados || "");
+          setActualBeneficiaries(data.participantes_reales || "");
+          setObservations(data.observaciones || "");
+
+          
+          setPermisoConcedido(true);
+
+        } else {
+          throw new Error("La actividad solicitada no existe en el sistema.");
+        }
+      } catch (err: any) {
+        setErrorCarga(err.message || "Error al conectar con el servidor.");
+      } finally {
+        setLoadingActividad(false);
+      }
+    };
+
+    obtenerDatosDeBD();
+  }, [id, user, isHydrated, router, toast]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -96,24 +159,122 @@ export default function ReporteClientPage({ activity }: Props) {
     setPreviewImage(URL.createObjectURL(file));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    return () => {
+      if (previewImage && previewImage.startsWith("blob:")) {
+        URL.revokeObjectURL(previewImage);
+      }
+    };
+  }, [previewImage]);
+
+  if (!isHydrated || loadingActividad || !permisoConcedido) {
+    return (
+      <Center h="80vh" flexDirection="column" gap={4}>
+        <Spinner size="xl" color="teal.500" thickness="4px" />
+        <Text fontSize="lg" fontWeight="medium" color="gray.600">
+          Verificando permisos y cronograma del evento...
+        </Text>
+      </Center>
+    );
+  }
+
+  if (errorCarga) {
+    return (
+      <Center h="80vh">
+        <Box p={6} textAlign="center" borderRadius="lg" bg="red.50" color="red.600" shadow="sm" maxW="450px">
+          <Heading size="md" mb={2}>Error de Entrada</Heading>
+          <Text mb={4}>{errorCarga}</Text>
+          <Button colorScheme="red" variant="outline" onClick={() => router.back()}>Volver atrás</Button>
+        </Box>
+      </Center>
+    );
+  }
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Aquí iría la lógica para enviar el reporte
-    console.log({
-      numMembers,
-      allies,
-      expectedBeneficiaries,
-      actualBeneficiaries,
-      photoFiles,
-      attendeeFile,
-      observations,
-    });
-    alert("Reporte enviado correctamente (simulado)");
+    if (!isHydrated || !permisoConcedido) return;
+
+    if (!user?.groupId) {
+      toast({
+        title: "Identificación de Grupo Requerida",
+        description: "El reporte no se pudo guardar, ¡no pudimos identificar tu grupo!",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "top"
+      });
+      return;
+    }
+
+    setLoading(true);
+    const formData = new FormData();
+
+    formData.append("nombre", actividadBase.nombre);
+    formData.append("ubicacion", actividadBase.ubicacion);
+    formData.append("fecha_inicio", actividadBase.fecha_inicio);
+    formData.append("fecha_fin", actividadBase.fecha_fin);
+    formData.append("descripcion", actividadBase.descripcion);
+    formData.append("area_conocimiento", actividadBase.area_conocimiento);
+    formData.append("financiamiento", actividadBase.financiamiento);
+    formData.append("group_id", actividadBase.group_id);
+    formData.append("participantes_grupo", String(numMembers || 0));
+    formData.append("aliados", allies || "");
+    formData.append("participantes_estimados", String(expectedBeneficiaries || 0));
+    formData.append("participantes_reales", String(actualBeneficiaries || 0));
+    formData.append("observaciones", observations || "");
+    formData.append("reporte_revisado", "true"); 
+
+    if (imageFile) {
+      formData.append("reporte", imageFile);
+    }
+    if (attendeeFile) {
+      formData.append("documento_asistencia", attendeeFile);
+    }
+    if (photoFiles && photoFiles.length > 0) {
+      for (let i = 0; i < photoFiles.length; i++) {
+        formData.append("galeria_fotos", photoFiles[i]);
+      }
+    }
+
+    try {
+      const token = localStorage.getItem("token") || "";
+      
+      const response = await apiRequest(`activities/${id}`, {
+        method: "PUT",
+        body: formData,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response && (response.error || response.status === 500 || response.status === 400)) {
+        throw new Error(response.message || "El servidor backend rechazó la actualización del reporte.");
+      }
+
+      toast({
+        title: "Reporte enviado con éxito",
+        description: "Los resultados de la actividad han sido guardados correctamente.",
+        status: "success",
+        duration: 4000,
+        isClosable: true,
+      });
+
+      router.push("/admingroup/nuestras_actividades");
+    } catch (error: any) {
+      toast({
+        title: "Error al guardar",
+        description: error.message || "Ocurrió un problema de conexión con el backend.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <Box maxW="6xl" mx="auto" p={8} my={8} bg="white" rounded="lg" shadow="xl">
-      <Heading size="2xl" mb={6} textAlign="center" color="primary">
+      <Heading size="2xl" mb={6} textAlign="center" color="teal.500">
         Reporte de Actividad
       </Heading>
 
@@ -121,25 +282,23 @@ export default function ReporteClientPage({ activity }: Props) {
         <VStack spacing={6} align="stretch">
 
           {/* Información Protegida */}
-
-          <FormControl>
+          <FormControl isDisabled>
             <FormLabel>Nombre de la Actividad Realizada</FormLabel>
-            <Input value={activity.title} isReadOnly />
+            <Input value={actividadBase.nombre} readOnly />
           </FormControl>
 
-          <FormControl>
+          <FormControl isDisabled>
             <FormLabel>Fecha de Inicio de la Actividad</FormLabel>
-            <Input value={activity.date_start || ""} isReadOnly />
+            <Input value={actividadBase.fecha_inicio ? actividadBase.fecha_inicio.substring(0, 10) : ""} readOnly />
           </FormControl>
 
-          <FormControl>
+          <FormControl isDisabled>
             <FormLabel>Fecha de Fin de la Actividad</FormLabel>
-            <Input value={activity.date_end || ""} isReadOnly />
+            <Input value={actividadBase.fecha_fin ? actividadBase.fecha_fin.substring(0, 10) : ""} readOnly />
           </FormControl>
 
           <FormControl isRequired>
             <FormLabel>Imagen de la Actividad</FormLabel>
-  
             {previewImage && (
               <Image
                 src={previewImage}
@@ -150,8 +309,7 @@ export default function ReporteClientPage({ activity }: Props) {
                 mb={3}
               />
             )}
-  
-            <Input type="file" accept="image/*" onChange={handleImageChange} />
+            <Input type="file" accept="image/*" onChange={handleImageChange} pt={1} />
           </FormControl>
 
           {/* Campos Editables */}
@@ -160,7 +318,7 @@ export default function ReporteClientPage({ activity }: Props) {
             <Input
               type="number"
               value={numMembers}
-              onChange={(e) => setNumMembers(Number(e.target.value))}
+              onChange={(e) => setNumMembers(e.target.value === "" ? "" : Number(e.target.value))}
             />
             <FormHelperText>
               Indique el número de integrantes del grupo que participaron en la ejecución de la actividad
@@ -181,7 +339,7 @@ export default function ReporteClientPage({ activity }: Props) {
             <Input
               type="number"
               value={expectedBeneficiaries}
-              onChange={(e) => setExpectedBeneficiaries(Number(e.target.value))}
+              onChange={(e) => setExpectedBeneficiaries(e.target.value === "" ? "" : Number(e.target.value))}
             />
           </FormControl>
 
@@ -190,7 +348,7 @@ export default function ReporteClientPage({ activity }: Props) {
             <Input
               type="number"
               value={actualBeneficiaries}
-              onChange={(e) => setActualBeneficiaries(Number(e.target.value))}
+              onChange={(e) => setActualBeneficiaries(e.target.value === "" ? "" : Number(e.target.value))}
             />
           </FormControl>
 
@@ -199,8 +357,9 @@ export default function ReporteClientPage({ activity }: Props) {
             <Input
               type="file"
               multiple
-              accept="image/*,video/*,.drawing"
+              accept="image/*,video/*"
               onChange={(e) => setPhotoFiles(e.target.files)}
+              pt={1}
             />
             <FormHelperText>
               Por favor, subir las 5 fotos que mejor representen la actividad realizada. Formato imagen y vídeo corto. Total máximo: 10 MB.
@@ -213,6 +372,7 @@ export default function ReporteClientPage({ activity }: Props) {
               type="file"
               accept=".pdf,.xlsx,.xls"
               onChange={(e) => setAttendeeFile(e.target.files?.[0] || null)}
+              pt={1}
             />
           </FormControl>
 
@@ -222,16 +382,20 @@ export default function ReporteClientPage({ activity }: Props) {
               placeholder="Ingrese observaciones adicionales"
               value={observations}
               onChange={(e) => setObservations(e.target.value)}
+              rows={5}
             />
           </FormControl>
 
-          <Divider />
-
           <Flex justify="flex-end" gap={4}>
-            <Button colorScheme="gray" type="button" onClick={() => window.history.back()}>
+            <Button colorScheme="gray" type="button" onClick={() => router.back()}>
               Cancelar
             </Button>
-            <Button colorScheme="teal" type="submit">
+            <Button 
+              colorScheme="teal" 
+              type="submit"
+              isLoading={loading}
+              loadingText="Enviando..."
+            >
               Enviar Reporte
             </Button>
           </Flex>

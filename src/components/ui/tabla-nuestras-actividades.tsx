@@ -16,7 +16,7 @@ import {
   Checkbox,
   useToast,
 } from "@chakra-ui/react";
-import { FiEdit } from "react-icons/fi";
+import { FiEdit, FiEye } from "react-icons/fi"; 
 import { FaRegFileAlt } from "react-icons/fa";
 import { apiRequest } from "@/components/formularios/api";
 
@@ -30,6 +30,7 @@ interface Actividad {
   fecha_fin?: string;    
   group?: string;
   reporte_completado?: boolean;
+  reporte_revisado?: boolean;
   destacado?: boolean; 
   participantes_reales?: number | string | null;
 }
@@ -147,7 +148,6 @@ export default function TablaNuestrasActividades({
       setLoadingId(null);
     }
   };
-
   return (
     <Box bg="white" p={6} rounded="md" shadow="sm" overflowX="auto">
       <Table variant="simple">
@@ -168,8 +168,10 @@ export default function TablaNuestrasActividades({
             const end = act._end;
 
             const calificaParaReporte = !!end && today.getTime() >= end.getTime();
+            const enCurso = !!start && !!end && today.getTime() >= start.getTime() && today.getTime() <= end.getTime();
 
             const tieneReporteSubido = act.reporte_completado || 
+                                       act.reporte_revisado ||
                                        (act.participantes_reales !== undefined && 
                                         act.participantes_reales !== null && 
                                         act.participantes_reales !== "" && 
@@ -196,7 +198,7 @@ export default function TablaNuestrasActividades({
                 <Td>{format(start)}</Td>
                 <Td>{format(end)}</Td>
 
-                {/* Columna interactiva libre de Destacadas */}
+                {/* Columna de Destacadas */}
                 {mostrarDestacados && (
                   <Td textAlign="center">
                     <Checkbox
@@ -209,20 +211,36 @@ export default function TablaNuestrasActividades({
                 )}
 
                 <Td isNumeric>
-                  {permitirEditar && (
-                    <Tooltip label="Editar actividad">
+                  {/* Si la actividad está en curso, bloqueamos la edición y mostramos el botón de Ver */}
+                  {enCurso ? (
+                    <Tooltip label="Ver actividad en curso">
                       <IconButton
                         as={NextLink}
-                        href={`/admingroup/modificar_actividad/${act.id}`} 
-                        aria-label="Editar"
-                        icon={<FiEdit />}
+                        href={`/actividad/${act.id}`}
+                        aria-label="Ver Actividad"
+                        icon={<FiEye />}
                         size="sm"
                         variant="ghost"
-                        colorScheme="teal"
+                        colorScheme="blue"
                       />
                     </Tooltip>
+                  ) : (
+                    permitirEditar && (
+                      <Tooltip label="Editar actividad planificada">
+                        <IconButton
+                          as={NextLink}
+                          href={`/admingroup/modificar_actividad/${act.id}`} 
+                          aria-label="Editar"
+                          icon={<FiEdit />}
+                          size="sm"
+                          variant="ghost"
+                          colorScheme="teal"
+                        />
+                      </Tooltip>
+                    )
                   )}
 
+                  {/* Botón exclusivo para rellenar reporte una vez culminado  */}
                   {calificaParaReporte && !tieneReporteSubido && (
                     <Tooltip label="Hacer reporte final">
                       <IconButton
@@ -233,12 +251,13 @@ export default function TablaNuestrasActividades({
                         size="sm"
                         variant="ghost"
                         colorScheme="orange"
-                        ml={permitirEditar ? 2 : 0}
+                        ml={2}
                       />
                     </Tooltip>
                   )}
 
-                  {(!permitirEditar && tieneReporteSubido) || (!permitirEditar && !calificaParaReporte) ? (
+                  {/* Leyenda en caso de no calificar para ninguna acción inmediata */}
+                  {(!permitirEditar && tieneReporteSubido && !enCurso) || (!permitirEditar && !calificaParaReporte && !enCurso) ? (
                     <Text fontSize="xs" color="gray.400" fontStyle="italic">Sin acciones</Text>
                   ) : null}
                 </Td>

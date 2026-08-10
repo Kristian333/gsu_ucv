@@ -64,7 +64,11 @@ const CONFIG_GRAFICAS: Record<number, ConfigGrafica> = {
   }
 };
 
-export default function GraficaGrupos() {
+interface GraficaGruposProps {
+  idGrupo?: string; 
+}
+
+export default function GraficaGrupos({ idGrupo }: GraficaGruposProps) {
   const toast = useToast();
   const { isHydrated, user } = useAuth();
   
@@ -75,6 +79,11 @@ export default function GraficaGrupos() {
 
   useEffect(() => {
     if (!isHydrated) return;
+
+    if (idGrupo) {
+      setGrupoIdDetectado(idGrupo);
+      return;
+    }
 
     if (user?.groupId || user?.group_id || user?.group || user?.nombre_grupo) {
       setGrupoIdDetectado(String(user.groupId || user.group_id || user.group || user.nombre_grupo));
@@ -95,7 +104,7 @@ export default function GraficaGrupos() {
         }
       }
     }
-  }, [isHydrated, user]);
+  }, [isHydrated, user, idGrupo]); 
 
   const datosCalculados = useActividades(actividadesRaw);
 
@@ -141,7 +150,7 @@ export default function GraficaGrupos() {
 
   if (!isHydrated || !grupoIdDetectado || loadingBackend) {
     return (
-      <Center h="100vh">
+      <Center h="300px">
         <Spinner size="xl" color="blue.500" thickness="4px" />
       </Center>
     );
@@ -154,7 +163,7 @@ export default function GraficaGrupos() {
     if (datosFinales.length === 0) {
       return (
         <Center h="400px">
-          <Text color="gray.500">No se encontraron actividades registradas para tu grupo.</Text>
+          <Text color="gray.500">No se encontraron actividades registradas para este grupo.</Text>
         </Center>
       );
     }
@@ -173,18 +182,8 @@ export default function GraficaGrupos() {
   };
 
   return (
-    <Box p={{ base: 4, md: 10 }} maxW="1400px" mx="auto">
-      {/* Encabezado Dinámico */}
-      <Box mb={10}>
-        <Heading size="2xl" fontWeight="black" letterSpacing="tight">
-          Panel de Estadísticas de la Sección
-        </Heading>
-        <Text fontSize="lg" color="gray.500" mt={1}>
-          Visualizando datos exclusivos del grupo: <Text as="span" fontWeight="bold" color="blue.500">{user?.nombre_grupo || user?.group || grupoIdDetectado}</Text>
-        </Text>
-      </Box>
-
-      <Flex wrap="wrap" gap={3} mb={12}>
+    <Box p={0} maxW="1400px" mx="auto">
+      <Flex wrap="wrap" gap={3} mb={8}>
         {Object.entries(CONFIG_GRAFICAS).map(([id, config]) => (
           <Button
             key={id}
@@ -202,11 +201,11 @@ export default function GraficaGrupos() {
         ))}
       </Flex>
 
-      <Box bg="white" p={{ base: 4, md: 8 }} borderRadius="3xl" shadow="2xl" border="1px solid" borderColor="gray.100">
-        <Heading size="lg" mb={8} color="gray.700">
+      <Box bg="white" p={{ base: 4, md: 6 }} borderRadius="2xl" border="1px solid" borderColor="gray.100">
+        <Heading size="md" mb={6} color="gray.700">
           {CONFIG_GRAFICAS[graficaActiva]?.titulo}
         </Heading>
-        <Box w="100%" h="450px">
+        <Box w="100%" h="420px">
           {renderGraficaActual()}
         </Box>
       </Box>

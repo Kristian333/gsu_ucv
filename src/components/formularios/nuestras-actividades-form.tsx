@@ -15,6 +15,7 @@ import {
   useToast
 } from "@chakra-ui/react";
 import { apiRequest } from "@/components/formularios/api";
+import { useAuth } from "@/app/context/auth-context";
 import TablaNuestrasActividades from "@/components/ui/tabla-nuestras-actividades";
 
 interface Actividad {
@@ -36,13 +37,14 @@ interface Actividad {
 
 export default function VistaNuestrasActividadesForm() {
   const toast = useToast();
+  const { user, isHydrated } = useAuth();
   const [actividades, setActividades] = useState<Actividad[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const cargarActividades = async () => {
     try {
-      const storedGroupId = localStorage.getItem("group_id");
+      const storedGroupId = user?.groupId;
       const token = localStorage.getItem("token") || "";
 
       if (!storedGroupId) {
@@ -85,8 +87,9 @@ export default function VistaNuestrasActividadesForm() {
   };
 
   useEffect(() => {
+    if (!isHydrated) return;
     cargarActividades();
-  }, []);
+  }, [isHydrated, user?.groupId]);
 
   const hoyStr = new Date().toISOString().substring(0, 10); 
   const anioActual = new Date().getFullYear(); 
@@ -121,7 +124,7 @@ export default function VistaNuestrasActividadesForm() {
 
   const historialCompleto = actividades;
 
-  if (loading) {
+  if (!isHydrated || loading) {
     return (
       <Center h="60vh" flexDirection="column" gap={4}>
         <Spinner size="xl" color="teal.500" thickness="4px" />
@@ -187,7 +190,12 @@ export default function VistaNuestrasActividadesForm() {
             {actividadesEsperaReporte.length === 0 ? (
               <Text color="gray.500" py={4} textAlign="center">No hay actividades pendientes por reportar.</Text>
             ) : (
-              <TablaNuestrasActividades actividades={actividadesEsperaReporte} permitirEditar={false} onRefresh={cargarActividades} />
+              <TablaNuestrasActividades 
+                actividades={actividadesEsperaReporte} 
+                permitirEditar={false} 
+                mostrarDestacados={true} 
+                onRefresh={cargarActividades} 
+              />
             )}
           </TabPanel>
 
@@ -195,7 +203,12 @@ export default function VistaNuestrasActividadesForm() {
             {actividadesViejasAnio.length === 0 ? (
               <Text color="gray.500" py={4} textAlign="center">No se registran actividades finalizadas este año.</Text>
             ) : (
-              <TablaNuestrasActividades actividades={actividadesViejasAnio} permitirEditar={false} onRefresh={cargarActividades} />
+              <TablaNuestrasActividades 
+                actividades={actividadesViejasAnio} 
+                permitirEditar={false} 
+                mostrarDestacados={true} 
+                onRefresh={cargarActividades} 
+              />
             )}
           </TabPanel>
 
