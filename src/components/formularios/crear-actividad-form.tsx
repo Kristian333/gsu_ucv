@@ -144,14 +144,19 @@ export default function CrearActividadForm() {
 
     const userIdNum = user?.id ? parseInt(String(user.id), 10) : NaN;
     
-    if (!isNaN(userIdNum)) {
-      formData.append("uploaded_by", String(userIdNum));
-    } else {
-      console.warn("Advertencia: user.id no es un entero válido:", user?.id);
-    }
+    if (isNaN(userIdNum)) {
+      toast({
+          title: "Sesión inválida",
+          description: "No se encontró el ID del usuario actual. Por favor reingresa.",
+          status: "error",
+        });
+        return;
+      }
+      
+    formData.append("uploaded_by", String(userIdNum));
 
     if (imageFile) {
-      formData.append("reporte", imageFile);
+      formData.append("cubierta", imageFile);
     }
 
     try {
