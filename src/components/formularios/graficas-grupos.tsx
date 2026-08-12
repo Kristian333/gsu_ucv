@@ -4,7 +4,7 @@ import { Box, Heading, Flex, Button, Text, Center, Spinner, useToast } from "@ch
 import { useAuth } from "@/app/context/auth-context";
 import { apiRequest } from "@/components/formularios/api";
 import { useActividades, ActividadBackend } from "@/components/ui/estadisticas/separar";
-import { SimpleBarCharts, SimpleBarCharts1, GraficaAreasPorAnio } from "@/components/ui/estadisticas/graficas";
+import { SimpleBarCharts, SimpleBarCharts1, GraficaAreasPorAnio,SimpleBarChartsHorizontal } from "@/components/ui/estadisticas/graficas";
 
 interface ConfigGrafica {
   titulo: string;
@@ -22,7 +22,7 @@ interface ConfigGrafica {
 const CONFIG_GRAFICAS: Record<number, ConfigGrafica> = {
   1: { 
     titulo: "Participantes Reales vs Estimados por Actividad", 
-    Componente: SimpleBarCharts, 
+    Componente: SimpleBarChartsHorizontal, 
     dataKey: "porActividad", 
     props: { 
       valorx: "lugar", 
