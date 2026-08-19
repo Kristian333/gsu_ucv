@@ -1,9 +1,24 @@
 "use client";
 import React from 'react';
 import {
-  Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis,
-  Area, AreaChart, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
-  Pie, PieChart, Cell
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+  Area,
+  AreaChart,
+  Radar,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Pie,
+  PieChart,
+  Cell
 } from 'recharts';
 
 export interface ChartData {
@@ -32,9 +47,7 @@ const ChartWrapper = ({ children }: { children: React.ReactNode }) => (
   </div>
 );
 
-export const SimpleBarCharts: React.FC<ChartProps> = ({ 
-  datos, valorx, valory, valory2, nombreLeyenda, nombreLeyenda2 
-}) => (
+export const SimpleBarCharts: React.FC<ChartProps> = ({ datos, valorx, valory, valory2, nombreLeyenda, nombreLeyenda2 }) => (
   <ChartWrapper>
     <BarChart data={datos} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
       <CartesianGrid strokeDasharray="4 1 2" />
@@ -97,16 +110,8 @@ export const DoublePieChart: React.FC<ChartProps> = ({ datos, valorx, valory, va
   </ChartWrapper>
 );
 
-export const GraficaAreasPorAnio: React.FC<{ datos: any[]; valorx: string; areas: string[] }> = ({ 
-  datos, 
-  valorx, 
-  areas 
-}) => {
-  const PALETA_COLORES = [
-    '#6b48ff', '#1ee3cf', '#FFBB28', '#FF8042', '#ff427f', 
-    '#3298dc', '#48c774', '#718096', '#a0aec0'
-  ];
-
+export const GraficaAreasPorAnio: React.FC<{ datos: any[]; valorx: string; areas: string[] }> = ({ datos, valorx, areas }) => {
+  const PALETA_COLORES = [ '#6b48ff', '#1ee3cf', '#FFBB28', '#FF8042', '#ff427f', '#3298dc', '#48c774', '#718096', '#a0aec0' ];
   return (
     <ChartWrapper>
       <BarChart data={datos} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
@@ -116,14 +121,30 @@ export const GraficaAreasPorAnio: React.FC<{ datos: any[]; valorx: string; areas
         <Tooltip />
         <Legend />
         {areas.map((nombreArea, index) => (
-          <Bar 
-            key={nombreArea} 
-            dataKey={nombreArea} 
-            fill={PALETA_COLORES[index % PALETA_COLORES.length]} 
-            name={nombreArea} 
-          />
+          <Bar key={nombreArea} dataKey={nombreArea} fill={PALETA_COLORES[index % PALETA_COLORES.length]} name={nombreArea} />
         ))}
       </BarChart>
     </ChartWrapper>
+  );
+};
+
+export const SimpleBarChartsHorizontal: React.FC<ChartProps> = ({ datos, valorx, valory, valory2, nombreLeyenda, nombreLeyenda2 }) => {
+
+  const alturaCalculada = datos && datos.length > 0 ? (datos.length * 55) + 100 : 450;
+
+  return (
+    <div style={{ width: '100%', height: `${alturaCalculada}px`, minHeight: '400px' }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={datos} layout="vertical" margin={{ top: 10, right: 30, left: 110, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="4 1 2" />
+          <XAxis type="number" />
+          <YAxis dataKey={valorx} type="category" tick={{ fontSize: 13 }} />
+          <Tooltip />
+          <Legend />
+          <Bar dataKey={valory} fill="#6b48ff" name={nombreLeyenda || valory} />
+          <Bar dataKey={valory2} fill="#1ee3cf" name={nombreLeyenda2 || valory2} />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
   );
 };
