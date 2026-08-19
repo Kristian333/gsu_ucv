@@ -235,7 +235,7 @@ export function GroupsTable({
               initialGroups.map((grupo) => {
                 const nombreGrupo = grupo.nombre || "Nombre no disponible";
                 const facultadGrupo = grupo.facultad || "Facultad no disponible";
-                const estaActivo = grupo.activo !== undefined ? grupo.activo : (grupo.is_active !== undefined ? grupo.is_active : true);
+                const estaActivo = grupo.activo;
                 const grupoId = grupo.id;
 
                 // Mapeo exhaustivo para logo/imagen
@@ -291,7 +291,7 @@ export function GroupsTable({
                     {/* Estado */}
                     <Td>
                       <Badge colorScheme={estaActivo ? "green" : "red"} variant="solid" borderRadius="full" px={2}>
-                        {estaActivo ? "Activo" : "Pendiente / Inactivo"}
+                        {estaActivo ? "Activo" : "Inactivo"}
                       </Badge>
                     </Td>
 

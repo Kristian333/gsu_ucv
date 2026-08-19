@@ -35,9 +35,11 @@ export interface GroupDetailBackend {
   fundacion: string;
   tipo: string;
   imagen_url: string;
+  proyecto_url: string;
   email: string;
   telefono: string;
   propietario: OwnerInfo;
+  objetivo: string;
   ubicacion: string;
   activo: boolean;
   miembros: GroupMember[];

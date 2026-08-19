@@ -7,11 +7,13 @@ import React, { useState, useEffect } from 'react';
 import { Heading, Paragraph } from "@/components/ui/tipografia";
 import { Pagination } from "@/components/ui/pagination";
 import { useRouter } from 'next/navigation';
+import { FACULTADES_FILTRO } from "@/constants/facultades";
+import { formatListToString } from "@/utils/common";
 
 interface GroupProps {
     id: string;
     title: string;
-    faculty: string;
+    faculty: string[];
     image: string | null;
 }
 
@@ -26,6 +28,8 @@ interface ClientGroupsProps {
 
 const GroupCard = ({ title, faculty, image }: Omit<GroupProps, 'id'>) => {
     const placeholderImage = "/imagen-no-disponible.jpg";
+    const facultyDisplay = formatListToString(faculty);
+
     return (
         <Card overflow="hidden" variant="unstyled" display="flex" flexDirection="column" justifyContent="center" alignItems="center" role="group">
             <Box overflow="hidden" display="flex" justifyContent="center" alignItems="center" width="100%" height="268px" borderRadius="full" mx="auto">
@@ -63,7 +67,7 @@ const GroupCard = ({ title, faculty, image }: Omit<GroupProps, 'id'>) => {
                     >
                         <Heading size="md">{title}</Heading>
                     </Box>
-                    <Paragraph>{faculty}</Paragraph>
+                    <Paragraph>{facultyDisplay}</Paragraph>
                 </Stack>
             </CardBody>
         </Card>
@@ -76,21 +80,6 @@ export function ClientGroups({ groups, currentPage, totalPages, currentSearch = 
     const [search, setSearch] = useState(currentSearch);
     const [filterMenuOpen, setFilterMenuOpen] = useState(false);
     
-    const faculties = [
-        'Agronomía',
-        'Arquitectura y Urbanismo',
-        'Ciencias',
-        'Ciencias Económicas y Sociales',
-        'Ciencias Jurídicas y Políticas',
-        'Ciencias Veterinarias',
-        'Farmacia',
-        'Humanidades y Educación',
-        'Ingeniería',
-        'Medicina',
-        'Odontología',
-        'DEU',
-    ];
-
     // Sincronizar el input local si cambia la URL
     useEffect(() => {
         setSearch(currentSearch);
@@ -127,8 +116,13 @@ export function ClientGroups({ groups, currentPage, totalPages, currentSearch = 
         updateUrl(search, faculty);
     };
 
-    // Formateamos la facultad activa para mostrarla con espacios en el botón del filtro
-    const displayFaculty = currentFaculty.replace(/_/g, " ");
+    const getDisplayFacultyName = (faculty: string) => {
+        if (!faculty) return "";
+        if (faculty === "DEU") return "Otros";
+        return faculty.replace(/_/g, " ");
+    };
+
+    const displayFaculty = getDisplayFacultyName(currentFaculty);
 
     return (
         <Box maxW="container.xl" mx="auto" py={10} px={6}>
@@ -190,18 +184,21 @@ export function ClientGroups({ groups, currentPage, totalPages, currentSearch = 
                                 (Mostrar todos)
                             </Box>
 
-                            {faculties.map((f) => (
-                                <Box
-                                    key={f}
-                                    p={2}
-                                    cursor="pointer"
-                                    bg={displayFaculty === f ? "gray.100" : "transparent"}
-                                    _hover={{ bg: "gray.100" }}
-                                    onClick={() => handleFacultyChange(f)}
-                                >
-                                    {f}
-                                </Box>
-                            ))}
+                            {FACULTADES_FILTRO.map((f) => {
+                                const label = f === "DEU" ? "Otros" : f;
+                                return (
+                                    <Box
+                                        key={f}
+                                        p={2}
+                                        cursor="pointer"
+                                        bg={currentFaculty === f ? "gray.100" : "transparent"}
+                                        _hover={{ bg: "gray.100" }}
+                                        onClick={() => handleFacultyChange(f)}
+                                    >
+                                        {label}
+                                    </Box>
+                                );
+                            })}
                         </Box>
                     )}
                 </Box>

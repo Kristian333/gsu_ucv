@@ -270,7 +270,7 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
       const areasString = form.area_conocimiento.join(", ").toUpperCase();
       formData.append("area_conocimiento", areasString);
     } else {
-      formData.append("area_conocimiento", "OTROS");
+      formData.append("area_conocimiento", "Otros");
     }
 
     if (form.financiamiento === "SI") {
@@ -281,11 +281,11 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
 
     formData.append("group_id", String(user.groupId));
     if (user?.id) {
-      formData.append("uploaded_by", String(user.id));
+      formData.append("subido_por", String(user.id));
     }
 
     if (newImageFile) {
-      formData.append("reporte", newImageFile);
+      formData.append("cubierta", newImageFile);
     }
 
     try {

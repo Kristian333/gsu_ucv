@@ -22,6 +22,7 @@ import {
 import { useRouter } from "next/navigation";
 import { apiRequest } from "@/components/formularios/api";
 import { useAuth } from "@/app/context/auth-context";
+import { TIPOS_ACTIVIDAD } from "@/constants/types";
 
 export default function CrearActividadForm() {
   const router = useRouter();
@@ -120,8 +121,7 @@ export default function CrearActividadForm() {
     formData.append(
       "fecha_fin",
       esMultidia ? form.fecha_fin : form.fecha_inicio
-    );      
-
+    );
     
     const { pais, estado, municipio, detalle } = locationParts;
     const direccionCompleta = `${pais}, ${estado}, ${municipio}, ${detalle}`;
@@ -131,7 +131,7 @@ export default function CrearActividadForm() {
       const areasString = form.area_conocimiento.join(", ").toUpperCase();
       formData.append("area_conocimiento", areasString);
     } else {
-      formData.append("area_conocimiento", "OTROS");
+      formData.append("area_conocimiento", "Otros");
     }
 
     if (form.financiamiento === "SI") {
@@ -150,10 +150,11 @@ export default function CrearActividadForm() {
           description: "No se encontró el ID del usuario actual. Por favor reingresa.",
           status: "error",
         });
+      setLoading(false);
         return;
       }
       
-    formData.append("uploaded_by", String(userIdNum));
+    formData.append("subido_por", String(userIdNum));
 
     if (imageFile) {
       formData.append("cubierta", imageFile);
@@ -321,17 +322,7 @@ export default function CrearActividadForm() {
             onChange={(val) => setForm({ ...form, area_conocimiento: val as string[] })}
           >
             <VStack align="stretch">
-              {[
-                "Salud",
-                "Acción Social",
-                "Cultural",
-                "Deportiva",
-                "Ambiente / Conservación",
-                "Investigación",
-                "Recreación",
-                "Debate",
-                "Otros",
-              ].map((a) => (
+              {TIPOS_ACTIVIDAD.map((a) => (
                 <Checkbox key={a} value={a}>
                   {a}
                 </Checkbox>

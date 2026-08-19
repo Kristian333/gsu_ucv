@@ -8,8 +8,6 @@ import {
   FormLabel,
   Input,
   Select,
-  Radio,
-  RadioGroup,
   Checkbox,
   CheckboxGroup,
   VStack,
@@ -27,11 +25,15 @@ import {
   ModalFooter,
   ModalCloseButton,
   useDisclosure,
-  Grid
+  Grid,
+  SimpleGrid,
 } from "@chakra-ui/react";
-import { useState } from "react";
+import { useState, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { apiRequest } from "@/components/formularios/api";
+import * as XLSX from "xlsx";
+import { FACULTADES, ESCUELAS_POR_FACULTAD } from "@/constants/facultades";
+import { TIPOS_ACTIVIDAD } from "@/constants/types";
 
 interface Miembro {
   nombre: string;
@@ -47,26 +49,36 @@ interface Miembro {
   isVerified?: boolean;
 }
 
+type MiembroStringField =
+  | "nombre"
+  | "cedula"
+  | "telefono"
+  | "correo"
+  | "coordinacion"
+  | "anio"
+  | "facultad"
+  | "escuela";
+
+const OPCION_NINGUNA_FACULTAD = "No pertenecemos a ninguna facultad";
+
 export default function CrearGrupoForm() {
   const router = useRouter();
   const toast = useToast();
 
   const [loading, setLoading] = useState(false);
-
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   // ESTADOS DEL FORMULARIO
   const [form, setForm] = useState({
     nombre: "",
     correo: "",
-    password: "",
-    tipoGrupo: "",
+    telefono: "",
+    esMultidisciplinario: false,
     facultad: [] as string[],
     fechaFundacion: "",
     objetivo: "",
-    actividades: [] as string[],
-    otrosActividad: "",
-    tipoIntegrantes: [] as string[],
+    tipo: [] as string[],
+    otrosTipo: "",
     observaciones: "",
     liderCedula: "",
   });
@@ -124,92 +136,40 @@ export default function CrearGrupoForm() {
 
   const [miembrosGuardados, setMiembrosGuardados] = useState<Miembro[]>([]);
 
-  const FACULTADES = [
-    "Agronomía",
-    "Arquitectura y Urbanismo",
-    "Ciencias",
-    "Ciencias Económicas y Sociales",
-    "Ciencias Jurídicas y Políticas",
-    "Ciencias Veterinarias",
-    "Farmacia",
-    "Humanidades y Educación",
-    "Ingeniería",
-    "Medicina",
-    "Odontología",
-  ];
+  const handleMultidisciplinarioChange = (isMulti: boolean) => {
+    setForm({
+      ...form,
+      esMultidisciplinario: isMulti,
+      facultad: [] 
+    });
+  };
 
-  const ESCUELAS_POR_FACULTAD: Record<string, string[]> = {
-    Agronomía: ["Agronomía"],
-    "Arquitectura y Urbanismo": ["Arquitectura"],
-    Ciencias: [
-      "Computación",
-      "Biología",
-      "Matemática",
-      "Física",
-      "Química",
-      "Geoquímica",
-    ],
-    "Ciencias Económicas y Sociales": [
-      "Administración y Contaduría",
-      "Antropología",
-      "Estadística y Ciencias Actuariales",
-      "Economía",
-      "Estudios Internacionales",
-      "Sociología",
-      "Trabajo Social"
-    ],
-    Farmacia: ["Farmacia"],
-    "Humanidades y Educación": [
-      "Artes",
-      "Bibliotecología y Archivología",
-      "Comunicación Social",
-      "Educación",
-      "Filosofía",
-      "Geografía",
-      "Historia",
-      "Idiomas Modernos",
-      "Letras",
-      "Psicología"
-    ],
-    Ingeniería: [
-      "Ciclo Básico de Ingeniería",
-      "Ingeniería Civil",
-      "Ingeniería Eléctrica",
-      "Ingeniería Geológica, Minas y Geofísica",
-      "Ingeniería Mecánica",
-      "Ingeniería Metalúrgica y Ciencias de los Materiales",
-      "Ingeniería Química",
-      "Ingeniería de Petróleo",
-      "Ingeniería de Procesos Industriales"
-    ],
-    "Ciencias Jurídicas y Políticas": [
-      "Derecho",
-      "Estudios Políticos y Administrativos"
-    ],
-    Medicina: [
-      "Bioanálisis",
-      "Enfermería",
-      "Medicina Dr. Luis Razetti",
-      "Medicina Dr. José María Vargas",
-      "Nutrición y Dietética",
-      "Salud Pública"
-    ],
-    Odontología: ["Odontología"],
-    "Ciencias Veterinarias": ["Medicina Veterinaria"],
+  const handleCheckboxFacultadChange = (selectedValues: string[]) => {
+    const teniaNinguna = form.facultad.includes(OPCION_NINGUNA_FACULTAD);
+    const tieneNingunaAhora = selectedValues.includes(OPCION_NINGUNA_FACULTAD);
+
+    if (!teniaNinguna && tieneNingunaAhora) {
+      // Si acaba de seleccionar "No pertenecemos a ninguna facultad", limpiamos lo demás
+      setForm({ ...form, facultad: [OPCION_NINGUNA_FACULTAD] });
+    } else if (teniaNinguna && selectedValues.length > 1) {
+      // Si tenía la opción especial y selecciona una facultad, quitamos la opción especial
+      setForm({ ...form, facultad: selectedValues.filter(v => v !== OPCION_NINGUNA_FACULTAD) });
+    } else {
+      setForm({ ...form, facultad: selectedValues });
+    }
   };
 
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
-
   const [pdfProyecto, setPdfProyecto] = useState<File | null>(null);
   const [archivoMiembros, setArchivoMiembros] = useState<File | null>(null);
 
   // FUNCIONES DE CAMBIO
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleLogo = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogo = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -217,21 +177,100 @@ export default function CrearGrupoForm() {
     setLogoPreview(URL.createObjectURL(file));
   };
 
-  const handleProyecto = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProyecto = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setPdfProyecto(file);
   };
 
-  const handleExcel = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleExcel = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setArchivoMiembros(file);
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const bstr = evt.target?.result;
+        const wb = XLSX.read(bstr, { type: "binary" });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+
+        // Convertimos la hoja a una matriz (arreglo de arreglos)
+        const data: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1 });
+
+        // Fila 3 es índice 2
+        if (data.length < 3) {
+          return toast({
+            title: "Estructura inválida",
+            description: "El archivo no posee suficientes filas para leer encabezados en la fila 3.",
+            status: "error",
+            duration: 3000,
+          });
+        }
+
+        const nuevosMiembros: Miembro[] = [];
+
+        // Leer los datos a partir de la fila 4 (índice 3)
+        for (let i = 3; i < data.length; i++) {
+          const row = data[i];
+          if (!row || row.length === 0) continue;
+
+          // Columna 2 es índice 1
+          const nombre = row[1] ? String(row[1]).trim() : "";
+          const cedula = row[2] ? String(row[2]).trim() : "";
+          const telefono = row[3] ? String(row[3]).trim() : "";
+          const correo = row[4] ? String(row[4]).trim() : "";
+          const coordinacion = row[5] ? String(row[5]).trim() : "";
+          const anio = row[6] ? String(row[6]).trim() : "";
+          const facultad = row[7] ? String(row[7]).trim() : "";
+          const escuela = row[8] ? String(row[8]).trim() : "";
+
+          if (cedula || nombre) {
+            nuevosMiembros.push({
+              nombre,
+              cedula,
+              telefono,
+              correo,
+              coordinacion,
+              anio,
+              facultad,
+              escuela,
+              isVerified: Boolean(cedula),
+            });
+          }
+        }
+
+        if (nuevosMiembros.length > 0) {
+          setMiembros(nuevosMiembros);
+          toast({
+            title: "Miembros importados",
+            description: `Se han importado ${nuevosMiembros.length} miembros desde el archivo.`,
+            status: "success",
+            duration: 3000,
+          });
+        } else {
+          toast({
+            title: "Sin datos",
+            description: "No se encontraron registros de miembros válidos.",
+            status: "warning",
+            duration: 3000,
+          });
+        }
+      } catch (err) {
+        toast({
+          title: "Error al procesar",
+          description: "No se pudo leer el archivo Excel/CSV.",
+          status: "error",
+          duration: 3000,
+        });
+      }
+    };
+    reader.readAsBinaryString(file);
   };
 
   const handleMiembroChange = (
     index: number,
-    field: keyof Miembro,
+    field: MiembroStringField,
     value: string
   ) => {
     const updated = [...miembros];
@@ -260,16 +299,7 @@ export default function CrearGrupoForm() {
   const addMiembro = () => {
     setMiembros([
       ...miembros,
-      {
-        nombre: "",
-        cedula: "",
-        telefono: "",
-        correo: "",
-        coordinacion: "",
-        anio: "",
-        facultad: "",
-        escuela: "",
-      },
+      miembroVacio(),
     ]);
   };
 
@@ -310,7 +340,7 @@ export default function CrearGrupoForm() {
   // SUBMIT
   const handleSubmit = async () => {
     // Validaciones básicas
-    if (!form.nombre || !form.correo || !form.tipoGrupo || !form.fechaFundacion || !form.objetivo) {
+    if (!form.nombre || !form.correo || !form.telefono || form.tipo.length === 0 || !form.fechaFundacion || !form.objetivo) {
       return toast({
         title: "Campos faltantes",
         description: "Debe completar todos los campos obligatorios.",
@@ -319,10 +349,31 @@ export default function CrearGrupoForm() {
       });
     }
 
+    if (!form.esMultidisciplinario) {
+      if (form.facultad.length === 0 || !form.facultad[0]) {
+        return toast({
+          title: "Facultad requerida",
+          description: "Debe seleccionar la facultad a la que pertenece el grupo.",
+          status: "error",
+          duration: 2000,
+        });
+      }
+    } else {
+      const esNinguna = form.facultad.includes(OPCION_NINGUNA_FACULTAD);
+      if (!esNinguna && form.facultad.length < 2) {
+        return toast({
+          title: "Facultades insuficientes",
+          description: "Un grupo multidisciplinario debe seleccionar al menos 2 facultades o indicar que no pertenecen a ninguna.",
+          status: "error",
+          duration: 3000,
+        });
+      }
+    }
+
     if (miembrosGuardados.length < 5) {
       return toast({
         title: "Miembros insuficientes",
-        description: "Se requiere un mínimo de 5 miembros registrados y guardados en el gestor para enviar la solicitud.",
+        description: "Se requiere un mínimo de 5 miembros registrados y guardados para enviar la solicitud.",
         status: "error",
         duration: 4000,
       });
@@ -355,10 +406,10 @@ export default function CrearGrupoForm() {
       });
     }
 
-    if (form.actividades.includes("OTROS") && !form.otrosActividad) {
+    if (form.tipo.includes("Otros") && !form.otrosTipo) {
       return toast({
         title: "Debe especificar actividad",
-        description: "Indicó 'OTROS' en Tipo de Actividades, debe especificar cuál.",
+        description: "Indicó 'Otros' en Tipo de Actividades, debe especificar cuál.",
         status: "error",
         duration: 2000,
       });
@@ -369,37 +420,49 @@ export default function CrearGrupoForm() {
 
     // 3. Empaquetar los metadatos principales del grupo en la estructura que espera el Backend
     // Adaptamos las claves según lo que suele inferir el struct de Go (puedes ajustar los nombres de las propiedades si tu backend usa nombres específicos)
-    const datosGrupo = {
-      nombre: form.nombre,
-      correo: form.correo,
-      password: form.password,
-      tipo_grupo: form.tipoGrupo,
-      facultades: Array.isArray(form.facultad) ? form.facultad : [form.facultad],
-      fecha_fundacion: form.fechaFundacion,
-      objetivo: form.objetivo,
-      actividades: form.actividades,
-      otros_actividad: form.otrosActividad,
-      tipo_integrantes: form.tipoIntegrantes,
-      observaciones: form.observaciones,
-      lider_cedula: form.liderCedula,
-      miembros: miembrosGuardados.map((m) => ({
-        nombre: m.nombre,
-        cedula: m.cedula,
-        telefono: m.telefono,
-        correo: m.correo,
-        coordinacion: m.coordinacion,
-        anio: m.anio,
-        facultad: m.facultad,
-        escuela: m.escuela,
-      }))
-    };
+    formData.append("nombre", form.nombre);
+    formData.append("correo", form.correo);
+    formData.append("telefono", form.telefono);
+    form.tipo.forEach((t) => {
+      formData.append("tipo", t);
+    });
+    formData.append("fundacion", form.fechaFundacion);
+    formData.append("es_multidisciplinario", String(form.esMultidisciplinario));
+    formData.append("objetivo", form.objetivo);
 
-    // Adjuntamos el objeto serializado como un string JSON bajo la clave que recupera el backend (ej: "grupo")
-    formData.append("grupo", JSON.stringify(datosGrupo));
+    let facultadesFinales: string[] = [];
+    if (form.esMultidisciplinario) {
+      if (form.facultad.includes(OPCION_NINGUNA_FACULTAD)) {
+        facultadesFinales = ["DEU"];
+      } else {
+        facultadesFinales = form.facultad;
+      }
+    } else {
+      facultadesFinales = [form.facultad[0]];
+    }
 
-    // 4. Adjuntar Archivos principales de la raíz
+    facultadesFinales.forEach((f) => {
+      formData.append("facultad", f);
+    });
+
+    const miembrosDTO = miembrosGuardados.map((m) => ({
+      nombre: m.nombre,
+      cedula: parseInt(m.cedula.replace(/\D/g, ""), 10) || 0,
+      telefono: m.telefono,
+      correo: m.correo,
+      coordinacion: m.coordinacion,
+      año: m.anio,
+      facultad: m.facultad,
+      escuela: m.escuela,
+      documento: m.documento ? m.documento.name : "",
+      es_lider: Boolean(m.cedula && m.cedula === form.liderCedula),
+      status: true,
+    }));
+
+    formData.append("miembros", JSON.stringify(miembrosDTO));
+
     formData.append("logo", logoFile);
-    formData.append("proyecto", pdfProyecto);
+    formData.append("proyecto_grupo", pdfProyecto);
 
     // 5. Adjuntar los archivos individuales de los miembros de forma correlativa para que el backend pueda asociarlos por índice
     miembrosGuardados.forEach((miembro, index) => {
@@ -440,31 +503,48 @@ export default function CrearGrupoForm() {
   };
 
   return (
-    <Box maxW="1800px" mx="auto" mt={10} p={8} borderRadius="lg" bg="white" shadow="md">
+    <Box maxW="700px" mx="auto" mt={10} p={8} borderRadius="lg" bg="white" shadow="md">
       <Heading mb={6}>Crear Grupo de Extensión</Heading>
 
-      <VStack spacing={6} align="stretch">
+      <VStack spacing={5} align="stretch">
         {/* Nombre */}
         <FormControl isRequired>
-          <FormLabel>NOMBRE DEL GRUPO DE EXTENSIÓN</FormLabel>
-          <Input name="nombre" value={form.nombre} onChange={handleChange} />
+          <FormLabel>Nombre del Grupo de Extensión</FormLabel>
+          <Input
+            name="nombre"
+            value={form.nombre}
+            onChange={handleChange}
+          />
         </FormControl>
 
         {/* Correo */}
-        <FormControl isRequired>
-          <FormLabel>CORREO ELECTRÓNICO</FormLabel>
-          <Input type="email" name="correo" value={form.correo} onChange={handleChange} />
-        </FormControl>
+        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+          <FormControl isRequired>
+            <FormLabel>Correo Electrónico</FormLabel>
+            <Input
+              type="email"
+              name="correo"
+              value={form.correo}
+              onChange={handleChange}
+              placeholder="ejemplo@gmail.com"
+            />
+          </FormControl>
 
-        {/* Contraseña */}
-        <FormControl isRequired>
-          <FormLabel>CONTRASEÑA</FormLabel>
-          <Input type="password" name="password" value={form.password ?? ""} onChange={handleChange} />
-        </FormControl>
+          {/* Teléfono de contacto */}
+          <FormControl isRequired>
+            <FormLabel>Teléfono de Contacto</FormLabel>
+            <Input
+              name="telefono"
+              value={form.telefono}
+              onChange={handleChange}
+              placeholder="Ej: 04141234567"
+            />
+          </FormControl>
+        </SimpleGrid>
 
         {/* Logo */}
         <FormControl isRequired>
-          <FormLabel>LOGO (jpg)</FormLabel>
+          <FormLabel mb={1}>Logo del Grupo (jpg/png/webp)</FormLabel>
           {logoPreview && (
             <Image
               src={logoPreview}
@@ -475,84 +555,86 @@ export default function CrearGrupoForm() {
               mb={3}
             />
           )}
-          <Input type="file" accept="image/jpeg" onChange={handleLogo} />
+          <Input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleLogo} />
         </FormControl>
 
         {/* Tipo de Grupo */}
-        <FormControl isRequired>
-          <FormLabel>TIPO DE GRUPO</FormLabel>
-          <RadioGroup name="tipoGrupo" value={form.tipoGrupo} onChange={(val) => setForm({ ...form, tipoGrupo: val })}>
-            <VStack align="start">
-              <Radio value="MULTIDISCIPLINARIO">MULTIDISCIPLINARIO</Radio>
-              <Radio value="MISMA FACULTAD">PERTENECEN A UNA MISMA FACULTAD</Radio>
-            </VStack>
-          </RadioGroup>
+        <FormControl  isRequired>
+          <FormLabel mb={4}>¿El Grupo es Multidisciplinario?</FormLabel>
+          <Checkbox 
+            isChecked={form.esMultidisciplinario} 
+            onChange={(e) => handleMultidisciplinarioChange(e.target.checked)}
+              colorScheme="primary"
+          >
+            Sí, el grupo involucra múltiples facultades o no esta asociada a ninguna.
+          </Checkbox>
         </FormControl>
 
         {/* Facultad */}
-        {form.tipoGrupo === "MISMA FACULTAD" && (        
-            <FormControl isRequired>
-            <FormLabel>FACULTAD</FormLabel>
-            <Select name="facultad" value={form.facultad} onChange={handleChange}>
-                <option value="">Seleccione...</option>
-                {FACULTADES.map((f) => (
+        {!form.esMultidisciplinario ? (        
+          <FormControl isRequired>
+            <FormLabel>Facultad</FormLabel>
+            <Select 
+              bg="white"
+              value={form.facultad[0] || ""} 
+              onChange={(e) => setForm({ ...form, facultad: e.target.value ? [e.target.value] : [] })}
+            >
+              <option value="">Seleccione...</option>
+              {FACULTADES.map((f) => (
                 <option key={f} value={f}>
-                    {f}
+                  {f}
                 </option>
-                ))}
-            </Select>
-            </FormControl>
-        )}
-        {form.tipoGrupo === "MULTIDISCIPLINARIO" && (        
-            <FormControl isRequired>
-            <FormLabel>FACULTAD</FormLabel>
-            <CheckboxGroup
-            value={form.facultad}
-            onChange={(val) => setForm({ ...form, facultad: val as string[] })}
-          >
-            <VStack align="stretch">
-              {FACULTADES.map((a) => (
-                <Checkbox key={a} value={a}>
-                  {a}
-                </Checkbox>
               ))}
-            </VStack>
-          </CheckboxGroup>
-            </FormControl>
+            </Select>
+          </FormControl>
+        ) : (        
+          <FormControl isRequired>
+            <FormLabel>Facultad(es)</FormLabel>
+            <CheckboxGroup
+              value={form.facultad}
+              onChange={(val) => handleCheckboxFacultadChange(val as string[])}
+            >
+              <VStack align="stretch" bg="white" p={3} borderRadius="md" border="1px" borderColor="gray.200">
+                <Checkbox value={OPCION_NINGUNA_FACULTAD} colorScheme="primary">
+                  <b>{OPCION_NINGUNA_FACULTAD}</b>
+                </Checkbox>
+                {FACULTADES.map((f) => (
+                  <Checkbox key={f} value={f} isDisabled={form.facultad.includes(OPCION_NINGUNA_FACULTAD)}>
+                    {f}
+                  </Checkbox>
+                ))}
+              </VStack>
+            </CheckboxGroup>
+          </FormControl>
         )}
 
         {/* Fecha fundación */}
         <FormControl isRequired>
-          <FormLabel>FECHA DE FUNDACIÓN</FormLabel>
+          <FormLabel>Fecha de Fundación</FormLabel>
           <Input type="date" name="fechaFundacion" value={form.fechaFundacion} onChange={handleChange} />
         </FormControl>
 
         {/* Objetivo */}
         <FormControl isRequired>
-          <FormLabel>OBJETIVO DEL GRUPO</FormLabel>
-          <Textarea name="objetivo" value={form.objetivo} onChange={handleChange} rows={5} />
+          <FormLabel>Objetivo del Grupo</FormLabel>
+          <Textarea
+            name="objetivo"
+            value={form.objetivo}
+            onChange={handleChange}
+            rows={4}
+            placeholder="Describe el propósito fundamental del grupo..."
+          />
         </FormControl>
 
         {/* Tipo(s) de actividad(es) */}
         <FormControl isRequired>
-          <FormLabel>TIPO(S) DE ACTIVIDAD(ES)</FormLabel>
+          <FormLabel>Tipo(s) de Actividad(es)</FormLabel>
           <CheckboxGroup
-            value={form.actividades}
-            onChange={(val) => setForm({ ...form, actividades: val as string[] })}
+            value={form.tipo}
+            onChange={(val) => setForm({ ...form, tipo: val as string[] })}
           >
             <VStack align="stretch">
-              {[
-                "ACCIÓN SOCIAL",
-                "ACOMPAÑAMIENTO Y ACCESORIA ESTUDIANTIL",
-                "AMBIENTAL",
-                "COMUNICACIÓN Y RETÓRICA",
-                "DIFUSIÓN DEL CONOCIMIENTO",
-                "FORMACIÓN",
-                "INNOVACIÓN",
-                "RECREACIÓN",
-                "SALUD Y BIENESTAR",
-                "OTROS",
-              ].map((a) => (
+              {TIPOS_ACTIVIDAD.map((a) => (
                 <Checkbox key={a} value={a}>
                   {a}
                 </Checkbox>
@@ -562,83 +644,87 @@ export default function CrearGrupoForm() {
         </FormControl>
 
         {/* Campo OTROS */}
-        {form.actividades.includes("OTROS") && (
+        {form.tipo.includes("Otros") && (
           <FormControl isRequired>
-            <FormLabel>SI LA OPCIÓN ES OTROS, ESPECIFIQUE</FormLabel>
+            <FormLabel>Si la opción es otros, especifique</FormLabel>
             <Input
-              name="otrosActividad"
-              value={form.otrosActividad}
+              name="otrosTipo"
+              value={form.otrosTipo}
               onChange={handleChange}
-              placeholder="Especifique actividad"
+              placeholder="Especifique el tipo de actividad"
             />
           </FormControl>
         )}
 
         {/* Proyecto PDF */}
         <FormControl isRequired>
-          <FormLabel>PROYECTO DEL GRUPO (PDF)</FormLabel>
+          <FormLabel>Proyecto del Grupo (PDF)</FormLabel>
           <Input type="file" accept="application/pdf" onChange={handleProyecto} />
         </FormControl>
 
-        {/* Tipo de integrantes */}
-        <FormControl isRequired>
-          <FormLabel>TIPO DE INTEGRANTES</FormLabel>
-          <CheckboxGroup
-            value={form.tipoIntegrantes}
-            onChange={(v) => setForm({ ...form, tipoIntegrantes: v as string[] })}
-          >
-            <VStack align="stretch">
-              <Checkbox value="ESTUDIANTES">ESTUDIANTES</Checkbox>
-              <Checkbox value="PROFESORES">PROFESORES</Checkbox>
-              <Checkbox value="OTROS">OTROS</Checkbox>
-            </VStack>
-          </CheckboxGroup>
-        </FormControl>
-
         {/* Miembros */}
-        <FormControl isRequired>
-          <FormLabel>MIEMBROS DEL GRUPO</FormLabel>
+        <Box border="1px" borderColor="gray.100" p={4} borderRadius="md" bg="gray.50">
+          <VStack spacing={4} align="stretch">
+            <FormControl isRequired>
+              <FormLabel>Miembros Integrantes del Grupo</FormLabel>
 
-          <Button colorScheme="blue" onClick={onOpen}>
-            Gestionar miembros
-          </Button>
+              <Button colorScheme="secondary" onClick={onOpen} width="full">
+                ⚙️ Gestionar miembros
+              </Button>
 
-          <Text fontSize="sm" color="gray.600" mt={2}>
-            Miembros agregados: {miembrosGuardados.length}
-          </Text>
-        </FormControl>
+              <Text fontSize="xs" color="gray.600" mt={2}>
+                Miembros agregados: <b>{miembrosGuardados.length}</b> (Mínimo requerido: 5)
+              </Text>
+            </FormControl>
 
-        {/* Líder de Grupo (Select dependiente de los miembros guardados) */}
-        <FormControl isRequired isDisabled={miembrosGuardados.length === 0}>
-          <FormLabel>LÍDER DE GRUPO</FormLabel>
-          <Select 
-            name="liderCedula" 
-            placeholder={miembrosGuardados.length === 0 ? "Primero gestione y guarde los miembros" : "Seleccione el líder..."}
-            value={form.liderCedula} 
-            onChange={handleChange}
-          >
-            {miembrosGuardados.map((m, idx) => (
-              <option key={m.cedula || idx} value={m.cedula}>
-                {m.nombre ? `${m.nombre} (C.I. ${m.cedula})` : `Miembro sin nombre - ${m.cedula}`}
-              </option>
-            ))}
-          </Select>
-          <Text fontSize="xs" color="gray.500" mt={1}>
-            Esta lista se actualizará cada vez que modifiques y guardes los datos en el gestor de arriba.
-          </Text>
-        </FormControl>
+            {/* Líder de Grupo */}
+            <FormControl isRequired isDisabled={miembrosGuardados.length === 0}>
+              <FormLabel>Líder de Grupo</FormLabel>
+              <Select 
+                bg="white"
+                name="liderCedula" 
+                placeholder={miembrosGuardados.length === 0 ? "Primero gestione y guarde los miembros" : "Seleccione el líder..."}
+                value={form.liderCedula} 
+                onChange={handleChange}
+              >
+                {miembrosGuardados.map((m, idx) => (
+                  <option key={m.cedula || idx} value={m.cedula}>
+                    {m.nombre ? `${m.nombre} (C.I. ${m.cedula})` : `Miembro sin nombre - ${m.cedula}`}
+                  </option>
+                ))}
+              </Select>
+              <Text fontSize="xs" color="gray.500" mt={1}>
+                Esta lista se actualizará cada vez que modifiques y guardes los datos en el gestor de arriba.
+              </Text>
+            </FormControl>
+          </VStack>
+        </Box>
 
+      {/* VENTANA MODAL PARA MIEMBROS */}
         <Modal isOpen={isOpen} onClose={onClose} size="full">
           <ModalOverlay />
-          <ModalContent maxW="95vw" maxH="90vh"  mx="auto" overflowY="auto">
+          <ModalContent maxW="95vw" maxH="90vh" mx="auto" overflowY="auto">
             <ModalHeader>Miembros del Grupo</ModalHeader>
             <ModalCloseButton />
 
             <ModalBody>
               <Box overflowX="auto">
-                <Text fontSize="sm" color="gray.700" mb={2}>
+                <Flex justify="space-between" align="center" mb={4}>
+                <Text fontSize="sm" color="gray.700">
                   <b>*El campo "Año" se refiere al año y semestre que está cursando el estudiante. No confundir con el año actual.</b>
                 </Text>
+                  
+                {/* BOTÓN PARA IMPORTAR EXCEL */}
+                <Button as="label" colorScheme="primary" size="sm" cursor="pointer">
+                  📁 Importar desde Excel / CSV
+                  <input
+                    type="file"
+                    accept=".xlsx, .xls, .csv"
+                    hidden
+                    onChange={handleExcel}
+                  />
+                </Button>
+                </Flex>
 
                 <VStack spacing={4} align="stretch" minW="200px">
 
@@ -670,7 +756,7 @@ export default function CrearGrupoForm() {
                     <Box key={index} borderBottom="1px solid" borderColor="gray.200" py={2}>
                       {!miembro.isVerified ? (
                         /* VISTA INICIAL: SOLO CÉDULA */
-                        <Flex gap={4} align="center" bg="blue.50" p={2} borderRadius="md">
+                        <Flex gap={4} align="center" bg="secondary.50" p={2} borderRadius="md">
                           <Box
                             display="flex"
                             alignItems="center"
@@ -687,7 +773,7 @@ export default function CrearGrupoForm() {
                               onChange={(e) => handleMiembroChange(index, "cedula", e.target.value)}
                             />
                           </FormControl>
-                          <Button colorScheme="blue" onClick={() => comprobarCedula(index)}>
+                          <Button colorScheme="secondary" onClick={() => comprobarCedula(index)}>
                             Comprobar
                           </Button>
                           <Button colorScheme="red" variant="ghost" onClick={() => removeMiembro(index)}>
@@ -696,7 +782,6 @@ export default function CrearGrupoForm() {
                         </Flex>
                       ) : (
                       <Grid
-                        key={index}
                         templateColumns="30px 1.8fr 1fr 1.3fr 1.3fr 1.5fr 1fr 1.5fr 1.5fr 2fr 50px"
                         gap={0}
                         alignItems="center"
@@ -757,7 +842,7 @@ export default function CrearGrupoForm() {
                         <Select
                           placeholder="Facultad"
                           value={miembro.facultad}
-                          onChange={(e) =>{
+                          onChange={(e) => {
                             handleMiembroChange(index, "facultad", e.target.value);
                             handleMiembroChange(index, "escuela", "");
                           }}
@@ -792,7 +877,7 @@ export default function CrearGrupoForm() {
                                 href={URL.createObjectURL(miembro.documento)}
                                 isExternal
                                 fontSize="sm"
-                                color="blue.500"
+                                color="secondary.500"
                               >
                                 Ver PDF
                               </Link>
@@ -833,7 +918,7 @@ export default function CrearGrupoForm() {
 
                   <Button
                     alignSelf="flex-start"
-                    colorScheme="green"
+                    colorScheme="primary"
                     variant="outline"
                     onClick={addMiembro}
                   >
@@ -845,7 +930,7 @@ export default function CrearGrupoForm() {
 
             <ModalFooter>
               <Button
-                colorScheme="green"
+                colorScheme="primary"
                 onClick={() => {
                   const error = validarMiembros();
                   if (error) {
@@ -870,18 +955,19 @@ export default function CrearGrupoForm() {
 
         {/* Observaciones */}
         <FormControl>
-          <FormLabel>OBSERVACIONES</FormLabel>
+          <FormLabel>Observaciones</FormLabel>
           <Textarea
             name="observaciones"
             value={form.observaciones}
             onChange={handleChange}
-            rows={4}
+            rows={3}
+            placeholder="Información adicional relevante..."
           />
         </FormControl>
 
         {/* Aviso */}
-        <Text fontSize="sm" color="gray.700" mt={6}>
-          La creación de un Grupo de Extensión requiere la aprobación tanto de la Dirección de Extensión como de la Facultad correspondiente. Este proceso puede llevar un tiempo.
+        <Text fontSize="sm" color="gray.700" lineHeight="tall" bg="primary.50/50" p={3} borderRadius="md" borderLeft="3px solid" borderColor="primary.400">
+          ℹ️ <strong>Nota institucional:</strong> La creación de un Grupo de Extensión requiere la aprobación tanto de la Dirección de Extensión como de la Facultad correspondiente. Este proceso puede llevar un tiempo.
         </Text>
 
         {/* Botones */}
@@ -890,11 +976,15 @@ export default function CrearGrupoForm() {
             Cancelar
           </Button>
 
-          <Button colorScheme="green" onClick={handleSubmit} isLoading={loading}>
+          <Button 
+            colorScheme="primary" 
+            onClick={handleSubmit} 
+            isLoading={loading}
+            loadingText="Enviando..."
+          >
             Enviar Solicitud
           </Button>
         </Flex>
-
       </VStack>
     </Box>
   );

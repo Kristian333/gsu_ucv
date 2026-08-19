@@ -7,7 +7,7 @@ import { apiServerRequest } from "@/utils/apiServer";
 interface GroupBackend {
     id: any;
     nombre?: string;
-    facultad?: string;
+    facultad?: string | string[];
     imagen_url?: string;
 }
 
@@ -35,6 +35,7 @@ async function getGroupsFromServer(page: number, limit: number, search: string, 
         const queryParams = new URLSearchParams({
             page: String(page),
             per_page: String(limit),
+            active: "true",
         });
 
         if (search) {
@@ -77,7 +78,11 @@ export default async function GruposPage({ searchParams }: GruposPageProps) {
     const mappedGroups = rawGroups.map((g: GroupBackend) => ({
         id: String(g.id),
         title: g.nombre || "Sin nombre asignado",
-        faculty: g.facultad || "No asignada", 
+        faculty: Array.isArray(g.facultad) 
+            ? g.facultad 
+            : g.facultad 
+                ? [g.facultad] 
+                : ["No asignada"], 
         image: g.imagen_url || "/imagen-no-disponible.jpg"
     }));
 

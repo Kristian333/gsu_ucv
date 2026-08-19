@@ -32,11 +32,13 @@ import {
 } from "@chakra-ui/react";
 import { FiFileText, FiEye } from "react-icons/fi";
 import { GroupDetailBackend, GroupMember, Award } from "@/types/group";
+import { formatListToString } from "@/utils/common";
 
 export default function GrupoDetalle({ grupo }: { grupo: GroupDetailBackend | null }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedDocUrl, setSelectedDocUrl] = useState<string>("");
   const [selectedDocName, setSelectedDocName] = useState<string>("");
+  const facultyDisplay = formatListToString(grupo.facultad);
 
   if (!grupo) {
     return (
@@ -96,14 +98,14 @@ export default function GrupoDetalle({ grupo }: { grupo: GroupDetailBackend | nu
       {/* Información Básica */}
       <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
         <Box bg="gray.50" p={5} borderRadius="lg">
-          <Heading size="md" mb={2} color="gray.700">Descripción</Heading>
-          <Text color="gray.600" fontSize="md">{grupo.descripcion}</Text>
+          <Heading size="md" mb={2} color="gray.700">Objetivo</Heading>
+          <Text color="gray.600" fontSize="md">{grupo.objetivo}</Text>
         </Box>
 
         <VStack align="start" spacing={3} bg="gray.50" p={5} borderRadius="lg">
           <Text fontSize="md"><strong>Email:</strong> {grupo.email || "—"}</Text>
           <Text fontSize="md"><strong>Teléfono:</strong> {grupo.telefono || "—"}</Text>
-          <Text fontSize="md"><strong>Facultad:</strong> {grupo.facultad || "—"}</Text>
+          <Text fontSize="md"><strong>Facultad:</strong> {facultyDisplay || "—"}</Text>
           <Text fontSize="md"><strong>Área:</strong> {grupo.tipo || "—"}</Text>
         </VStack>
       </SimpleGrid>

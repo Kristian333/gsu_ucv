@@ -4,6 +4,7 @@
 import { Box, Flex, Heading, Text, Image, VStack, Divider, Button } from "@chakra-ui/react";
 import NextLink from "next/link";
 import React, { useState } from "react";
+import { formatListToString } from "@/utils/common";
 
 export interface GroupItem {
   id: string;
@@ -35,6 +36,8 @@ export default function GroupClientPage({ groupId, group, activities }: Props) {
     ? [...group.awards].sort((a, b) => b.awarddate - a.awarddate)
     : [];
   
+  const facultyDisplay = formatListToString(group.faculty);
+
   const [showAllAwards, setShowAllAwards] = useState(false);
   
   {/* Pagina del Grupo */}
@@ -64,9 +67,9 @@ export default function GroupClientPage({ groupId, group, activities }: Props) {
               {group.title}
             </Heading>
 
-            {group.faculty && (
+            {facultyDisplay && (
               <Text fontSize="xl" color="gray.600">
-                <strong>Facultad:</strong> {group.faculty}
+                <strong>Facultad:</strong> {facultyDisplay}
               </Text>
             )}
 

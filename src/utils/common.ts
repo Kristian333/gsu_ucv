@@ -140,3 +140,17 @@ export function getFacultyImagePath(facultadName?: string): string {
 
   return `/facultades/${normalized}.png`;
 }
+
+/**
+ * Formatea una lista de elementos (string, array o null/undefined) 
+ */
+export function formatListToString(value: string | string[] | null | undefined): string {
+  if (!value) return "N/A";
+  
+  if (Array.isArray(value)) {
+    const filtered = value.filter((item) => item !== "DEU");
+    return filtered.length > 0 ? filtered.join(" / ") : "";
+  }
+
+  return value === "DEU" ? "" : value;
+}
