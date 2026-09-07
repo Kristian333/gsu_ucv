@@ -1,6 +1,11 @@
 {
     "info": "Edif. Biblioteca Central, Piso 05, Ciudad Universitaria de Caracas, Venezuela, correo electrónico deu.depgsu@gmail.com, Teléfonos: 0412.5502096 / 0212 605 3929",
     "pie_pagina": "“Ciudad Universitaria de Caracas, Patrimonio de la Humanidad: 2025, vigésimo quinto aniversario de la Declaración de la UNESCO”",
+  "contacto": {
+    "email_gsu": "deu.depgsu@gmail.com",
+    "telefono_gsu": "0412-5502096",
+    "direccion_deu": "Caracas, UCV, Edif. Biblioteca Central, Piso 5"
+  },
     "UCV": [
         {
             "id_ucv": 1,

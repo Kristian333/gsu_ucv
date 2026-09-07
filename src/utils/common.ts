@@ -154,3 +154,14 @@ export function formatListToString(value: string | string[] | null | undefined):
 
   return value === "DEU" ? "" : value;
 }
+
+/**
+ * Convierte un valor de facultad (string o array de strings) en un arreglo de cadenas,
+ * filtrando valores nulos o "DEU".
+ */
+export function parseFacultiesList(value: string | string[] | null | undefined): string[] {
+  if (!value) return [];
+  
+  const list = Array.isArray(value) ? value : [value];
+  return list.filter((f) => f && f !== "DEU");
+}

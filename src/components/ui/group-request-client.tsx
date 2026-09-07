@@ -323,12 +323,12 @@ export default function GroupRequestReviewClient({ requestId }: Props) {
                       <Td>{`${m.escuela || ""} (${m.facultad || ""})`}</Td>
                       <Td>{m.coordinacion || "N/A"}</Td>
                       <Td>
-                        {m.documento ? (
+                        {m.documento_url ? (
                           <Button
                             size="xs"
                             colorScheme="primary"
                             onClick={() =>
-                              handleOpenDoc(m.documento, `Documento de ${m.nombre}`)
+                              handleOpenDoc(m.documento_url, `Documento de ${m.nombre}`)
                             }
                           >
                             Ver Documento

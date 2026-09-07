@@ -128,8 +128,9 @@ export default function CrearActividadForm() {
     formData.append("ubicacion", direccionCompleta);
 
     if (form.area_conocimiento && form.area_conocimiento.length > 0) {
-      const areasString = form.area_conocimiento.join(", ").toUpperCase();
-      formData.append("area_conocimiento", areasString);
+      form.area_conocimiento.forEach((area) => {
+        formData.append("area_conocimiento", area.toUpperCase());
+      });
     } else {
       formData.append("area_conocimiento", "Otros");
     }

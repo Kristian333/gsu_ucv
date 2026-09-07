@@ -30,7 +30,7 @@ import {
   Center,
   Icon,
 } from "@chakra-ui/react";
-import { FiFileText, FiEye } from "react-icons/fi";
+import { FiFileText } from "react-icons/fi";
 import { GroupDetailBackend, GroupMember, Award } from "@/types/group";
 import { formatListToString } from "@/utils/common";
 
@@ -38,7 +38,6 @@ export default function GrupoDetalle({ grupo }: { grupo: GroupDetailBackend | nu
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedDocUrl, setSelectedDocUrl] = useState<string>("");
   const [selectedDocName, setSelectedDocName] = useState<string>("");
-  const facultyDisplay = formatListToString(grupo.facultad);
 
   if (!grupo) {
     return (
@@ -50,6 +49,9 @@ export default function GrupoDetalle({ grupo }: { grupo: GroupDetailBackend | nu
       </Box>
     );
   }
+
+  const mostrarFacultad = formatListToString(grupo.facultad);
+  const mostrarTipo = formatListToString(grupo.tipo);
 
   const hasAwards = Array.isArray(grupo.reconocimientos) && grupo.reconocimientos.length > 0;
   const hasMembers = Array.isArray(grupo.miembros) && grupo.miembros.length > 0;
@@ -105,8 +107,8 @@ export default function GrupoDetalle({ grupo }: { grupo: GroupDetailBackend | nu
         <VStack align="start" spacing={3} bg="gray.50" p={5} borderRadius="lg">
           <Text fontSize="md"><strong>Email:</strong> {grupo.email || "—"}</Text>
           <Text fontSize="md"><strong>Teléfono:</strong> {grupo.telefono || "—"}</Text>
-          <Text fontSize="md"><strong>Facultad:</strong> {facultyDisplay || "—"}</Text>
-          <Text fontSize="md"><strong>Área:</strong> {grupo.tipo || "—"}</Text>
+          <Text fontSize="md"><strong>Facultad:</strong> {mostrarFacultad || "—"}</Text>
+          <Text fontSize="md"><strong>Área:</strong> {mostrarTipo || "—"}</Text>
         </VStack>
       </SimpleGrid>
 

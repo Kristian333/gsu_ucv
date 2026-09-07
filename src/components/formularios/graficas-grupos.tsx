@@ -1,15 +1,25 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Box, Heading, Flex, Button, Text, Center, Spinner, useToast } from "@chakra-ui/react";
+import {
+  Box, Heading, Flex, Text, Center, Spinner, useToast, 
+  Select, FormControl, FormLabel, HStack 
+} from "@chakra-ui/react";
 import { useAuth } from "@/app/context/auth-context";
 import { apiRequest } from "@/components/formularios/api";
-import { useActividades, ActividadBackend } from "@/components/ui/estadisticas/separar";
-import { SimpleBarCharts, SimpleBarCharts1, GraficaAreasPorAnio,SimpleBarChartsHorizontal } from "@/components/ui/estadisticas/graficas";
+import { TIPOS_ACTIVIDAD } from "@/constants/types";
+import { MIN_ANIO_HISTORICO } from "@/constants/general";
+import { GroupAnalyticsResponse } from "@/types/analytics";
+import {
+  SimpleBarCharts1,
+  GraficaAreasPorAnio,
+  SimpleBarChartsHorizontal
+} from "@/components/ui/estadisticas/graficas";
 
 interface ConfigGrafica {
   titulo: string;
   Componente: React.ComponentType<any>;
-  dataKey: string;
+  dataKey: keyof GroupAnalyticsResponse;
+  esRango: boolean;
   props: {
     valorx: string;
     valory?: string;
@@ -23,7 +33,8 @@ const CONFIG_GRAFICAS: Record<number, ConfigGrafica> = {
   1: { 
     titulo: "Participantes Reales vs Estimados por Actividad", 
     Componente: SimpleBarChartsHorizontal, 
-    dataKey: "porActividad", 
+    dataKey: "participantes_por_actividad",
+    esRango: false,
     props: { 
       valorx: "lugar", 
       valory: "cantidadEsperada", 
@@ -35,31 +46,36 @@ const CONFIG_GRAFICAS: Record<number, ConfigGrafica> = {
   2: { 
     titulo: "Cantidad de Actividades por Estado", 
     Componente: SimpleBarCharts1, 
-    dataKey: "porEstado", 
+    dataKey: "actividades_por_estado",
+    esRango: false,
     props: { valorx: "lugar", valory: "CantidadReal", nombreLeyenda: "Cantidad de Actividades" } 
   },
   3: { 
     titulo: "Miembros del Grupo que Participaron en las Actividades", 
     Componente: SimpleBarCharts1, 
-    dataKey: "porActividad", 
+    dataKey: "participantes_por_actividad",
+    esRango: false,
     props: { valorx: "lugar", valory: "integrantes", nombreLeyenda: "Miembros Activos" } 
   },
   4: { 
     titulo: "Cantidad de Actividades por Municipio / Ciudad", 
     Componente: SimpleBarCharts1, 
-    dataKey: "porCiudad", 
+    dataKey: "actividades_por_ciudad", 
+    esRango: false,
     props: { valorx: "lugar", valory: "CantidadReal", nombreLeyenda: "Cantidad de Actividades" } 
   },
   5: { 
     titulo: "Cantidad de Actividades por Año", 
     Componente: SimpleBarCharts1, 
-    dataKey: "porAnio", 
+    dataKey: "historico_por_anio", 
+    esRango: true,
     props: { valorx: "lugar", valory: "CantidadReal", nombreLeyenda: "Cantidad de Actividades" } 
   },
   6: { 
     titulo: "Distribución de Áreas de Conocimiento por Año", 
     Componente: GraficaAreasPorAnio, 
-    dataKey: "porAreaAnio", 
+    dataKey: "areas_conocimiento_por_anio", 
+    esRango: true,
     props: { valorx: "lugar" } 
   }
 };
@@ -71,11 +87,23 @@ interface GraficaGruposProps {
 export default function GraficaGrupos({ idGrupo }: GraficaGruposProps) {
   const toast = useToast();
   const { isHydrated, user } = useAuth();
+  const currentYear = new Date().getFullYear();
   
   const [graficaActiva, setGraficaActiva] = useState<number>(1);
   const [loadingBackend, setLoadingBackend] = useState<boolean>(true);
-  const [actividadesRaw, setActividadesRaw] = useState<ActividadBackend[]>([]);
+  const [analyticsData, setAnalyticsData] = useState<GroupAnalyticsResponse | null>(null);
   const [grupoIdDetectado, setGrupoIdDetectado] = useState<string | null>(null);
+
+  // Estados de filtros
+  const [anioEspecifico, setAnioEspecifico] = useState<number>(currentYear);
+  const [desdeAnio, setDesdeAnio] = useState<number>(currentYear - 3);
+  const [hastaAnio, setHastaAnio] = useState<number>(currentYear);
+
+  // Opciones de años para selectores
+  const opcionesAnios = Array.from(
+    { length: currentYear - MIN_ANIO_HISTORICO + 1 }, 
+    (_, i) => currentYear - i
+  );
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -85,8 +113,8 @@ export default function GraficaGrupos({ idGrupo }: GraficaGruposProps) {
       return;
     }
 
-    if (user?.groupId || user?.group_id || user?.group || user?.nombre_grupo) {
-      setGrupoIdDetectado(String(user.groupId || user.group_id || user.group || user.nombre_grupo));
+    if (user?.groupId || user?.group) {
+      setGrupoIdDetectado(String(user.groupId || user.group));
     } else {
       const token = localStorage.getItem("token");
       if (token) {
@@ -106,49 +134,89 @@ export default function GraficaGrupos({ idGrupo }: GraficaGruposProps) {
     }
   }, [isHydrated, user, idGrupo]); 
 
-  const datosCalculados = useActividades(actividadesRaw);
-
-  useEffect(() => {
+  const cargarEstadisticasDelGrupo = async () => {
     if (!isHydrated || !grupoIdDetectado) return;
 
-    const cargarEstadisticasDelGrupo = async () => {
-      try {
-        setLoadingBackend(true);
-        const token = localStorage.getItem("token") || "";
+    try {
+      setLoadingBackend(true);
 
-        const response = await apiRequest(`activities?group_id=${grupoIdDetectado}&disablePaging=true`, {
-          method: 'GET',
-          headers: {
-            "Authorization": `Bearer ${token}`
-          }
-        });
+      const response = await apiRequest("analytics", {
+        method: 'POST',
+        body: JSON.stringify({
+          anio_actual: anioEspecifico,
+          desde_anio: desdeAnio,
+          hasta_anio: hastaAnio,
+          areas_maestras: TIPOS_ACTIVIDAD,
+          group_id: grupoIdDetectado
+        })
+      });
 
-        if (response && (response.error || response.status === 500 || response.status === 400)) {
-          throw new Error(response.message || "Error al recopilar los registros del servidor.");
-        }
-
-        if (response && response.actividades) {
-          setActividadesRaw(response.actividades);
-        } else if (Array.isArray(response)) {
-          setActividadesRaw(response);
-        }
-      } catch (error: any) {
-        toast({
-          title: "Error de sincronización",
-          description: error.message || "Fallo al conectar con las métricas del servidor.",
-          status: "error",
-          duration: 5000,
-          isClosable: true
-        });
-      } finally {
-        setLoadingBackend(false);
+      if (response && (response.error || response.status === 500 || response.status === 400)) {
+        throw new Error(response.message || "Error al recopilar las analíticas del servidor.");
       }
-    };
 
+      if (response) {
+        setAnalyticsData(response);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error de sincronización",
+        description: error.message || "Fallo al conectar con las métricas del servidor.",
+        status: "error",
+        duration: 5000,
+        isClosable: true
+      });
+    } finally {
+      setLoadingBackend(false);
+    }
+  };
+
+  useEffect(() => {
     cargarEstadisticasDelGrupo();
-  }, [isHydrated, grupoIdDetectado, toast]);
+  }, [isHydrated, grupoIdDetectado, anioEspecifico, desdeAnio, hastaAnio]);
 
-  if (!isHydrated || !grupoIdDetectado || loadingBackend) {
+  // Manejadores de cambios con validación estricta de rangos
+  const handleDesdeChange = (nuevoDesde: number) => {
+    if (nuevoDesde >= hastaAnio) {
+      const ajustado = hastaAnio - 1;
+      setDesdeAnio(ajustado);
+      toast({
+        title: "Rango no permitido",
+        description: `El año 'Desde' debe ser menor al año 'Hasta'. Se ajustó automáticamente a ${ajustado}.`,
+        status: "warning",
+        duration: 4000,
+        isClosable: true
+      });
+    } else {
+      setDesdeAnio(nuevoDesde);
+    }
+  };
+
+  const handleHastaChange = (nuevoHasta: number) => {
+    if (nuevoHasta > currentYear) {
+      setHastaAnio(currentYear);
+      toast({
+        title: "Año no permitido",
+        description: `El año 'Hasta' no puede ser mayor al año actual (${currentYear}). Se ajustó automáticamente.`,
+        status: "warning",
+        duration: 4000,
+        isClosable: true
+      });
+    } else if (nuevoHasta <= desdeAnio) {
+      const ajustado = hastaAnio;
+      toast({
+        title: "Rango no permitido",
+        description: `El año 'Hasta' debe ser mayor al año 'Desde' (${desdeAnio}).`,
+        status: "warning",
+        duration: 4000,
+        isClosable: true
+      });
+    } else {
+      setHastaAnio(nuevoHasta);
+    }
+  };
+
+  if (!isHydrated || !grupoIdDetectado) {
     return (
       <Center h="300px">
         <Spinner size="xl" color="blue.500" thickness="4px" />
@@ -156,57 +224,116 @@ export default function GraficaGrupos({ idGrupo }: GraficaGruposProps) {
     );
   }
 
+  const configActual = CONFIG_GRAFICAS[graficaActiva];
+
   const renderGraficaActual = () => {
-    const config = CONFIG_GRAFICAS[graficaActiva];
-    const datosFinales = (datosCalculados as any)[config.dataKey] || [];
+    if (!analyticsData) return null;
+
+    const datosFinales = analyticsData[configActual.dataKey] || [];
 
     if (datosFinales.length === 0) {
       return (
         <Center h="400px">
-          <Text color="gray.500">No se encontraron actividades registradas para este grupo.</Text>
+          <Text color="gray.500">No se encontraron datos registrados para este grupo.</Text>
         </Center>
       );
     }
 
     if (graficaActiva === 6) {
       return (
-        <config.Componente 
+        <configActual.Componente 
           datos={datosFinales} 
-          valorx={config.props.valorx} 
-          areas={datosCalculados.todasLasAreas} 
+          valorx={configActual.props.valorx} 
+          areas={TIPOS_ACTIVIDAD}
         />
       );
     }
 
-    return <config.Componente datos={datosFinales} {...config.props} />;
+    return <configActual.Componente datos={datosFinales} {...configActual.props} />;
   };
 
   return (
     <Box p={0} maxW="1400px" mx="auto">
-      <Flex wrap="wrap" gap={3} mb={8}>
-        {Object.entries(CONFIG_GRAFICAS).map(([id, config]) => (
-          <Button
-            key={id}
-            onClick={() => setGraficaActiva(Number(id))}
-            variant={graficaActiva === Number(id) ? "solid" : "outline"}
-            colorScheme="blue"
-            borderRadius="full"
-            px={6}
-            size="sm"
-            _hover={{ transform: "translateY(-2px)", shadow: "md" }}
-            transition="all 0.2s"
+      <Flex wrap="wrap" gap={4} mb={6} justify="space-between" align="flex-end">
+        {/* Selector Dropdown de Tipo de Reporte */}
+        <FormControl maxW={{ base: "100%", md: "450px" }}>
+          <FormLabel fontWeight="bold" color="gray.700">Seleccionar Gráfica:</FormLabel>
+          <Select 
+            value={graficaActiva} 
+            onChange={(e) => setGraficaActiva(Number(e.target.value))}
+            size="md"
+            borderRadius="xl"
+            borderColor="blue.300"
+            focusBorderColor="blue.500"
+            fontWeight="medium"
           >
-            {config.titulo}
-          </Button>
-        ))}
+            {Object.entries(CONFIG_GRAFICAS).map(([id, config]) => (
+              <option key={id} value={id}>
+                {config.titulo}
+              </option>
+            ))}
+          </Select>
+        </FormControl>
+
+        {/* Filtros dinámicos de Fechas */}
+        {configActual.esRango ? (
+          <HStack spacing={3}>
+            <FormControl w="140px">
+              <FormLabel fontWeight="bold" fontSize="xs" color="gray.600" mb={1}>Desde:</FormLabel>
+              <Select 
+                value={desdeAnio} 
+                onChange={(e) => handleDesdeChange(Number(e.target.value))}
+                size="sm"
+                borderRadius="lg"
+              >
+                {opcionesAnios.map(a => (
+                  <option key={a} value={a}>{a}</option>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl w="140px">
+              <FormLabel fontWeight="bold" fontSize="xs" color="gray.600" mb={1}>Hasta:</FormLabel>
+              <Select 
+                value={hastaAnio} 
+                onChange={(e) => handleHastaChange(Number(e.target.value))}
+                size="sm"
+                borderRadius="lg"
+              >
+                {opcionesAnios.map(a => (
+                  <option key={a} value={a}>{a}</option>
+                ))}
+              </Select>
+            </FormControl>
+          </HStack>
+        ) : (
+          <FormControl w={{ base: "100%", sm: "180px" }}>
+            <FormLabel fontWeight="bold" fontSize="xs" color="gray.600" mb={1}>Año de Consulta:</FormLabel>
+            <Select 
+              value={anioEspecifico} 
+              onChange={(e) => setAnioEspecifico(Number(e.target.value))}
+              size="sm"
+              borderRadius="lg"
+            >
+              {opcionesAnios.map(a => (
+                <option key={a} value={a}>{a}</option>
+              ))}
+            </Select>
+          </FormControl>
+        )}
       </Flex>
 
       <Box bg="white" p={{ base: 4, md: 6 }} borderRadius="2xl" border="1px solid" borderColor="gray.100">
         <Heading size="md" mb={6} color="gray.700">
-          {CONFIG_GRAFICAS[graficaActiva]?.titulo}
+          {configActual?.titulo}
         </Heading>
         <Box w="100%" h="420px">
-          {renderGraficaActual()}
+          {loadingBackend ? (
+            <Center h="100%">
+              <Spinner size="lg" color="blue.500" />
+            </Center>
+          ) : (
+            renderGraficaActual()
+          )}
         </Box>
       </Box>
     </Box>

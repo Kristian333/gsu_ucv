@@ -454,7 +454,7 @@ export default function CrearGrupoForm() {
       año: m.anio,
       facultad: m.facultad,
       escuela: m.escuela,
-      documento: m.documento ? m.documento.name : "",
+      //documento: m.documento ? m.documento.name : "",
       es_lider: Boolean(m.cedula && m.cedula === form.liderCedula),
       status: true,
     }));

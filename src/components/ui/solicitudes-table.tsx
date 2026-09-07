@@ -21,22 +21,8 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/app/context/auth-context'; 
 import { apiRequest } from '@/components/formularios/api';
-import { Pagination } from '@/components/ui/pagination'; 
-
-const FACULTADES = [
-  "Agronomía",
-  "Arquitectura y Urbanismo",
-  "Ciencias",
-  "Ciencias Económicas y Sociales",
-  "Ciencias Jurídicas y Políticas",
-  "Ciencias Veterinarias",
-  "Farmacia",
-  "Humanidades y Educación",
-  "Ingeniería",
-  "Medicina",
-  "Odontología",
-  'DEU',
-];
+import { Pagination } from '@/components/ui/pagination';
+import { FACULTADES_FILTRO } from '@/constants/facultades';
 
 const ESTADOS = [
   { label: 'Todos los estados', value: '' },
@@ -122,8 +108,8 @@ export function SolicitudesTable({ mode = 'admin', defaultFaculty, groupId }: So
   // En modo faculty, priorizamos el Context -> props -> primer ítem del array
   const facultyFromAuth = user?.facultad;
   const initialFaculty = mode === 'faculty' 
-    ? (facultyFromAuth || defaultFaculty || FACULTADES[0])
-    : (facultyParam || FACULTADES[0]);
+    ? (facultyFromAuth || defaultFaculty || FACULTADES_FILTRO[0])
+    : (facultyParam || FACULTADES_FILTRO[0]);
 
   const currentColSpan = isGroupMode ? 3 : (showResourceCol ? 5 : 4);
 
@@ -160,22 +146,24 @@ export function SolicitudesTable({ mode = 'admin', defaultFaculty, groupId }: So
   const formattedFacultad = facultad.replace(/\s+/g, '_');
 
   const fetchData = useCallback(async () => {
-    if (!facultad) return;
+    if (!facultad && mode !== 'admin') return;
     setLoading(true);
     try {
       const statusQuery = status ? `&status=${status}` : '';
       let endpoint = '';
 
-    if (mode === 'group') {
-      // Endpoint enfocado al grupo específico
-      endpoint = `/group-resource-requests/group/${groupId}?page=${page}&pageSize=20${statusQuery}`;
-    } else if (mode === 'faculty') {
-      endpoint = `/admin/group-requests?faculty=${formattedFacultad}&page=${page}&per_page=20${statusQuery}`;
-    } else {
-      endpoint = activeTab === 'groups'
-        ? `/admin/group-requests?faculty=${formattedFacultad}&page=${page}&per_page=20${statusQuery}`
-        : `/admin/group-resource-requests?faculty=${formattedFacultad}&page=${page}&pageSize=20${statusQuery}`;
-    }
+      if (mode === 'group') {
+        // Endpoint enfocado al grupo específico
+        endpoint = `/group-resource-requests/group/${groupId}?page=${page}&pageSize=20${statusQuery}`;
+      } else if (mode === 'faculty') {
+        endpoint = `/admin/group-requests?faculty=${formattedFacultad}&page=${page}&per_page=20${statusQuery}`;
+      } else {
+        if (activeTab === 'groups') {
+          endpoint = `/admin/group-requests?faculty=DEU&page=${page}&per_page=20${statusQuery}`;
+        } else {
+          endpoint = `/admin/group-resource-requests?faculty=${formattedFacultad}&page=${page}&pageSize=20${statusQuery}`;
+        }
+      }
         
       const result = await apiRequest(endpoint);
 
@@ -190,7 +178,7 @@ export function SolicitudesTable({ mode = 'admin', defaultFaculty, groupId }: So
     } finally {
       setLoading(false);
     }
-  }, [activeTab, formattedFacultad, page, facultad, status]);
+  }, [activeTab, page, facultad, status, mode, groupId]);
 
   useEffect(() => {
     if (isHydrated) {
@@ -254,11 +242,11 @@ export function SolicitudesTable({ mode = 'admin', defaultFaculty, groupId }: So
         </ButtonGroup>
       )}
 
-      {/* Filtros: Facultad (Admin) y Estado (Admin + Faculty) */}
+      {/* Filtros: Facultad (solo Admin en Solicitudes de Recursos) y Estado (Admin + Faculty) */}
       <Flex justify="space-between" align="center" mb={6} gap={4} wrap="wrap">
         <Flex gap={4} wrap="wrap" w={{ base: '100%', md: 'auto' }}>
-          {/* Selector de Facultad: modo admin */}
-          {mode === 'admin' && (
+          {/* Selector de Facultad: solo en modo admin y pestaña de recursos */}
+          {mode === 'admin' && activeTab === 'resources' && (
             <Box w={{ base: '100%', sm: '260px' }}>
               <Text mb={2} fontWeight="bold" fontSize="sm">
                 Filtrar por Facultad:
@@ -268,7 +256,7 @@ export function SolicitudesTable({ mode = 'admin', defaultFaculty, groupId }: So
                 focusBorderColor="primary.500"
                 onChange={(e) => handleFacultyChange(e.target.value)}
               >
-                {FACULTADES.map((f) => (
+                {FACULTADES_FILTRO.map((f) => (
                   <option key={f} value={f}>
                     {f}
                   </option>
@@ -326,7 +314,7 @@ export function SolicitudesTable({ mode = 'admin', defaultFaculty, groupId }: So
                 transition="background 0.15s ease-in-out"
                 >
                   {mode !== 'group' && <Td fontWeight="medium">{item.grupo_nombre || item.grupo_id}</Td>}
-                  {mode !== 'group' && <Td>{item.facultad || facultad}</Td>}
+                  {mode !== 'group' && <Td>{item.facultad || (activeTab === 'groups' && mode === 'admin' ? 'DEU' : facultad)}</Td>}
 
                   {(activeTab === 'resources' || mode === 'group') && (
                       <Td>

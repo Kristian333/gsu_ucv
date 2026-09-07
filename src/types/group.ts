@@ -10,7 +10,7 @@ export interface GroupMember {
   año: string | number; // Soporta la transición temporal de int a string
   facultad: string;
   escuela: string;
-  documento: string;
+  documento_url: string;
   status: boolean;
 }
 

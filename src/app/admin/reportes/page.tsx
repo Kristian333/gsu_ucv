@@ -3,6 +3,7 @@ import { Box, Heading, Text } from '@chakra-ui/react'
 import { Metadata } from 'next'
 import { ActivitiesReportsTable } from '@/components/ui/activities-reports-table'
 import { ActivityBackend, GetActivitiesBackendResponse } from '@/types/activity'
+import { apiServerRequest } from '@/utils/apiServer'
 
 interface PageProps {
   searchParams: Promise<{
@@ -32,19 +33,11 @@ async function getActivitiesReports(
     queryParams.append('report_checked', reportChecked)
   }
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
-
   try {
-    const res = await fetch(`${API_URL}/activities?${queryParams.toString()}`, {
-      cache: 'no-store',
-    })
-
-    if (!res.ok) {
-      console.error('Error fetching activities reports:', res.statusText)
-      return { activities: [], totalPages: 1, currentPage: 1 }
-    }
-
-    const data: GetActivitiesBackendResponse = await res.json()
+    const data: GetActivitiesBackendResponse = await apiServerRequest(
+      `activities?${queryParams.toString()}`,
+      { cache: 'no-store' }
+    )
 
     return {
       activities: data.actividades || [],
@@ -82,6 +75,7 @@ export default async function ReportsPage({ searchParams }: PageProps) {
       </Text>
 
       <ActivitiesReportsTable
+        mode="reports"
         activities={activities}
         currentReportCheckedFilter={reportCheckedFilter || ''}
         currentPage={currentPage}

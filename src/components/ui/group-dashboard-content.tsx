@@ -2,26 +2,40 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { VStack, Button, Text, Heading, Divider, Box, Spinner, Center } from "@chakra-ui/react";
+import {
+  VStack,
+  Button,
+  Text,
+  Heading,
+  Divider,
+  Box,
+  Spinner,
+  Center,
+  SimpleGrid,
+} from "@chakra-ui/react";
 import NextLink from "next/link";
 import { useAuth } from "@/app/context/auth-context";
 import { apiRequest } from "@/components/formularios/api";
+import { DashboardCard } from "@/components/ui/dashboard-card";
+import { GroupDashboardResponse } from "@/types/dashboard";
 
 export function GroupDashboardContent() {
   const { user, isHydrated } = useAuth();
   const [miGrupo, setMiGrupo] = useState<any | null>(null);
+  const [metrics, setMetrics] = useState<GroupDashboardResponse | null>(null);
   const [loadingGrupo, setLoadingGrupo] = useState<boolean>(true);
   const [infoAlDia, setInfoAlDia] = useState<boolean>(false);
 
-  const rolesArray = (user?.roles || []).map(r => r.toLowerCase().trim());
+  const rolesArray = (user?.roles || []).map((r) => r.toLowerCase().trim());
   const GroupDash = rolesArray.includes("group_admin") || rolesArray.includes("group_helper");
   const VisitanteDash = rolesArray.includes("visitante");
 
   useEffect(() => {
     if (!isHydrated) return;
 
-    // Si no cuenta con id de grupo (como un visitante nuevo), no hay nada que buscar en el backend
-    if (!user?.groupId) {
+    const groupId = user?.groupId;
+    
+    if (!groupId) {
       setLoadingGrupo(false);
       return;
     }
@@ -32,7 +46,7 @@ export function GroupDashboardContent() {
         const dataGrupos = await apiRequest("groups?per_page=100", { method: "GET" });
         const lista = dataGrupos.grupos || dataGrupos.Groups || dataGrupos.groups || [];
         
-        const grupoEncontrado = lista.find((g: any) => String(g.id) === String(user?.groupId));
+        const grupoEncontrado = lista.find((g: any) => String(g.id) === String(groupId));
         
         if (grupoEncontrado) {
           setMiGrupo(grupoEncontrado);
@@ -47,6 +61,12 @@ export function GroupDashboardContent() {
             setInfoAlDia(hoy < fechaLimite);
           }
         }
+
+        const metricsData: GroupDashboardResponse = await apiRequest(
+          `groups/${groupId}/dashboard`,
+          { method: "GET" }
+        );
+        setMetrics(metricsData);
       } catch (error) {
         console.error("Error obteniendo detalles del grupo en dashboard:", error);
       } finally {
@@ -85,54 +105,58 @@ export function GroupDashboardContent() {
       
       {/* Sección Visitantes */}
       {VisitanteDash && (
-        <>
-          {mostrar.crearGrupo && (
-            <VStack spacing={4}>
-              <Text fontSize="xl" textAlign="center">
-                ¡Realiza una solicitud para crear tu Grupo de Extensión en el sistema!
-              </Text>
-              <NextLink href="/admingroup/crear_grupo" passHref>
-                <Button background="teal.500" color="white" size="lg" _hover={{ bg: "teal.600" }}>
-                  ¡Crea tu grupo de extensión!
-                </Button>
-              </NextLink>
-            </VStack>
-          )}
-
-          {mostrar.sinValidar && (
-            <Text fontSize="xl" textAlign="center" color="orange.500" fontWeight="medium">
-              Tu solicitud todavía está pendiente de revisión por la Dirección de Extensión.
-            </Text>
-          )}
-
-          {mostrar.corregir && (
-            <VStack spacing={4}>
-              <Text fontSize="xl" textAlign="center">
-                Tu solicitud ha sido revisada, pero necesita correcciones.
-              </Text>
-              <NextLink href="/admingroup/corregir_solicitud" passHref>
-                <Button colorScheme="orange" size="lg">
-                  Corregir solicitud
-                </Button>
-              </NextLink>
-            </VStack>
-          )}
-
-          {mostrar.validada && (
-            <Text fontSize="xl" textAlign="center" color="green.600" fontWeight="semibold">
-              Tu solicitud fue aceptada. Por favor, cierra sesión e ingresa con tus credenciales de Grupo de Extensión.
-            </Text>
-          )}
-        </>
+        <VStack spacing={4}>
+          <Text fontSize="xl" textAlign="center">
+            ¡Realiza una solicitud para crear tu Grupo de Extensión en el sistema!
+          </Text>
+          <NextLink href="/admingroup/crear_grupo" passHref>
+            <Button background="teal.500" color="white" size="lg" _hover={{ bg: "teal.600" }}>
+              ¡Crea tu grupo de extensión!
+            </Button>
+          </NextLink>
+        </VStack>
       )}
       
       {/* Sección Coordinadores de Grupo */}
       {GroupDash && (
         <>
           {mostrar.bienvenidaGrupo && (
-            <Heading size="2xl" textAlign="center">
-              ¡Bienvenido al panel de gestión de tu Grupo de Extensión!
-            </Heading>
+            <VStack spacing={8} w="full" maxW="container.xl">
+              <Heading size="2xl" textAlign="center">
+                ¡Bienvenido al panel de gestión de tu Grupo de Extensión!
+              </Heading>
+
+              {/* Métrica / Tarjetas usando DashboardCard */}
+              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={8} w="full">
+                <DashboardCard
+                  title="Actividades Futuras"
+                  description="Actividades programadas por el grupo pendientes de ejecución."
+                  tags={[
+                    {
+                      count: metrics?.actividades_futuras ?? 0,
+                      label: "programadas",
+                      colorScheme: "blue",
+                    },
+                  ]}
+                  link="/admingroup/nuestras_actividades?estado=proximamente&page=1"
+                  linkText="Ver actividades"
+                />
+
+                <DashboardCard
+                  title="Reportes Pendientes"
+                  description="Reportes de actividades finalizadas pendientes por enviar o completar."
+                  tags={[
+                    {
+                      count: metrics?.reportes_pendientes ?? 0,
+                      label: "pendientes",
+                      colorScheme: "orange",
+                    },
+                  ]}
+                  link="/admingroup/nuestras_actividades?page=1&estado=espera_reporte"
+                  linkText="Ver reportes"
+                />
+              </SimpleGrid>
+            </VStack>
           )}
 
           {mostrar.validarGrupo && (
@@ -147,6 +171,19 @@ export function GroupDashboardContent() {
               </NextLink>
             </VStack>
           )}
+          
+          {/*{mostrar.corregir && (
+            <VStack spacing={4}>
+              <Text fontSize="xl" textAlign="center">
+                Tu solicitud ha sido revisada, pero necesita correcciones.
+              </Text>
+              <NextLink href="/admingroup/corregir_solicitud" passHref>
+                <Button colorScheme="orange" size="lg">
+                  Corregir solicitud
+                </Button>
+              </NextLink>
+            </VStack>
+          )}*/}
         </>
       )}
       

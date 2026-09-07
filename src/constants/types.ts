@@ -1,4 +1,4 @@
-// /constans/facultades.ts
+// /constans/types.ts
 
 export const TIPOS_ACTIVIDAD: string[] = [
   "Comunicación y Retórica",

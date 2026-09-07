@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState, useEffect, ChangeEvent } from "react";
 import {
   Box,
@@ -24,6 +25,7 @@ import { useRouter } from "next/navigation";
 import { apiRequest } from "@/components/formularios/api";
 import { useAuth } from "@/app/context/auth-context";
 import { validateGroupAccess } from "@/utils/auth-guards";
+import { TIPOS_ACTIVIDAD } from "@/constants/types";
 
 interface ModificarActividadFormProps {
   id: string;
@@ -62,6 +64,7 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
 
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [newImageFile, setNewImageFile] = useState<File | null>(null);
+  
   const verificarSiYaIniciOOPaso = (fechaInicioString: string): boolean => {
     if (!fechaInicioString) return false;
     const fechaInicioFormateada = fechaInicioString.substring(0, 10);
@@ -117,8 +120,10 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
           }
 
           let areasArray: string[] = [];
-          if (data.area_conocimiento) {
-            areasArray = data.area_conocimiento.split(",").map((a: string) => a.trim().toUpperCase());
+          if (Array.isArray(data.area_conocimiento)) {
+            areasArray = data.area_conocimiento;
+          } else if (typeof data.area_conocimiento === "string" && data.area_conocimiento.length > 0) {
+            areasArray = data.area_conocimiento.split(",").map((a: string) => a.trim());
           }
 
           const esSi = data.financiamiento && data.financiamiento !== "NO" && data.financiamiento !== "";
@@ -222,6 +227,7 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
       }
     };
   }, [previewImage]);
+
   if (!isHydrated || loadingActividad || !permisoConcedido) {
     return (
       <Center h="70vh" flexDirection="column" gap={4}>
@@ -242,6 +248,7 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
       </Center>
     );
   }
+
   const handleSave = async () => {
     if (!isHydrated || !permisoConcedido) return;
 
@@ -267,8 +274,9 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
     const direccionCompleta = `${pais}, ${estado}, ${municipio}, ${detalle}`;
     formData.append("ubicacion", direccionCompleta);
     if (form.area_conocimiento && form.area_conocimiento.length > 0) {
-      const areasString = form.area_conocimiento.join(", ").toUpperCase();
-      formData.append("area_conocimiento", areasString);
+      form.area_conocimiento.forEach((area) => {
+        formData.append("area_conocimiento", area);
+      });
     } else {
       formData.append("area_conocimiento", "Otros");
     }
@@ -360,6 +368,7 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
           )}
           <Input type="file" accept="image/*" onChange={handleImageChange} pt={1} />
         </FormControl>
+
         <Box border="1px" borderColor="gray.100" p={4} borderRadius="md" bg="gray.50">
           <Heading size="sm" mb={4}>Ubicación de la Actividad*</Heading>
           <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
@@ -405,6 +414,7 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
             </FormControl>
           </SimpleGrid>
         </Box>
+
         <Box width="100%" height="1px" bg="gray.200" mx="auto" my={2} borderRadius="full" />
 
         {/* Checkbox con texto adaptativo según el origen de la data */}
@@ -457,17 +467,7 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
             onChange={(val) => setForm({ ...form, area_conocimiento: val as string[] })}
           >
             <VStack align="stretch">
-              {[
-                "Salud",
-                "Acción Social",
-                "Cultural",
-                "Deportiva",
-                "Ambiente / Conservación",
-                "Investigación",
-                "Recreación",
-                "Debate",
-                "Otros",
-              ].map((a) => (
+              {TIPOS_ACTIVIDAD.map((a) => (
                 <Checkbox key={a} value={a}>
                   {a}
                 </Checkbox>
@@ -475,6 +475,7 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
             </VStack>
           </CheckboxGroup>
         </FormControl>
+
         <FormControl isRequired>
           <FormLabel>Financiamiento</FormLabel>
           <Select name="financiamiento" value={form.financiamiento} onChange={handleChange}>
@@ -483,6 +484,7 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
             <option value="NO">NO</option>
           </Select>
         </FormControl>
+
         {form.financiamiento === "SI" && (
           <FormControl isRequired>
             <FormLabel>Organización Financiadora</FormLabel>
@@ -494,6 +496,7 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
             />
           </FormControl>
         )}
+
         <FormControl isRequired>
           <FormLabel>Descripción</FormLabel>
           <Textarea
@@ -504,6 +507,7 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
             rows={5}
           />
         </FormControl>
+        
         <Flex justify="space-between" mt={7}>
           <Button colorScheme="gray" onClick={() => router.back()}>
             Cancelar

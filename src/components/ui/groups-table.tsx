@@ -22,23 +22,23 @@ import {
   InputRightElement,
   Stack,
   Flex,
+  Wrap,
+  WrapItem,
 } from '@chakra-ui/react';
 import React, { useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { SearchIcon, CloseIcon } from '@chakra-ui/icons';
 import { Pagination } from "@/components/ui/pagination";
+import { FACULTADES_FILTRO } from '@/constants/facultades';
+import { parseFacultiesList } from '@/utils/common';
 
 interface GroupBackend {
   id: any;
-  nombre?: string;
-  name?: string;       
-  facultad?: string;
-  faculty?: string;    
+  nombre?: string;    
+  facultad?: string[];
   activo?: boolean;
-  is_active?: boolean;
   email?: string;
   telefono?: string;
-  phone?: string;
   imagen_url?: string;
 }
 
@@ -75,21 +75,7 @@ export function GroupsTable({
   const [isSearchOpen, setIsSearchOpen] = useState<boolean>(Boolean(currentSearch));
   const [searchQuery, setSearchQuery] = useState<string>(currentSearch);
 
-  const facultadesUCV = [
-    'Todos',
-    'Ciencias',
-    'Ingeniería',
-    'Humanidades y Educación',
-    'Medicina',
-    'Odontología',
-    'Farmacia',
-    'Arquitectura y Urbanismo',
-    'Ciencias Económicas y Sociales',
-    'Ciencias Jurídicas y Políticas',
-    'Agronomía',
-    'Ciencias Veterinarias',
-    'DEU'
-  ];
+  const facultadesUCV = ['Todos', ...FACULTADES_FILTRO];
 
   // Helper para actualizar los parámetros en la URL
   const updateUrlParams = (newParams: Record<string, string | null>) => {
@@ -140,7 +126,7 @@ export function GroupsTable({
   const colSpanCount = showFacultyColumn ? 5 : 4;
 
   return (
-    <Box>
+    <Box w="full" maxW="100%" overflow="hidden">
       {/* Sección de Filtros y Búsqueda */}
       <Box mb={6} p={4} bg="gray.50" borderRadius="xl" borderWidth="1px" borderColor="gray.100">
         <Stack direction={{ base: "column", md: "row" }} spacing={4} align="center" justify="space-between">
@@ -219,22 +205,30 @@ export function GroupsTable({
       </Box>
 
       {/* Tabla */}
-      <TableContainer minH="300px" border="1px solid" borderColor="gray.100" borderRadius="md">
-        <Table variant="simple">
+      <Box 
+        w="full" 
+        maxW="100%" 
+        border="1px solid" 
+        borderColor="gray.100" 
+        borderRadius="md" 
+        bg="white"
+      >
+        <Table variant="simple" layout="fixed" w="full">
           <Thead bg="gray.50">
             <Tr>
-              <Th>Grupo</Th>
-              {showFacultyColumn && <Th>Facultad</Th>}
-              <Th>Contacto</Th>
-              <Th>Estado</Th>
-              <Th textAlign="center">Acciones</Th>
+              <Th w={showFacultyColumn ? "30%" : "40%"} px={3}>Grupo</Th>
+              {showFacultyColumn && <Th w="25%" px={3}>Facultad</Th>}
+              <Th w="23%" px={3}>Contacto</Th>
+              <Th w="10%" px={2} textAlign="center">Estado</Th>
+              <Th w="13%" px={2} textAlign="center">Acciones</Th>
             </Tr>
           </Thead>
           <Tbody>
             {initialGroups.length > 0 ? (
               initialGroups.map((grupo) => {
                 const nombreGrupo = grupo.nombre || "Nombre no disponible";
-                const facultadGrupo = grupo.facultad || "Facultad no disponible";
+                const facultadRaw = grupo.facultad || "Facultad no disponible";
+                const listaFacultades = parseFacultiesList(facultadRaw);
                 const estaActivo = grupo.activo;
                 const grupoId = grupo.id;
 
@@ -252,11 +246,12 @@ export function GroupsTable({
                     
                     {/* Logo + Nombre */}
                     <Td>
-                      <HStack spacing={3}>
+                      <HStack spacing={3} align="center">
                         <Image
                           src={logoSrc}
                           alt={nombreGrupo}
                           boxSize="48px"
+                          flexShrink={0}
                           objectFit="cover"
                           borderRadius="md"
                           fallbackSrc="/imagen-no-disponible.jpg"
@@ -265,6 +260,7 @@ export function GroupsTable({
                           fontWeight="bold" 
                           color="teal.600" 
                           cursor="pointer"
+                          lineHeight="short"
                           _hover={{ textDecoration: "underline" }}
                           onClick={() => router.push(detailUrl)}
                         >
@@ -273,30 +269,40 @@ export function GroupsTable({
                       </HStack>
                     </Td>
                     
-                    {/* Facultad */}
+                    {/* Facultad(es) */}
                     {showFacultyColumn && (
-                      <Td>
-                        <Badge colorScheme="secondary" variant="subtle" px={2} py={1} borderRadius="sm">
-                          {facultadGrupo}
-                        </Badge>
+                      <Td px={3} py={3} whiteSpace="normal">
+                        {listaFacultades.length > 0 ? (
+                          <Wrap spacing={1}>
+                            {listaFacultades.map((fac, idx) => (
+                              <WrapItem key={idx}>
+                                <Badge colorScheme="secondary" variant="subtle" px={1.5} py={0.5} borderRadius="sm" fontSize="xs">
+                                  {fac}
+                                </Badge>
+                              </WrapItem>
+                            ))}
+                          </Wrap>
+                        ) : (
+                          <Text fontSize="xs" color="gray.400">Sin facultad asignada</Text>
+                        )}
                       </Td>
                     )}
 
                     {/* Contacto */}
-                    <Td>
-                      <Text fontSize="sm" fontWeight="medium" color="gray.800">{emailContacto}</Text>
-                      <Text fontSize="xs" color="gray.500">{telefonoContacto}</Text>
+                    <Td px={3} py={3} whiteSpace="normal" wordBreak="break-all">
+                      <Text fontSize="sm" fontWeight="medium" color="gray.800" lineHeight="tight">{emailContacto}</Text>
+                      <Text fontSize="xs" color="gray.500" mt={1}>{telefonoContacto}</Text>
                     </Td>
                     
                     {/* Estado */}
-                    <Td>
+                    <Td px={2} py={3} textAlign="center" whiteSpace="normal">
                       <Badge colorScheme={estaActivo ? "green" : "red"} variant="solid" borderRadius="full" px={2}>
                         {estaActivo ? "Activo" : "Inactivo"}
                       </Badge>
                     </Td>
 
                     {/* Acciones */}
-                    <Td textAlign="center">
+                    <Td px={2} py={3} textAlign="center">
                       <Button
                         size="sm"
                         colorScheme="teal"
@@ -320,7 +326,7 @@ export function GroupsTable({
             )}
           </Tbody>
         </Table>
-      </TableContainer>
+      </Box>
 
       {/* Paginación */}
       <Pagination 
