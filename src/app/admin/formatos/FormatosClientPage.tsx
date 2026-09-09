@@ -299,7 +299,7 @@ export default function FormatosClientPage({ initialTemplates, generalData }: Fo
               </List>
               <Box bg="blue.50" borderLeft="4px solid" borderColor="secondary" p={3} borderRadius="md">
                 <Text fontSize="xs" fontWeight="bold" color="blue.900">Uso de Tablas Reales:</Text>
-                <Text fontSize="xs" color="blue.800">Usa el botón "Tablas" de la barra de herramientas. Dentro de las celdas de datos, coloca variables simples como <code>{"{{miembro_nombre}}"}</code> o <code>{"{{miembro_cedula}}"}</code> para indicar como completar cada columna.</Text>
+                <Text fontSize="xs" color="blue.800">Usa el botón &quot;Tablas&quot; de la barra de herramientas. Dentro de las celdas de datos, coloca variables simples como <code>{"{{miembro_nombre}}"}</code> o <code>{"{{miembro_cedula}}"}</code> para indicar como completar cada columna.</Text>
               </Box>
             </AlertDialogBody>
             <AlertDialogFooter><Button bg="secondary" color="white" _hover={{ filter: "brightness(0.9)" }} onClick={guideDisclosure.onClose}>Entendido</Button></AlertDialogFooter>
@@ -327,7 +327,7 @@ export default function FormatosClientPage({ initialTemplates, generalData }: Fo
           <AlertDialogContent borderRadius="xl">
             <AlertDialogHeader fontSize="lg" fontWeight="bold">¿Eliminar este formato?</AlertDialogHeader>
             <AlertDialogBody>
-              ¿Está seguro de que desea eliminar permanentemente la plantilla <strong>"{tipoSolicitud}"</strong>? Esta acción no se puede deshacer y modificará de inmediato el archivo <code>templates.json</code>.
+              ¿Está seguro de que desea eliminar permanentemente la plantilla <strong>&quot;{tipoSolicitud}&quot;</strong>? Esta acción no se puede deshacer y modificará de inmediato el archivo <code>templates.json</code>.
             </AlertDialogBody>
             <AlertDialogFooter>
               <Button onClick={deleteDisclosure.onClose} size="sm" variant="ghost">Cancelar</Button>

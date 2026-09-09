@@ -3,7 +3,7 @@
 
 import { Box, SimpleGrid, Card, CardBody, Stack, Image, Text } from "@chakra-ui/react";
 import NextLink from 'next/link';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Heading, Paragraph } from "@/components/ui/tipografia";
 import { Pagination } from "@/components/ui/pagination";
 import { useRouter } from 'next/navigation';
@@ -85,18 +85,7 @@ export function ClientGroups({ groups, currentPage, totalPages, currentSearch = 
         setSearch(currentSearch);
     }, [currentSearch]);
 
-    // Debounce para actualizar la URL tras escribir en el buscador
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            if (search !== currentSearch) {
-                updateUrl(search, currentFaculty);
-            }
-        }, 400);
-
-        return () => clearTimeout(timer);
-    }, [search]);
-
-    const updateUrl = (newSearch: string, newFaculty: string) => {
+    const updateUrl = useCallback((newSearch: string, newFaculty: string) => {
         const query = new URLSearchParams();
         query.set("page", "1"); // Siempre resetear a página 1 al filtrar
         
@@ -109,7 +98,18 @@ export function ClientGroups({ groups, currentPage, totalPages, currentSearch = 
         }
 
         router.push(`/grupos?${query.toString()}`);
-    };
+    }, [router]);
+
+    // Debounce para actualizar la URL tras escribir en el buscador
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (search !== currentSearch) {
+                updateUrl(search, currentFaculty);
+            }
+        }, 400);
+
+        return () => clearTimeout(timer);
+    }, [search, currentSearch, currentFaculty, updateUrl]);
 
     const handleFacultyChange = (faculty: string) => {
         setFilterMenuOpen(false);

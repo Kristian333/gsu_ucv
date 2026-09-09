@@ -769,8 +769,7 @@ export default function ValidarGrupoForm() {
                 >
                   <Text fontSize="sm" color="gray.700">
                     <b>
-                      *El campo "Año" se refiere al año y semestre que está cursando
-                      el estudiante. No confundir con el año actual.
+                      *El campo &quot;Año&quot; se refiere al año y semestre que está cursando el estudiante. No confundir con el año actual.
                     </b>
                   </Text>
 

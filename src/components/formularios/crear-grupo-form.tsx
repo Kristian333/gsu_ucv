@@ -711,7 +711,7 @@ export default function CrearGrupoForm() {
               <Box overflowX="auto">
                 <Flex justify="space-between" align="center" mb={4}>
                 <Text fontSize="sm" color="gray.700">
-                  <b>*El campo "Año" se refiere al año y semestre que está cursando el estudiante. No confundir con el año actual.</b>
+                  <b>*El campo &quot;Año&quot; se refiere al año y semestre que está cursando el estudiante. No confundir con el año actual.</b>
                 </Text>
                   
                 {/* BOTÓN PARA IMPORTAR EXCEL */}

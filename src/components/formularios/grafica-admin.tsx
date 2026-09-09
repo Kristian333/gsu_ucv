@@ -1,11 +1,11 @@
-  "use client";
-  import React, { useState, useEffect } from 'react';
-  import { 
-    Box, Heading, Flex, Text, Center, Spinner, Badge, useToast,
-    Tabs, TabList, TabPanels, Tab, TabPanel, Select, FormControl, FormLabel, HStack 
-  } from "@chakra-ui/react";
-  import { useAuth } from "@/app/context/auth-context";
-  import { apiRequest } from "@/components/formularios/api";
+"use client";
+import React, { useState, useEffect, useCallback } from 'react';
+import { 
+  Box, Heading, Flex, Text, Center, Spinner, Badge, useToast,
+  Tabs, TabList, TabPanels, Tab, TabPanel, Select, FormControl, FormLabel, HStack 
+} from "@chakra-ui/react";
+import { useAuth } from "@/app/context/auth-context";
+import { apiRequest } from "@/components/formularios/api";
 import { TIPOS_ACTIVIDAD } from "@/constants/types";
 import { MIN_ANIO_HISTORICO } from "@/constants/general";
 import { GroupAnalyticsResponse } from "@/types/analytics";
@@ -39,17 +39,17 @@ interface GrupoBackend {
 
 const CONFIG_GRAFICAS: Record<number, ConfigGrafica> = {
   1: {
-  titulo: "Participantes Reales vs Estimados",
-  Componente: SimpleBarChartsHorizontal,
-  dataKey: "participantes_por_actividad",
+    titulo: "Participantes Reales vs Estimados",
+    Componente: SimpleBarChartsHorizontal,
+    dataKey: "participantes_por_actividad",
     esRango: false,
-  props: { 
-    valorx: "lugar",
-    valory: "cantidadEsperada",
-    valory2: "CantidadReal",
-    nombreLeyenda: "Participantes Estimados",
-    nombreLeyenda2: "Participantes Reales"
-  } 
+    props: { 
+      valorx: "lugar",
+      valory: "cantidadEsperada",
+      valory2: "CantidadReal",
+      nombreLeyenda: "Participantes Estimados",
+      nombreLeyenda2: "Participantes Reales"
+    } 
   },
   2: {
     titulo: "Volumen de Actividades por Estado",
@@ -116,7 +116,7 @@ export default function DashboardAdmin() {
     (_, i) => currentYear - i
   );
 
-  const cargarDatosDashboard = async () => {
+  const cargarDatosDashboard = useCallback(async () => {
     if (!isHydrated) return;
     try {
       setLoadingBackend(true);
@@ -147,8 +147,8 @@ export default function DashboardAdmin() {
 
     } catch (error: any) {
       toast({
-      title: "Error de carga",
-      description: error.message || "No se pudieron obtener las analíticas del sistema.",
+        title: "Error de carga",
+        description: error.message || "No se pudieron obtener las analíticas del sistema.",
         status: "error",
         duration: 6000,
         isClosable: true,
@@ -157,11 +157,11 @@ export default function DashboardAdmin() {
     } finally {
       setLoadingBackend(false);
     }
-  };
+  }, [isHydrated, anioEspecifico, desdeAnio, hastaAnio, toast]);
 
   useEffect(() => {
     cargarDatosDashboard();
-  }, [isHydrated, anioEspecifico, desdeAnio, hastaAnio]);
+  }, [cargarDatosDashboard]);
 
   const handleDesdeChange = (nuevoDesde: number) => {
     if (nuevoDesde >= hastaAnio) {
@@ -213,7 +213,7 @@ export default function DashboardAdmin() {
   const configActual = CONFIG_GRAFICAS[graficaActiva];
 
   const renderGraficaActual = () => {
-  if (!analyticsData) return null;
+    if (!analyticsData) return null;
 
     const datosFinales = analyticsData[configActual.dataKey] || [];
 
@@ -230,7 +230,7 @@ export default function DashboardAdmin() {
         <configActual.Componente
           datos={datosFinales}
           valorx={configActual.props.valorx}
-        areas={TIPOS_ACTIVIDAD}
+          areas={TIPOS_ACTIVIDAD}
         />
       );
     }
@@ -241,7 +241,7 @@ export default function DashboardAdmin() {
     <Box p={{ base: 4, md: 10 }} maxW="1400px" mx="auto">
       <Box mb={8}>
         <Flex align="center" gap={3}>
-          <Heading as="h1" size="xl"  mb={2}>
+          <Heading as="h1" size="xl" mb={2}>
             Estadísticas Generales de los Grupos
           </Heading>
           <Badge colorScheme="primary" fontSize="0.8em" borderRadius="full" px={3} py={0.5}>
@@ -278,7 +278,7 @@ export default function DashboardAdmin() {
                     <option key={id} value={id}>
                       {config.titulo}
                     </option>
-              ))}
+                  ))}
                 </Select>
               </FormControl>
 

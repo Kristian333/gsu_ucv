@@ -224,8 +224,8 @@ export default function TemplatePreviewModal({
 
           <div class="header">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-              <img src="${ucvBase64}" height="55" alt="UCV" />
-              <img src="${gsuBase64}" height="50" alt="GSU" />
+              <img src="${ucvBase64}" height="55" alt="UCV Logo" />
+              <img src="${gsuBase64}" height="50" alt="GSU Logo" />
             </div>
             <div class="header-brand-title">UNIVERSIDAD CENTRAL DE VENEZUELA</div>
             <div class="header-brand-subtitle">DIRECCIÓN DE EXTENSIÓN UNIVERSITARIA</div>
@@ -327,8 +327,8 @@ export default function TemplatePreviewModal({
                   textAlign="center"
                 >
                   <Flex justify="space-between" align="center" mb={1}>
-                    <Image src="/UCV.png" h="55px" objectFit="contain" />
-                    <Image src="/logo.png" h="50px" objectFit="contain" />
+                    <Image src="/UCV.png" h="55px" objectFit="contain" alt="Logo UCV" />
+                    <Image src="/logo.png" h="50px" objectFit="contain" alt="Logo GSU" />
                   </Flex>
                   <Text fontWeight="bold" fontSize="11pt" borderBottom="2px solid black" pb="5px">
                     UNIVERSIDAD CENTRAL DE VENEZUELA

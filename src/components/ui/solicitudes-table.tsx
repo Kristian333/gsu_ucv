@@ -96,6 +96,7 @@ export function SolicitudesTable({ mode = 'admin', defaultFaculty, groupId }: So
   const pageParam = searchParams.get('page');
   const page = pageParam ? parseInt(pageParam, 10) : 1;
   
+  type TabType = 'groups' | 'resources';
   const tabParam = searchParams.get('tab') as TabType;
   const activeTab: TabType = mode === 'faculty' ? 'groups' : (tabParam || 'groups');
 
@@ -178,7 +179,7 @@ export function SolicitudesTable({ mode = 'admin', defaultFaculty, groupId }: So
     } finally {
       setLoading(false);
     }
-  }, [activeTab, page, facultad, status, mode, groupId]);
+  }, [activeTab, page, facultad, status, mode, groupId, formattedFacultad]);
 
   useEffect(() => {
     if (isHydrated) {
@@ -308,27 +309,27 @@ export function SolicitudesTable({ mode = 'admin', defaultFaculty, groupId }: So
             ) : data.length > 0 ? (
               data.map((item) => (
                 <Tr
-                key={item.id}
-                onClick={() => handleRowClick(item.id)}
-                _hover={{ bg: 'gray.100', cursor: 'pointer' }}
-                transition="background 0.15s ease-in-out"
+                  key={item.id}
+                  onClick={() => handleRowClick(item.id)}
+                  _hover={{ bg: 'gray.100', cursor: 'pointer' }}
+                  transition="background 0.15s ease-in-out"
                 >
                   {mode !== 'group' && <Td fontWeight="medium">{item.grupo_nombre || item.grupo_id}</Td>}
                   {mode !== 'group' && <Td>{item.facultad || (activeTab === 'groups' && mode === 'admin' ? 'DEU' : facultad)}</Td>}
 
                   {(activeTab === 'resources' || mode === 'group') && (
-                      <Td>
-                          <Badge colorScheme="secondary">{item.tipo}</Badge>
-                      </Td>
+                    <Td>
+                      <Badge colorScheme="secondary">{item.tipo}</Badge>
+                    </Td>
                   )}
 
                   <Td>
                     {new Date(item.creado_en).toLocaleDateString()}
                   </Td>
                   <Td>
-                      <Badge colorScheme={getBadgeColorScheme(item.estado)}>
-                        {formatEstado(item.estado)}
-                      </Badge>
+                    <Badge colorScheme={getBadgeColorScheme(item.estado)}>
+                      {formatEstado(item.estado)}
+                    </Badge>
                   </Td>
                 </Tr>
               ))

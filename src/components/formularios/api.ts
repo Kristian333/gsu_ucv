@@ -8,24 +8,26 @@ export async function apiRequest(
   const url = `${API_BASE_URL.replace(/\/$/, '')}/${endpoint.replace(/^\//, '')}`;
 
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
- 
+
   const isAuthRoute = endpoint.includes('auth/login');
 
   const { isPublic, ...nativeOptions } = options; 
- 
-  const headers: Record<string, string> = {
-    ...(token && !isAuthRoute ? { 'Authorization': `Bearer ${token}` } : {}),
-    ...options.headers, 
-  };
+
+  const headers = new Headers(options.headers);
+
+  if (token && !isAuthRoute) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+
  
   if (!(options.body instanceof FormData)) {
-    if (!headers['Content-Type']) {
-      headers['Content-Type'] = 'application/json';
+    if (!headers.has('Content-Type')) {
+      headers.set('Content-Type', 'application/json');
     }
   } else {
-    delete headers['Content-Type'];
+    headers.delete('Content-Type');
   }
- 
+
   const response = await fetch(url, {
     ...nativeOptions,
     headers,

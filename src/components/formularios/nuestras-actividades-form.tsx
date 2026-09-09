@@ -1,6 +1,6 @@
 // components/formularios/nuestras-actividades-form
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { 
   Box, 
@@ -80,7 +80,7 @@ export default function VistaNuestrasActividadesForm({ searchParams = {} }: Form
     router.push(`${pathname}?${current.toString()}`);
   };
 
-  const cargarActividades = async () => {
+  const cargarActividades = useCallback(async () => {
     if (!user?.groupId) return;
     setLoading(true);
 
@@ -157,13 +157,13 @@ export default function VistaNuestrasActividadesForm({ searchParams = {} }: Form
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.groupId, currentPage, featuredFilter]);
 
   useEffect(() => {
     if (isHydrated) {
       cargarActividades();
     }
-  }, [isHydrated, user?.groupId, currentPage, featuredFilter]);
+  }, [isHydrated, cargarActividades]);
 
   // Filtrado local en cliente (Estado y Año)
   const actividadesFiltradas = actividades.filter((act) => {

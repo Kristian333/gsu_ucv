@@ -48,7 +48,7 @@ export function FacultyDashboardClient() {
     return (
       <Center h="50vh">
         <Text fontSize="lg" color="red.500">
-          Error: Tu usuario no posee el rol 'faculty_admin'. Roles detectados: {roles.join(", ")}
+          Error: Tu usuario no posee el rol &apos;faculty_admin&apos;. Roles detectados: {roles.join(", ")}
         </Text>
       </Center>
     );

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box, Heading, Flex, Text, Center, Spinner, useToast, 
   Select, FormControl, FormLabel, HStack 
@@ -134,7 +134,7 @@ export default function GraficaGrupos({ idGrupo }: GraficaGruposProps) {
     }
   }, [isHydrated, user, idGrupo]); 
 
-  const cargarEstadisticasDelGrupo = async () => {
+  const cargarEstadisticasDelGrupo = useCallback(async () => {
     if (!isHydrated || !grupoIdDetectado) return;
 
     try {
@@ -169,11 +169,11 @@ export default function GraficaGrupos({ idGrupo }: GraficaGruposProps) {
     } finally {
       setLoadingBackend(false);
     }
-  };
+  }, [isHydrated, grupoIdDetectado, anioEspecifico, desdeAnio, hastaAnio, toast]);
 
   useEffect(() => {
     cargarEstadisticasDelGrupo();
-  }, [isHydrated, grupoIdDetectado, anioEspecifico, desdeAnio, hastaAnio]);
+  }, [cargarEstadisticasDelGrupo]);
 
   // Manejadores de cambios con validación estricta de rangos
   const handleDesdeChange = (nuevoDesde: number) => {
