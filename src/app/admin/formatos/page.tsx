@@ -1,3 +1,4 @@
+import { Box, Heading, Text } from '@chakra-ui/react'
 import { Metadata } from "next";
 import FormatosClientPage from "./FormatosClientPage";
 import { getTemplates } from "./actions";
@@ -28,9 +29,18 @@ export default async function AdminFormatosPage() {
   };
 
   return (
+    <Box mx="auto" py={10} px={6}>
+      <Heading as="h1" size="xl" mb={2}>
+        Administrador de Formatos
+      </Heading>
+      <Text fontSize="lg" color="gray.500" mb={8}>
+        Edición estructural de los formatos para las solicitudes de recursos de los Grupos de Extensión.
+      </Text>
+
     <FormatosClientPage 
       initialTemplates={templates} 
       generalData={generalData}
     />
+    </Box>
   );
 }

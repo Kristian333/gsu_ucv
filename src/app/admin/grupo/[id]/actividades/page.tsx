@@ -1,8 +1,7 @@
 // /app/admin/grupo/[id]/actividades/page.tsx
-import { Box, Heading, Text, Breadcrumb, BreadcrumbItem, BreadcrumbLink } from '@chakra-ui/react'
+import { Box, Heading, Text } from '@chakra-ui/react'
 import { Metadata } from 'next'
-import Link from 'next/link'
-import { ActivitiesReportsTable } from '@/components/ui/activities-reports-table'
+import { ActivitiesReportsTable } from '@/components/ui/activities-admin-table'
 import { ActivityBackend, GetActivitiesBackendResponse } from '@/types/activity'
 import { apiServerRequest } from '@/utils/apiServer'
 
@@ -32,8 +31,46 @@ async function getGroupActivities(
     limit: '10',
   })
 
-  if (status) {
-    queryParams.append('status', status)
+  // Helper para formatear Date en DD-MM-YYYY
+  const formatDate = (date: Date): string => {
+    const day = String(date.getDate()).padStart(2, '0')
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const year = date.getFullYear()
+    return `${day}-${month}-${year}`
+  }
+
+  const now = new Date()
+  const todayStr = formatDate(now)
+
+  if (status === 'future') {
+    const tomorrow = new Date(now)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    const tomorrowStr = formatDate(tomorrow)
+
+    // Fecha fin: 2 años más a partir de hoy
+    const futureTwoYears = new Date(now)
+    futureTwoYears.setFullYear(futureTwoYears.getFullYear() + 2)
+    const futureTwoYearsStr = formatDate(futureTwoYears)
+
+    queryParams.append('start_date', tomorrowStr)
+    queryParams.append('end_date', futureTwoYearsStr)
+  } else if (status === 'in_progress') {
+    queryParams.append('start_date', todayStr)
+    queryParams.append('end_date', todayStr)
+  } else if (status === 'pending_report') {
+    const yesterday = new Date(now)
+    yesterday.setDate(yesterday.getDate() - 1)
+    const yesterdayStr = formatDate(yesterday)
+
+    queryParams.append('start_date', '01-01-2020')
+    queryParams.append('end_date', yesterdayStr)
+    queryParams.append('has_actual_participants', 'false')
+  } else if (status === 'pending_review') {
+    queryParams.append('has_actual_participants', 'true')
+    queryParams.append('report_checked', 'false')
+  } else if (status === 'reviewed') {
+    queryParams.append('has_actual_participants', 'true')
+    queryParams.append('report_checked', 'true')
   }
 
   try {
@@ -68,22 +105,6 @@ export default async function GroupActivitiesPage({ params, searchParams }: Page
 
   return (
     <Box maxW="container.xl" mx="auto" py={10} px={6}>
-      {/* NAVEGACIÓN SECUNDARIA / BREADCRUMBS */}
-      <Breadcrumb mb={4} color="gray.500" fontSize="sm">
-        <BreadcrumbItem>
-          <BreadcrumbLink as={Link} href="/admin/grupos">
-            Grupos
-          </BreadcrumbLink>
-        </BreadcrumbItem>
-        <BreadcrumbItem>
-          <BreadcrumbLink as={Link} href={`/admin/grupo/${id}`}>
-            Detalle del Grupo
-          </BreadcrumbLink>
-        </BreadcrumbItem>
-        <BreadcrumbItem isCurrentPage color="teal.600" fontWeight="bold">
-          <BreadcrumbLink>Actividades</BreadcrumbLink>
-        </BreadcrumbItem>
-      </Breadcrumb>
 
       <Heading as="h1" size="xl" mb={2}>
         Actividades del Grupo

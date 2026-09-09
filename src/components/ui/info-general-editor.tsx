@@ -411,7 +411,7 @@ export function InfoGeneralEditor({ initialData, onSave }: InfoGeneralEditorProp
                 <VStack spacing={6}>
                   <FormControl>
                     <FormLabel fontSize="sm" fontWeight="semibold">
-                      Encabezado (Corresponde a &quot;info&quot;)
+                      Información de Contacto y Dirección en Pie de Página
                     </FormLabel>
                     <Textarea
                       rows={3}
@@ -422,7 +422,7 @@ export function InfoGeneralEditor({ initialData, onSave }: InfoGeneralEditorProp
 
                   <FormControl>
                     <FormLabel fontSize="sm" fontWeight="semibold">
-                      Pie de Página (Corresponde a &quot;pie_pagina&quot;)
+                      Texto Extra Pie de Página
                     </FormLabel>
                     <Textarea
                       rows={3}

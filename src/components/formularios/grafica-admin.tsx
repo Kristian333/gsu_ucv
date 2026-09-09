@@ -241,19 +241,19 @@ export default function DashboardAdmin() {
     <Box p={{ base: 4, md: 10 }} maxW="1400px" mx="auto">
       <Box mb={8}>
         <Flex align="center" gap={3}>
-          <Heading size="2xl" fontWeight="black" letterSpacing="tight">
+          <Heading as="h1" size="xl"  mb={2}>
             Estadísticas Generales de los Grupos
           </Heading>
-          <Badge colorScheme="red" fontSize="0.8em" borderRadius="full" px={3} py={0.5}>
+          <Badge colorScheme="primary" fontSize="0.8em" borderRadius="full" px={3} py={0.5}>
             ADMIN
           </Badge>
         </Flex>
-        <Text fontSize="lg" color="gray.500" mt={1}>
+        <Text fontSize="lg" color="gray.500" mb={8}>
           Visualizando métricas consolidadas de todos los grupos, áreas y sedes universitarias a nivel nacional.
         </Text>
       </Box>
 
-      <Tabs variant="enclosed" colorScheme="red">
+      <Tabs variant="enclosed" colorScheme="secondary">
         <TabList mb={6}>
           <Tab fontWeight="bold">Métricas Globales</Tab>
           <Tab fontWeight="bold">Análisis por Grupo Específico</Tab>

@@ -57,9 +57,9 @@ export default function GrupoDetalle({ grupo }: { grupo: GroupDetailBackend | nu
   const hasMembers = Array.isArray(grupo.miembros) && grupo.miembros.length > 0;
 
   const handleOpenDocument = (member: GroupMember) => {
-    const fileUrl = member.documento.startsWith("http")
-      ? member.documento
-      : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/files/documents/${member.documento}`;
+    const fileUrl = member.documento_url.startsWith("http")
+      ? member.documento_url
+      : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/files/documents/${member.documento_url}`;
 
     setSelectedDocUrl(fileUrl);
     setSelectedDocName(`Documento de ${member.nombre}`);
@@ -86,7 +86,7 @@ export default function GrupoDetalle({ grupo }: { grupo: GroupDetailBackend | nu
           <HStack align="center" spacing={3}>
             <Heading size="xl">{grupo.nombre}</Heading>
             <Badge colorScheme={grupo.activo ? "green" : "red"}>
-              {grupo.activo ? "Activo" : "Inactivo"}
+              <Text mt={1} fontSize="md">{grupo.activo ? "Activo" : "Inactivo"}</Text>
             </Badge>
           </HStack>
           <Text color="gray.500" mt={1} fontSize="md">

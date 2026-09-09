@@ -2,18 +2,10 @@
 
 import {
   Modal, ModalOverlay, ModalContent, ModalHeader, ModalCloseButton,
-  ModalBody, ModalFooter, Button, Box, Flex, VStack, Text, Image, useToast, Spinner
+  ModalBody, ModalFooter, Button, Box, Flex, VStack, Text, Image, useToast
 } from "@chakra-ui/react";
 import { FileText, CheckCircle } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import {
-  PAGE_LAYOUT,
-  HEADER_SPACE_MM,
-  FOOTER_SPACE_MM,
-  LETTER_CONTENT_CSS,
-  buildLetterContentHtml,
-} from "@/components/lib/pdfLayout";
-import { paginateHtml, wrapTableHeaderRowsInHtml } from "@/components/lib/paginateHtml";
+import { useState } from "react";
 
 export type PreviewModalMode = "default" | "preview_previa_s_r" | "approve";
 
@@ -28,11 +20,11 @@ interface PreviewModalProps {
   onConfirmApprove?: () => Promise<void>;
 }
 
-export default function TemplatePreviewModal({
-  isOpen,
-  onClose,
-  tipoSolicitud,
-  modeloCarta,
+export default function TemplatePreviewModal({ 
+  isOpen, 
+  onClose, 
+  tipoSolicitud, 
+  modeloCarta, 
   generalData,
   codigoFormato = "CODIGO FORMATO",
   mode = "default",
@@ -41,9 +33,7 @@ export default function TemplatePreviewModal({
   const toast = useToast();
   const [isDownloading, setIsDownloading] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
-  const [pages, setPages] = useState<string[]>([]);
-  const [isLoadingPagination, setIsLoadingPagination] = useState(false);
-
+  
   const getFechaFormateada = () => {
     const meses = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
     const hoy = new Date();
@@ -57,40 +47,7 @@ export default function TemplatePreviewModal({
     });
   };
 
-  const fullContentHtml = useMemo(() => {
-    if (!isOpen) return "";
-    const cuerpoFormateado = parseContenidoPreview(modeloCarta)
-      .replace(/style="text-align:\s*right;?"/g, 'class="text-right"')
-      .replace(/style="text-align:\s*center;?"/g, 'class="text-center"')
-      .replace(/style="text-align:\s*justify;?"/g, 'class="text-justify"');
-
-    return buildLetterContentHtml({
-      codigoFormato,
-      fecha: getFechaFormateada(),
-      cuerpoFormateado,
-      directorNombre: generalData?.director?.director_extension,
-      directorCargo: generalData?.director?.cargo,
-    });
-  }, [isOpen, modeloCarta, codigoFormato, generalData]);
-
-  useEffect(() => {
-    if (!isOpen || !fullContentHtml) {
-      setPages([]);
-      setIsLoadingPagination(false);
-      return;
-    }
-
-    setIsLoadingPagination(true);
-
-    const id = requestAnimationFrame(() => {
-      const result = paginateHtml(fullContentHtml);
-      setPages(result);
-      setIsLoadingPagination(false);
-    });
-
-    return () => cancelAnimationFrame(id);
-  }, [isOpen, fullContentHtml]);
-
+  // Función nativa y limpia para generar y descargar el archivo compatible con Word MS
   const getBase64Image = async (src: string): Promise<string> => {
     try {
       const res = await fetch(src);
@@ -117,17 +74,8 @@ export default function TemplatePreviewModal({
         .replace(/style="text-align:\s*right;?"/g, 'class="text-right"')
         .replace(/style="text-align:\s*center;?"/g, 'class="text-center"')
         .replace(/style="text-align:\s*justify;?"/g, 'class="text-justify"');
-
-      const contentHtml = wrapTableHeaderRowsInHtml(
-        buildLetterContentHtml({
-          codigoFormato,
-          fecha,
-          cuerpoFormateado,
-          directorNombre: generalData?.director?.director_extension,
-          directorCargo: generalData?.director?.cargo,
-        })
-      );
-
+     
+      // Estructura maestra HTML que procesará Puppeteer en el servidor
       const htmlCompletoParaPDF = `
         <!DOCTYPE html>
         <html>
@@ -137,59 +85,53 @@ export default function TemplatePreviewModal({
               size: letter;
               margin: 0;
             }
-            * {
-              box-sizing: border-box;
-            }
             body {
-              font-family: 'Arial', Helvetica, sans-serif;
+              font-family: 'Arial', sans-serif;
               margin: 0;
               padding: 0;
               -webkit-print-color-adjust: exact;
-              print-color-adjust: exact;
             }
             .page-container {
-              padding-left: ${PAGE_LAYOUT.MARGIN_X_MM}mm;
-              padding-right: ${PAGE_LAYOUT.MARGIN_X_MM}mm;
+              padding-left: 2.54cm;
+              padding-right: 2.54cm;
             }
-            .header-space { height: ${HEADER_SPACE_MM}mm; }
-            .footer-space { height: ${FOOTER_SPACE_MM}mm; }
-
-            .table-print-layout,
-            .table-print-layout > thead > tr > td,
-            .table-print-layout > tbody > tr > td,
-            .table-print-layout > tfoot > tr > td {
+            .header-space { height: 160px; }
+            .footer-space { height: 100px; }
+            
+            /* Eliminación estricta de bordes en la tabla de impresión base */
+            .table-print-layout, .table-print-layout td, .table-print-layout th {
               border: none !important;
               padding: 0 !important;
               background-color: transparent !important;
             }
-
+            
             .header {
               position: fixed;
-              top: ${PAGE_LAYOUT.HEADER_TOP_MM}mm;
-              left: ${PAGE_LAYOUT.MARGIN_X_MM}mm;
-              right: ${PAGE_LAYOUT.MARGIN_X_MM}mm;
+              top: 2.0cm; left: 2.54cm; right: 2.54cm;
+              height: 120px;
               text-align: center;
               background-color: white;
             }
+            
+            /* Ajuste de línea divisoria de diseño institucional */
             .header-brand-title {
-              font-weight: bold;
-              font-size: 11pt;
+              font-weight: bold; 
+              font-size: 11pt; 
               letter-spacing: 0.5px;
               border-bottom: 2px solid #000000;
               padding-bottom: 5px;
             }
             .header-brand-subtitle {
-              font-weight: bold;
-              font-size: 9pt;
-              color: #4a5568;
+              font-weight: bold; 
+              font-size: 9pt; 
+              color: #4a5568; 
               margin-top: 5px;
             }
 
             .footer {
               position: fixed;
-              bottom: ${PAGE_LAYOUT.FOOTER_BOTTOM_MM}mm;
-              left: ${PAGE_LAYOUT.MARGIN_X_MM}mm;
-              right: ${PAGE_LAYOUT.MARGIN_X_MM}mm;
+              bottom: 1.5cm; left: 2.54cm; right: 2.54cm;
+              height: 70px;
               border-top: 1px solid #cbd5e0;
               text-align: center;
               font-size: 8.5pt;
@@ -200,9 +142,29 @@ export default function TemplatePreviewModal({
               line-height: 1.6;
               text-align: justify;
             }
+            
+            /* Estilos para las tablas reales internas creadas en Tiptap */
+            .content-body table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+            .content-body th, .content-body td { border: 1px solid #cbd5e0; padding: 8px; font-size: 10.5pt; }
+            .content-body th { background-color: #f7fafc !important; font-weight: bold; }
             p { margin-bottom: 10px; margin-top: 0; }
 
-            ${LETTER_CONTENT_CSS}
+            /* Estilos de listas multinivel para PDF */
+            ul { padding-left: 24px; list-style-type: disc; margin-bottom: 8px; }
+            ul ul { list-style-type: circle; margin-top: 4px; }
+            ul ul ul { list-style-type: square; }
+
+            ol { padding-left: 24px; list-style-type: decimal; margin-bottom: 8px; }
+            ol ol { list-style-type: lower-alpha; margin-top: 4px; }
+            ol ol ol { list-style-type: lower-roman; }
+
+            ul ol { list-style-type: decimal; margin-top: 4px; }
+            ol ul { list-style-type: disc; margin-top: 4px; }
+            
+            /* Clases explícitas para procesar alineaciones guardadas en el JSON */
+            .text-right { text-align: right !important; }
+            .text-center { text-align: center !important; }
+            .text-justify { text-align: justify !important; }
           </style>
         </head>
         <body>
@@ -213,7 +175,20 @@ export default function TemplatePreviewModal({
                 <td>
                   <div class="page-container">
                     <div class="content-body">
-                      ${contentHtml}
+                      <p><strong>DEU-GSU / ${codigoFormato || "FORMATO OFICIAL"}</strong></p>
+                      <p class="text-right">${fecha}</p>
+                      <br/>
+                      <div>${cuerpoFormateado}</div>
+                      <br/><br/>
+                      <div style="page-break-inside: avoid;">
+                      <p>Atentamente,</p>
+                      <br/><br/><br/>
+                      <div style="width: 300px; margin: 0 auto; text-align: center; page-break-inside: avoid;">
+                        <div style="border-top: 1.5px solid black; padding-top: 5px;">
+                          <strong>${generalData?.director?.director_extension}</strong><br/>
+                          <span style="font-size: 10pt; font-weight: bold;">${generalData?.director?.cargo}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </td>
@@ -266,6 +241,7 @@ export default function TemplatePreviewModal({
     }
   };
 
+  // Acción del modo de aprobación: Descarga el PDF y envía la confirmación de aprobación al backend
   const handleApproveAndDownload = async () => {
     setIsApproving(true);
     try {
@@ -287,93 +263,85 @@ export default function TemplatePreviewModal({
       <ModalContent borderRadius="xl">
         <ModalHeader borderBottom="1px solid" borderColor="gray.100" fontSize="md">
           Vista Previa (Tamaño Carta) — {tipoSolicitud || "Nuevo Formato"}
-          {!isLoadingPagination && pages.length > 0 && (
-            <Text as="span" fontSize="xs" color="gray.500" fontWeight="normal" ml={2}>
-              ({pages.length} {pages.length === 1 ? "página" : "páginas"})
-            </Text>
-          )}
         </ModalHeader>
         <ModalCloseButton />
+        
+        <ModalBody bg="gray.300" py={6} display="flex" justifyContent="center">
+          {/* HOJA SIMULADA TAMAÑO CARTA EN PANTALLA */}
+          <Box 
+            bg="white" 
+            w="215.9mm" 
+            minH="279.4mm"
+            boxShadow="2xl"
+            position="relative"
+            p="25.4mm"
+            sx={{ 
+              "& *": { fontFamily: "Arial, sans-serif !important" },
+              ".rich-text-preview table": { width: "100%", borderCollapse: "collapse", margin: "14px 0" },
+              ".rich-text-preview th, .rich-text-preview td": { border: "1px solid #cbd5e0", padding: "8px", fontSize: "10.5pt" },
+              ".rich-text-preview th": { backgroundColor: "#f7fafc", fontWeight: "bold" },
+              
+              ".rich-text-preview ul": { paddingLeft: "24px", listStyleType: "disc", marginBottom: "8px" },
+              ".rich-text-preview ul ul": { listStyleType: "circle", marginTop: "4px" },
+              ".rich-text-preview ul ul ul": { listStyleType: "square" },
 
-        <ModalBody bg="gray.300" py={6} display="flex" flexDirection="column" alignItems="center" minH="400px" justifyContent={isLoadingPagination ? "center" : "flex-start"}>
-          {/* Estilos de contenido */}
-          <style dangerouslySetInnerHTML={{ __html: LETTER_CONTENT_CSS }} />
+              ".rich-text-preview ol": { paddingLeft: "24px", listStyleType: "decimal", marginBottom: "8px" },
+              ".rich-text-preview ol ol": { listStyleType: "lower-alpha", marginTop: "4px" },
+              ".rich-text-preview ol ol ol": { listStyleType: "lower-roman" },
 
-          {isLoadingPagination ? (
-            <VStack spacing={4} py={12}>
-              <Spinner size="xl" color="blue.500" thickness="4px" speed="0.65s" />
-              <Text fontSize="sm" color="gray.600" fontWeight="medium">Cargando...</Text>
-            </VStack>
-          ) : (
-            pages.map((pageHtml, idx) => (
-              <Box
-                key={idx}
-                bg="white"
-                w={`${PAGE_LAYOUT.PAGE_WIDTH_MM}mm`}
-                h={`${PAGE_LAYOUT.PAGE_HEIGHT_MM}mm`}
-                flexShrink={0}
-                boxShadow="2xl"
-                position="relative"
-                overflow="hidden"
-                mb={8}
-                sx={{ "& *": { fontFamily: "Arial, sans-serif !important" } }}
-              >
-                {/* Encabezado */}
-                <Box
-                  position="absolute"
-                  top={`${PAGE_LAYOUT.HEADER_TOP_MM}mm`}
-                  left={`${PAGE_LAYOUT.MARGIN_X_MM}mm`}
-                  right={`${PAGE_LAYOUT.MARGIN_X_MM}mm`}
-                  textAlign="center"
-                >
-                  <Flex justify="space-between" align="center" mb={1}>
-                    <Image src="/UCV.png" h="55px" objectFit="contain" />
-                    <Image src="/logo.png" h="50px" objectFit="contain" />
-                  </Flex>
-                  <Text fontWeight="bold" fontSize="11pt" borderBottom="2px solid black" pb="5px">
-                    UNIVERSIDAD CENTRAL DE VENEZUELA
+              ".rich-text-preview ul ol": { listStyleType: "decimal", marginTop: "4px" },
+              ".rich-text-preview ol ul": { listStyleType: "disc", marginTop: "4px" }
+            }}
+          >
+            {/* Encabezado en Preview */}
+            <Box pb={2} mb={6} textAlign="center">
+              <Flex justify="space-between" align="center" mb={1}>
+                <Image src="/UCV.png" h="55px" objectFit="contain" />
+                <Image src="/logo.png" h="50px" objectFit="contain" />
+              </Flex>
+              <Text fontWeight="bold" fontSize="11pt" borderBottom="2px solid black" pb="5px">
+                UNIVERSIDAD CENTRAL DE VENEZUELA
+              </Text>
+              <Text fontWeight="bold" fontSize="9pt" color="gray.600" mt="5px">
+                DIRECCIÓN DE EXTENSIÓN UNIVERSITARIA
+              </Text>
+            </Box>
+
+            {/* Contenido */}
+            <Box>
+              <Text fontWeight="bold" fontSize="11pt" mb={1}>DEU-GSU / {codigoFormato || "FORMATO OFICIAL"}</Text>
+              <Text textAlign="right" fontSize="11pt" mb={6}>{getFechaFormateada()}</Text>
+
+              <Box 
+                textAlign="justify" 
+                fontSize="11pt" 
+                lineHeight="1.6"
+                className="rich-text-preview"
+                dangerouslySetInnerHTML={{ __html: parseContenidoPreview(modeloCarta) }}
+              />
+
+              <Box mt={10} style={{ pageBreakInside: "avoid" }}>
+                <Text mb={14}>Atentamente,</Text>
+                <VStack spacing={0} align="center" w="300px" mx="auto">
+                  <Box borderTop="1.5px solid black" w="full" mb={2} />
+                  <Text fontWeight="bold" fontSize="11pt">{generalData?.director?.director_extension}</Text>
+                  <Text fontWeight="bold" fontSize="10pt" color="gray.600">
+                    {generalData?.director?.cargo}
                   </Text>
-                  <Text fontWeight="bold" fontSize="9pt" color="gray.600" mt="5px">
-                    DIRECCIÓN DE EXTENSIÓN UNIVERSITARIA
-                  </Text>
-                </Box>
-
-                {/* Zona de contenido */}
-                <Box
-                  position="absolute"
-                  top={`${HEADER_SPACE_MM}mm`}
-                  left={`${PAGE_LAYOUT.MARGIN_X_MM}mm`}
-                  right={`${PAGE_LAYOUT.MARGIN_X_MM}mm`}
-                  bottom={`${FOOTER_SPACE_MM}mm`}
-                  overflow="hidden"
-                  fontSize="11pt"
-                  lineHeight="1.6"
-                  textAlign="justify"
-                  className="rich-text-preview"
-                  dangerouslySetInnerHTML={{ __html: pageHtml }}
-                />
-
-                {/* Pie de página */}
-                <Box
-                  position="absolute"
-                  bottom={`${PAGE_LAYOUT.FOOTER_BOTTOM_MM}mm`}
-                  left={`${PAGE_LAYOUT.MARGIN_X_MM}mm`}
-                  right={`${PAGE_LAYOUT.MARGIN_X_MM}mm`}
-                  borderTop="1px solid"
-                  borderColor="gray.300"
-                  pt={2}
-                  textAlign="center"
-                >
-                  <Text fontWeight="bold" fontSize="8.5pt" color="gray.700">{generalData?.pie_pagina}</Text>
-                  <Text fontSize="8pt" color="gray.500">{generalData?.info}</Text>
-                </Box>
-
-                <Text position="absolute" bottom="5mm" right={`${PAGE_LAYOUT.MARGIN_X_MM}mm`} fontSize="7pt" color="gray.400">
-                  Página {idx + 1} de {pages.length}
-                </Text>
+                </VStack>
               </Box>
-            ))
-          )}
+            </Box>
+
+            {/* Pie de página */}
+            <Box 
+              position="absolute"
+              bottom="15mm" left="25.4mm" right="25.4mm"
+              borderTop="1px solid" borderColor="gray.300" pt={2} textAlign="center"
+            >
+              <Text fontWeight="bold" fontSize="8.5pt" color="gray.700">{generalData?.pie_pagina}</Text>
+              <Text fontSize="8pt" color="gray.500">{generalData?.info}</Text>
+            </Box>
+          </Box>
         </ModalBody>
 
         <ModalFooter borderTop="1px solid" borderColor="gray.100">
@@ -388,14 +356,13 @@ export default function TemplatePreviewModal({
               <Button variant="ghost" onClick={onClose} isDisabled={isApproving}>
                 Cancelar
               </Button>
-              <Button
-                leftIcon={<CheckCircle size={16} />}
-                bg="primary"
+              <Button 
+                leftIcon={<CheckCircle size={16} />} 
+                bg="primary" 
                 color="white"
-                _hover={{ filter: "brightness(0.9)" }}
+                _hover={{ filter: "brightness(0.9)" }} 
                 onClick={handleApproveAndDownload}
                 isLoading={isApproving || isDownloading}
-                isDisabled={isLoadingPagination}
                 loadingText="Procesando"
               >
                 Aprobar y Descargar
@@ -405,14 +372,13 @@ export default function TemplatePreviewModal({
 
           {mode === "default" && (
             <>
-              <Button
-                leftIcon={<FileText size={16} />}
-                bg="secondary"
+              <Button 
+                leftIcon={<FileText size={16} />} 
+                bg="secondary" 
                 color="white"
-                _hover={{ filter: "brightness(0.9)" }}
+                _hover={{ filter: "brightness(0.9)" }} 
                 onClick={handleDownloadPDF}
                 isLoading={isDownloading}
-                isDisabled={isLoadingPagination}
                 loadingText="Generando PDF"
               >
                 Descargar Documento PDF (.pdf)

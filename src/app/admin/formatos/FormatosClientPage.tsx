@@ -191,11 +191,7 @@ export default function FormatosClientPage({ initialTemplates, generalData }: Fo
 
   return (
     <Box p={6} bg="gray.200" minH="100vh">
-      <Flex justify="space-between" align="center" mb={6}>
-        <VStack align="flex-start" spacing={1}>
-          <Heading size="md" color="blue.800">Administrador de Formatos Dinámicos</Heading>
-          <Text fontSize="sm" color="gray.600">Edición estructural de los formatos para las solicitudes de recursos de los Grupos de Extensión.</Text>
-        </VStack>
+      <Flex justify="right" align="right" mb={6}>
         <HStack spacing={3}>
           <Button leftIcon={<HelpCircle size={16} />} bg="secondary" color="white" _hover={{ filter: "brightness(0.9)" }} size="sm" onClick={guideDisclosure.onOpen}>Guía de Variables</Button>
           <Button leftIcon={<PlusCircle size={16} />} bg="primary" color="white" _hover={{ filter: "brightness(0.9)" }} size="sm" onClick={handleNewTemplate}>Crear Nuevo Formato</Button>

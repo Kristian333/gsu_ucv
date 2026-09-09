@@ -1,4 +1,4 @@
-// /components/ui/activities-reports-table.tsx
+// /components/ui/activities-admin-table.tsx
 'use client'
 
 import React from 'react'

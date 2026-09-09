@@ -29,7 +29,7 @@ import { ArrowBackIcon, CheckCircleIcon, ExternalLinkIcon, StarIcon } from '@cha
 import { useRouter } from 'next/navigation'
 import NextLink from 'next/link'
 import { ActivityBackend } from '@/types/activity'
-import { formatActivityDateRange, getActivityStatus } from '@/utils/common'
+import { formatActivityDateRange, getActivityStatus, formatListToString } from '@/utils/common'
 import { apiRequest } from '@/components/formularios/api'
 
 // Keyframe para animación de los puntos suspensivos (opacity pulse)
@@ -54,6 +54,7 @@ export function ActivityDetailView({ initialActivity, userRole = 'admin' }: Acti
   const [activity, setActivity] = useState<ActivityBackend>(initialActivity)
   const [isUpdating, setIsUpdating] = useState<boolean>(false)
   const [isAuthorized, setIsAuthorized] = useState<boolean>(userRole !== 'admingroup')
+  const areaDisplay = formatListToString(activity.area_conocimiento)
 
   // Validación de acceso por grupo (Client Side Guard)
   useEffect(() => {
@@ -371,7 +372,7 @@ export function ActivityDetailView({ initialActivity, userRole = 'admin' }: Acti
                 </Box>
                 <Box p={4} bg="gray.50" borderRadius="lg" borderLeft="4px solid" borderColor="success">
                   <Text fontSize="xs" color="gray.600">
-                    Beneficiados Reales (Reporte)
+                    Beneficiados Reales
                   </Text>
                   <Text fontSize="2xl" fontWeight="bold" color="primary.700">
                     {activity.participantes_reales ?? 0}
@@ -423,7 +424,7 @@ export function ActivityDetailView({ initialActivity, userRole = 'admin' }: Acti
                   Área de Conocimiento
                 </Text>
                 <Text color="gray.800" fontWeight="medium">
-                  {activity.area_conocimiento || 'No especificada'}
+                  {areaDisplay || 'No especificada'}
                 </Text>
               </Box>
 

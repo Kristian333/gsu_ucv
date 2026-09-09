@@ -1,6 +1,6 @@
 "use client";
 
-import { useEditor, EditorContent, Editor } from "@tiptap/react";
+import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import TextAlign from "@tiptap/extension-text-align";
 import Underline from "@tiptap/extension-underline";
@@ -10,6 +10,8 @@ import { TableRow } from "@tiptap/extension-table-row";
 import { TableHeader } from "@tiptap/extension-table-header";
 import { TableCell } from "@tiptap/extension-table-cell";
 import OrderedList from "@tiptap/extension-ordered-list";
+import BulletList from "@tiptap/extension-bullet-list";
+import ListItem from "@tiptap/extension-list-item";
 import { TextStyle } from "@tiptap/extension-text-style";
 import { Mark, mergeAttributes } from "@tiptap/core";
 import {
@@ -69,10 +71,12 @@ export default function RichTextEditor({
   const editor = useEditor({
     editable: !readOnly,
     extensions: [
-      StarterKit.configure({ orderedList: false, strike: false }),
+      StarterKit.configure({ orderedList: false, bulletList: false, strike: false }),
       Underline,
       Strike,
+      BulletList,
       OrderedList,
+      ListItem,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Table.configure({ resizable: true }),
       TableRow,
@@ -277,8 +281,20 @@ export default function RichTextEditor({
         ".ProseMirror th, .ProseMirror td": { border: "1px solid #cbd5e0", padding: "6px", minWidth: "50px", position: "relative" },
         ".ProseMirror th": { backgroundColor: "#edf2f7", fontWeight: "bold" },
         ".ProseMirror .selectedCellAfter": { backgroundColor: "rgba(200, 200, 255, 0.4)" },
+        
+        /* Reglas de Listas No Numeradas (Bullets multinivel) */
         ".ProseMirror ul": { paddingLeft: "24px", listStyleType: "disc", marginBottom: "8px" },
-        ".ProseMirror ol": { paddingLeft: "24px", listStyleType: "decimal", marginBottom: "8px" }
+        ".ProseMirror ul ul": { listStyleType: "circle", marginTop: "4px" },
+        ".ProseMirror ul ul ul": { listStyleType: "square" },
+
+        /* Reglas de Listas Numeradas (Multinivel: 1. -> a. -> i.) */
+        ".ProseMirror ol": { paddingLeft: "24px", listStyleType: "decimal", marginBottom: "8px" },
+        ".ProseMirror ol ol": { listStyleType: "lower-alpha", marginTop: "4px" },
+        ".ProseMirror ol ol ol": { listStyleType: "lower-roman" },
+        
+        /* Combinación mixta de listas */
+        ".ProseMirror ul ol": { listStyleType: "decimal", marginTop: "4px" },
+        ".ProseMirror ol ul": { listStyleType: "disc", marginTop: "4px" }
       }}>
         <EditorContent editor={editor} />
       </Box>
