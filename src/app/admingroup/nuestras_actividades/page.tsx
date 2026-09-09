@@ -1,17 +1,15 @@
-// /app/admingroup/nuestras_actividades/page.tsx
-import { Box, Heading } from "@chakra-ui/react";
-import { mockActivityItems } from "@/data/actividadesMock";
-import TablaNuestrasActividades from "@/components/ui/tabla-nuestras-actividades";
+import { Metadata } from "next";
+import VistaNuestrasActividadesForm from "@/components/formularios/nuestras-actividades-form";
 
-export default function NuestrasActividadesPage() {
-    
-    const actividades = mockActivityItems;
+export const metadata: Metadata = {
+  title: "Actividades del Grupo de Extensión | GSU",
+  description: "Lista completa de las actividades del Grupo de Extensión.",
+};
 
-    return  (
-        <Box maxW="container.xl" mx="auto" py={10} px={6}>
-            <Heading mb={6}>Nuestras Actividades — LAMUN</Heading>
-    
-            <TablaNuestrasActividades actividades={actividades} />
-        </Box>
-    )
+interface PageProps {
+  searchParams: { [key: string]: string | string[] | undefined };
+}
+
+export default function NuestrasActividadesPage({ searchParams }: PageProps) {
+  return <VistaNuestrasActividadesForm searchParams={searchParams} />;
 }

@@ -1,13 +1,18 @@
-import { notFound } from "next/navigation";
-import { mockActivityItems } from "@/data/actividadesMock";
+import { Metadata } from "next";
 import ModificarActividadForm from "@/components/formularios/modificar-actividad-form";
 
-export default function ModificarActividadPage({ params }) {
-  const actividad = mockActivityItems.find(
-    (a) => String(a.id) === String(params.id)
-  );
+export const metadata: Metadata = {
+  title: "Modificar Actividad | GSU",
+  description: "Formulario para la edición y actualización de actividades de extensión.",
+};
 
-  if (!actividad) return notFound();
+interface PaginaProps {
+  params: Promise<{ id: string }> | { id: string };
+}
 
-  return <ModificarActividadForm actividad={actividad} />;
+export default async function PaginaModificarActividad({ params }: PaginaProps) {
+  const resolvedParams = await params;
+  const idActividad = resolvedParams.id;
+
+  return <ModificarActividadForm id={idActividad} />;
 }

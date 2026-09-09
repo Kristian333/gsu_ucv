@@ -1,19 +1,14 @@
 "use client"
 
 import type { IconButtonProps } from "@chakra-ui/react"
-import { ClientOnly, IconButton, Skeleton } from "@chakra-ui/react"
-import { ThemeProvider, useTheme } from "next-themes"
-import type { ThemeProviderProps } from "next-themes"
+import { 
+  IconButton, 
+  useColorMode as useChakraColorMode, 
+  useColorModeValue as useChakraColorModeValue,
+  ChakraProvider 
+} from "@chakra-ui/react"
 import * as React from "react"
 import { LuMoon, LuSun } from "react-icons/lu"
-
-export interface ColorModeProviderProps extends ThemeProviderProps {}
-
-export function ColorModeProvider(props: ColorModeProviderProps) {
-  return (
-    <ThemeProvider attribute="class" disableTransitionOnChange {...props} />
-  )
-}
 
 export type ColorMode = "light" | "dark"
 
@@ -23,21 +18,21 @@ export interface UseColorModeReturn {
   toggleColorMode: () => void
 }
 
+export function ColorModeProvider({ children }: { children: React.ReactNode }) {
+  return <>{children}</>
+}
+
 export function useColorMode(): UseColorModeReturn {
-  const { resolvedTheme, setTheme } = useTheme()
-  const toggleColorMode = () => {
-    setTheme(resolvedTheme === "light" ? "dark" : "light")
-  }
+  const { colorMode, toggleColorMode, setColorMode } = useChakraColorMode()
   return {
-    colorMode: resolvedTheme as ColorMode,
-    setColorMode: setTheme,
+    colorMode: colorMode as ColorMode,
+    setColorMode,
     toggleColorMode,
   }
 }
 
 export function useColorModeValue<T>(light: T, dark: T) {
-  const { colorMode } = useColorMode()
-  return colorMode === "dark" ? dark : light
+  return useChakraColorModeValue(light, dark)
 }
 
 export function ColorModeIcon() {
@@ -53,23 +48,14 @@ export const ColorModeButton = React.forwardRef<
 >(function ColorModeButton(props, ref) {
   const { toggleColorMode } = useColorMode()
   return (
-    <ClientOnly fallback={<Skeleton boxSize="8" />}>
-      <IconButton
-        onClick={toggleColorMode}
-        variant="ghost"
-        aria-label="Toggle color mode"
-        size="sm"
-        ref={ref}
-        {...props}
-        css={{
-          _icon: {
-            width: "5",
-            height: "5",
-          },
-        }}
-      >
-        <ColorModeIcon />
-      </IconButton>
-    </ClientOnly>
+    <IconButton
+      onClick={toggleColorMode}
+      variant="ghost"
+      aria-label="Toggle color mode"
+      size="sm"
+      ref={ref}
+      icon={<ColorModeIcon />}
+      {...props}
+    />
   )
 })

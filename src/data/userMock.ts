@@ -29,7 +29,7 @@ export const mockUserItems = [
     {
         id: "4",
         name: "Ciencias",
-        avatar: "/ciencias.jpg",
+        avatar: "/facultades/ciencias.jpg",
         role: "Facultad",
         correo: "ciencias@cienciasucv.com",
         contraseña: "100",

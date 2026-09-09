@@ -1,55 +1,50 @@
 [
   {
+    "id": 1,
     "tipo_solicitud": "Constancia de Registro de Grupo",
-    "modelo_carta": "Caracas, <fecha_actual>\n\nPARA QUIEN PUEDA INTERESAR\n\nPor medio de la presente se hace constar que el grupo de extensión denominado <nombre_grupo>, con correo electrónico <correo_grupo>, se encuentra registrado oficialmente desde la fecha <fecha_fundacion>.\n\nSin más a qué hacer referencia,\n\nDirección de Extensión Universitaria.",
-    "campos": [
-      { "nombre": "Fecha de hoy", "indicador": "<fecha_actual>", "tipo": "Texto", "buscar_bd": "" },
-      { "nombre": "Grupo a Certificar", "indicador": "<nombre_grupo>", "tipo": "Texto", "buscar_bd": "gruposMock.title" },
-      { "nombre": "Fecha de Fundación", "indicador": "<fecha_fundacion>", "tipo": "Texto", "buscar_bd": "gruposMock.fundation" },
-      { "nombre": "Email del Grupo", "indicador": "<correo_grupo>", "tipo": "Texto", "buscar_bd": "gruposMock.email" }
-    ]
+    "modelo_carta": "<p><strong>PARA QUIEN PUEDA INTERESAR</strong></p><p></p><p>Por medio de la presente se hace constar que el grupo de extensión denominado <strong>{{nombre_grupo}}</strong>, con correo electrónico {{correo_grupo}}, se encuentra registrado oficialmente desde la fecha {{fecha_fundacion}}.</p><p></p><p>Sin más a qué hacer referencia,</p><p></p><p>Dirección de Extensión Universitaria.</p>",
+    "notas": ""
   },
   {
+    "id": 2,
     "tipo_solicitud": "Acreditación de Miembros",
-    "modelo_carta": "Por medio de la presente, la Dirección de Extensión avala que los siguientes estudiantes pertenecen al grupo <nombre_grupo>:\n\n<tabla:miembros_tabla>\n\nTodos los mencionados cumplen con las horas de servicio correspondientes.",
-    "campos": [
-      { "nombre": "Nombre del Grupo", "indicador": "<nombre_grupo>", "tipo": "Texto", "buscar_bd": "gruposMock.title" },
-      { 
-        "nombre": "Listado de Miembros", 
-        "indicador": "miembros_tabla", 
-        "tipo": "Tabla", 
-        "columnas": ["name", "ci", "school", "year"],
-        "buscar_bd": "gruposMock.members" 
-      }
-    ]
+    "modelo_carta": "<p>Por medio de la presente, la Dirección de Extensión avala que los siguientes estudiantes pertenecen al grupo <strong>{{nombre_grupo}}</strong>:</p><table style=\"min-width: 75px;\"><colgroup><col style=\"min-width: 25px;\"><col style=\"min-width: 25px;\"><col style=\"min-width: 25px;\"></colgroup><tbody><tr><th colspan=\"1\" rowspan=\"1\"><p><strong>NOMBRE Y APELLIDO</strong></p></th><th colspan=\"1\" rowspan=\"1\"><p><strong>C.I.</strong></p></th><th colspan=\"1\" rowspan=\"1\"><p><strong>ESCUELA</strong></p></th></tr><tr><td colspan=\"1\" rowspan=\"1\"><p>{{miembro_nombre}}</p></td><td colspan=\"1\" rowspan=\"1\"><p>{{miembro_cedula}}</p></td><td colspan=\"1\" rowspan=\"1\"><p>{{miembro_escuela}}</p></td></tr></tbody></table><p></p><p>Todos los mencionados cumplen con las horas de servicio correspondientes.</p>",
+    "notas": ""
   },
   {
+    "id": 3,
     "tipo_solicitud": "Constancia de Participación en Actividad",
-    "modelo_carta": "Ciudadana:\n**<nombre_coordinador>**\nCoordinadora de Extensión\n**<facultad_coordinador>**\nUniversidad Central de Venezuela\nPresente.\n\nPor medio de la presente, me permito dirigirme a usted con el fin de hacer constar que los estudiantes regulares de la Escuela de <nombre_escuela> de su facultad pertenecientes al Grupo de Extensión Estudiantil **<nombre_grupo>**, participaron en <articulo_actividad> <nombre_actividad> que realizamos <intervalo> <fecha> en el horario comprendido de <hora_inicio> a <hora_fin>, en <lugar_actividad><final_actividad>.\n\n<tabla:TABLA_Miembros>\n\n**<nombre_grupo>** es un Grupo de Extensión adscrito al Programa de Extensión Estudiantil del Departamento de Gestión Social Universitaria de la Dirección de Extensión de la Universidad Central de Venezuela.\nSin más a que hacer referencia, se despide.",
-    "campos": [
-        { "nombre": "Coordinador", "indicador": "<nombre_coordinador>", "tipo": "Texto", "buscar_bd": "generalData.coordinadores" },
-        { "nombre": "Facultad", "indicador": "<facultad_coordinador>", "tipo": "Texto", "buscar_bd": "dependencia.facultad" },
-        { "nombre": "Escuela", "indicador": "<nombre_escuela>", "tipo": "Texto", "buscar_bd": "dependencia.escuela" },
-        { "nombre": "Nombre del Grupo", "indicador": "<nombre_grupo>", "tipo": "Texto", "buscar_bd": "group.title" },
-        { "nombre": "Artículo", "indicador": "<articulo_actividad>", "tipo": "Texto", "buscar_bd": "" },
-        { "nombre": "Actividad", "indicador": "<nombre_actividad>", "tipo": "Texto", "buscar_bd": "actividades" },
-        { "nombre": "Nota Final", "indicador": "<final_actividad>", "tipo": "Texto", "buscar_bd": "", "ejemplo": "Ej: , atendiendo a más de 100 niños en edad escolar" },
-        { 
-        "nombre": "Estudiantes Participantes", 
-        "indicador": "TABLA_Miembros", 
-        "tipo": "Tabla", 
-        "buscar_bd": "members", 
-        "columnas": ["name", "ci", "school", "year"] 
-        }
-    ]
+    "modelo_carta": "<p><span><span style=\"font-size: 11pt;\">Ciudadan{{a/o}}:</span></span><br><span><strong><span style=\"font-size: 11pt;\">{{nombre_coordinador}}</span></strong></span><br><span><span style=\"font-size: 11pt;\">Coordinador{{a/}} de Extensión</span></span><br><span><strong><span style=\"font-size: 11pt;\">{{facultad_del_coordinador}}</span></strong></span></p><p></p><p><span><span style=\"font-size: 12pt;\">Por medio de la presente, me permito dirigirme a usted con el fin de hacer constar que los estudiantes regulares de la Escuela de {{nombre_escuela}} de su facultad pertenecientes al Grupo de Extensión Estudiantil </span><strong><span style=\"font-size: 12pt;\">{{nombre_grupo}}</span></strong><span style=\"font-size: 12pt;\">, participaron en {{nombre_actividad}} que realizamos {{fecha}} en el horario comprendido de {{hora_inicio}} a {{hora_fin}}, en {{lugar_actividad}}{{info_actividad_extra}}.</span></span></p><p></p><table style=\"min-width: 400px;\"><colgroup><col style=\"width: 250px;\"><col style=\"width: 100px;\"><col style=\"min-width: 25px;\"><col style=\"min-width: 25px;\"></colgroup><tbody><tr><th colspan=\"1\" rowspan=\"1\" colwidth=\"250\"><p style=\"text-align: center;\"><span><span style=\"font-size: 13pt;\">NOMBRE Y APELLIDO</span></span></p></th><th colspan=\"1\" rowspan=\"1\" colwidth=\"100\"><p style=\"text-align: center;\"><span><span style=\"font-size: 13pt;\">C.I.</span></span></p></th><th colspan=\"1\" rowspan=\"1\"><p style=\"text-align: center;\"><span><span style=\"font-size: 13pt;\">Escuela</span></span></p></th><th colspan=\"1\" rowspan=\"1\"><p style=\"text-align: center;\"><span><span style=\"font-size: 13pt;\">Semestre</span></span></p></th></tr><tr><td colspan=\"1\" rowspan=\"1\" colwidth=\"250\"><p><span><span style=\"font-size: 13pt;\">{{miembro_nombre}}</span></span></p></td><td colspan=\"1\" rowspan=\"1\" colwidth=\"100\"><p><span><span style=\"font-size: 13pt;\">{{miembro_cedula}}</span></span></p></td><td colspan=\"1\" rowspan=\"1\"><p><span><span style=\"font-size: 13pt;\">{{nombre_escuela}}</span></span></p></td><td colspan=\"1\" rowspan=\"1\"><p><span><span style=\"font-size: 13pt;\">{{numero_semestre}}</span></span></p></td></tr></tbody></table><p></p><p><span><strong><span style=\"font-size: 11pt;\">{{nombre_grupo}}</span></strong><span style=\"font-size: 11pt;\"> es un Grupo de Extensión adscrito al Programa de Extensión Estudiantil del Departamento de Gestión Social Universitaria de la Dirección de Extensión de la Universidad Central de Venezuela.</span></span><br><span><span style=\"font-size: 11pt;\">Sin más a que hacer referencia, se despide.</span></span></p>",
+    "notas": "- {{info_actividad_extra}} es opcional para agregar informacion extra sobre la actividad. Por ejemplo, agregando un ejemplo incluyendo  tanto {{lugar_actividad}}{{info_actividad_extra}}."
   },
   {
-    "tipo_solicitud": "",
-    "modelo_carta": "",
-    "campos": [
-        {
-            "nombre": ""
-        }
-    ]
+    "id": 5,
+    "tipo_solicitud": "Solicitud de Donación y Apoyo Humanitario",
+    "modelo_carta": "<p><strong>A quien pueda interesar</strong></p><p>Por medio de la presente, nos dirigimos a usted(es) con el propósito de presentar la iniciativa humanitaria articulada de manera conjunta entre la Dirección de Extensión Universitaria de la Universidad Central de Venezuela y el grupo de extensión <strong>{{nombre_grupo}}</strong>.</p><p>Acudimos a sus buenos oficios para solicitar formalmente su valioso apoyo con la donación de los insumos detallados a continuación, requeridos para el abordaje de la comunidad de {{lugar_actividad}}:</p><ol><li><p><strong>{{categoria_titulo}}</strong></p><ul><li><p>{{insumo_elemento}}</p></li></ul></li></ol><p></p><p>Contar con su respaldo resulta clave para asegurar la efectividad de nuestras acciones de asistencia en el territorio. Sin más a qué hacer referencia, se despide.</p><p></p>",
+    "notas": "- El sistema agrupará los requerimientos repitiendo la viñeta principal con el {{categoria_titulo}} (Ej: \"1. Medicamentos e Insumos Médicos\").\n- Dentro de cada título, se generará una lista anidada repitiendo la variable {{insumo_elemento}} de forma corrida y sin cantidades (Ej: \"Acetaminofén, Aspirina, Diclofenac\")."
+  },
+  {
+    "id": 6,
+    "tipo_solicitud": "Bachillerato permisos",
+    "modelo_carta": "<p>Ciudadanos:<br><strong>{{institucion_destino}}</strong><br></p><p>Por medio de la presente, me permito dirigirme a usted con el fin de solicitar los permisos necesarios para que los estudiantes de su institución se les garanticen su participación en la actividad <strong>{{nombre_actividad}}</strong> a realizarse {{fecha_actividad}} en el horario comprendido de {{hora_inicio}} a {{hora_fin}}, en {{lugar_actividad}}.</p><p>A continuación se detallan los alumnos postulados para dicha actividad:</p><table style=\"min-width: 75px;\"><colgroup><col style=\"min-width: 25px;\"><col style=\"min-width: 25px;\"><col style=\"min-width: 25px;\"></colgroup><tbody><tr><th colspan=\"1\" rowspan=\"1\"><p><strong>NOMBRE Y APELLIDO</strong></p></th><th colspan=\"1\" rowspan=\"1\"><p><strong>C.I.</strong></p></th><th colspan=\"1\" rowspan=\"1\"><p><strong>ESCUELA</strong></p></th></tr><tr><td colspan=\"1\" rowspan=\"1\"><p>{{alumno_nombre_apellido}}</p></td><td colspan=\"1\" rowspan=\"1\"><p>{{alumno_cedula}}</p></td><td colspan=\"1\" rowspan=\"1\"><p>{{alumno_escuela}}</p></td></tr></tbody></table><p></p><p>Eventos como el {{nombre_actividad}} son fundamentales para la formación integral de los estudiantes, ya que fomentan el pensamiento crítico, la oratoria, la investigación y la comprensión de asuntos globales desde una perspectiva académica y formativa, complementando significativamente la educación recibida en las aulas de clase.</p><p>Sin más a que hacer referencia, se despide.</p><p></p>",
+    "notas": "- {{institucion_destino}}: Institución que recibe.\n- {{fecha_actividad}}: Fecha formal del evento (Ej: El Lunes 5 de diciembre del 2025).\n- Tabla Dinámica: El procesador del sistema iterará de forma automática sobre la fila de datos inyectando los valores correspondientes a {{alumno_nombre_apellido}}, {{alumno_cedula}} y {{alumno_escuela}} por cada estudiante registrado."
+  },
+  {
+    "id": 7,
+    "tipo_solicitud": "Recomendación institucional",
+    "modelo_carta": "<p>Ciudadanos:<br><strong>{{institucion_destino}}</strong><br></p><p>En mi calidad de Jefa del Departamento de Gestión Social Universitaria de la Universidad Central de Venezuela (UCV), es un honor para mí emitir esta recomendación institucional en favor de la estudiante <strong>{{nombre_estudiante}}</strong>, cuya trayectoria académica y compromiso social han dejado una huella tangible en nuestra casa de estudios.</p><p>Desde una perspectiva técnica y académica, {{nombre_estudiante}} posee una agudeza excepcional para el diagnóstico de problemáticas sociales. Su hito de mayor impacto fue la conceptualización y co-fundación de <strong>\"{{nombre_grupo}}\"</strong>, el cual se consolidó bajo mi supervisión como el primer grupo de extensión universitaria en la historia de la Escuela de {{escuela_origen}}. Ante un modelo académico tradicionalmente centrado en la medicina reactiva, {{nombre_estudiante}} diseñó e implementó estrategias de prevención primaria en comunidades vulnerables, demostrando una madurez intelectual y una capacidad de gestión de proyectos de alto nivel.</p><p>Este logro no solo evidencia su liderazgo, sino también su dominio de competencias transversales: pensamiento sistémico, persuasión estratégica y coordinación de equipos interdisciplinarios.</p><p>Su decisión de cursar la <strong>{{carrera_destino}}</strong> en la {{institucion_destino}} responde a una visión ambiciosa y necesaria: escalar el impacto social mediante el rigor científico y la innovación tecnológica. Estoy plenamente convencida de que {{nombre_estudiante}} representa el perfil de líder transformadora que el {{nombre_programa_beca}} busca potenciar. Su capacidad para traducir la teoría académica en soluciones reales para la sociedad la convierte en un activo de valor incalculable para cualquier programa de excelencia.</p><p>Quedo a su entera disposición para ampliar cualquier información sobre las competencias académicas y la probidad ética de la postulante.</p><p></p>",
+    "notas": "- {{institucion_destino}}: Universidad u organismo receptor .\n- {{nombre_estudiante}}: Nombre y apellido de la persona postulada.\n- {{nombre_grupo}}: Nombre del grupo de extensión cofundado.\n- {{escuela_origen}}: Escuela de procedencia en la UCV (Ej: Enfermería).\n- {{carrera_destino}}: Grado o ingeniería a cursar en el exterior (Ej: Ingeniería en Biotecnología).\n- {{nombre_programa_beca}}: Programa o fondo de becas específico ."
+  },
+  {
+    "id": 8,
+    "tipo_solicitud": "Solicitud de Espacios",
+    "modelo_carta": "<p><strong>{{nombre_grupo}}</strong><br>Correo {{correo_grupo}}<br>Tlf: {{telefono_grupo}}</p><p><strong>Solicitud de Espacios</strong></p><p><strong>{{coordinacion_destino}}</strong></p><p>Un gusto saludarles, el presente correo es para solicitar el uso de los salones descritos a continuación de la {{escuela_destino}} con la finalidad de realizar las últimas actividades de formación académica dirigida a aquellos estudiantes de la Universidad Central de Venezuela que forman parte de <strong>{{nombre_grupo}}</strong> en su cohorte {{numero_cohorte}} para el año {{año_cohorte}}, de cara a nuestra participación en {{evento_destino}} el próximo mes de {{mes_evento}}. Estas se realizarán los días:</p><ul><li><p><strong>{{espacio_nombre}}</strong>:</p><ul><li><p>{{espacio_detalle_dia}} — Horario: {{espacio_detalle_hora}}</p></li></ul></li></ul><p>Las actividades serán supervisadas por los actuales jefes de la delegación {{nombre_grupo}} con el fin de preservar la organización, buenas prácticas y finalización exitosa de la actividad.</p><p><strong>Estudiantes responsables de {{nombre_grupo}}</strong><br><strong>Jefes de Delegación</strong></p><ol><li><p>C.I. {{responsable_cedula}} — <strong>{{responsable_nombre}}</strong> estudiante de {{responsable_trayecto}} de {{responsable_carrera}}.</p></li></ol><p>Asimismo, extendemos nuestros saludos y nos ponemos a la disposición de cualquier iniciativa que se requiera en pro de mejorar la formación integral de cada estudiante.</p><p>Esperamos su pronta respuesta.</p><p><strong>Jefatura Institucional {{nombre_grupo}} {{año_cohorte}}</strong><br>Jefe de Delegación: {{contacto_jefe}}<br>Asesora académica: {{contacto_asesor_academico}}<br>Asesor Financiero: {{contacto_asesor_financiero}}<br>Head Delegate: {{contacto_head_delegate}}</p>",
+    "notas": "- {{coordinacion_destino}}: Autoridad o área a la que se dirige (Ej: Coordinación de Extensión de la Facultad de Ingeniería).\n- {{escuela_destino}}: Escuela interna específica (Ej: Escuela de la Facultad de Ingeniería).\n- Lista de Espacios (ul): El procesador iterará los salones en negrita y sus respectivos bloques de días y horarios debajo.\n- Lista de Responsables (ol): Estructura ordenada que renderizará correlativamente a los estudiantes encargados con su cédula, nombre, año/semestre y carrera."
+  },
+  {
+    "id": 9,
+    "tipo_solicitud": "Solicitud de Transporte",
+    "modelo_carta": "<p>Ciudadano:<br><strong>{{nombre_autoridad}}</strong><br>{{cargo_autoridad}}<br>Presente.—</p><p>Por medio de la presente me dirijo a usted, en la oportunidad de solicitarle de sus buenos oficios, la tramitación pertinente para la asignación de una (1) unidad de transporte grande ({{capacidad_transporte}} puestos), para el traslado de los miembros del grupo estudiantil <strong>{{nombre_grupo}}</strong>, adscrito a esta Dependencia, el cual se trasladará el próximo mes de {{mes_traslado}} del año en curso al {{destino_principal}}, con la finalidad de participar en el <strong>{{nombre_evento}}</strong>, a realizarse en la {{institución_anfitriona}}.</p><p>El itinerario sería el siguiente:</p><ul><li><p><strong>Salida:</strong> el {{fecha_salida}} a las {{hora_salida}}, desde {{origen_salida}} hasta {{destino_salida}}.</p></li><li><p><strong>Retorno:</strong> el {{fecha_retorno}} a las {{hora_retorno}}, desde {{origen_retorno}} hasta {{destino_retorno}}.</p></li></ul><p>Agradeciendo de antemano su atención a esta solicitud, quedamos a disposición para ampliar cualquier información adicional que considere necesaria.</p><p>Quedamos a la espera de su pronta respuesta.</p><p></p>",
+    "notas": "- {{codigo_oficio}}: Número correlativo de control interno asignado por la dirección (Ej: ____).\n- {{nombre_autoridad}} y {{cargo_autoridad}}: Permite la reutilización variando el destinatario (Ej: Prof. Luis Millán / Coordinador del Rectorado o Lic. Luis Esaa / Coordinador del Vicerrectorado Administrativo).\n- Lista de Itinerario (ul): Renderizará automáticamente las viñetas estructuradas de Salida y Retorno con sus variables cronológicas internas de forma alineada."
   }
 ]

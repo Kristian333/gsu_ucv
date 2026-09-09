@@ -1,18 +1,12 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { Box, Flex, IconButton, Image, Text, Heading } from "@chakra-ui/react";
-import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
+import { useState, useEffect } from "react";
+import { Box, Flex, Image, Text, VStack, Grid, Badge } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import NextLink from "next/link";
+import { PrimaryButton, SecondaryButton } from "@/components/ui/buttons";
+import { formatActivityDateRange, normalizeDate, parseDate } from "@/utils/common";
 
-// --- Envolturas Motion para Chakra ---
-const MotionBox = motion(Box);
-const MotionFlex = motion(Flex);
-const MotionHeading = motion(Heading);
-const MotionText = motion(Text);
-
-// --- Tipos ---
 interface Activity {
   id: number;
   title: string;
@@ -21,250 +15,211 @@ interface Activity {
   date_start: string;
   date_end: string;
   place: string;
+  group: string;
+  area: string[];
 }
 
 interface CarouselProps {
   activities: Activity[];
 }
 
-// --- Subcomponente Slide ---
-const Slide = ({ item, router, isActive }: { item: Activity; router: any; isActive: boolean }) => {
-  // Valores de movimiento para el Tilt (no causan re-renders de React)
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-
-  // Suavizado físico
-  const mouseX = useSpring(x, { stiffness: 150, damping: 20 });
-  const mouseY = useSpring(y, { stiffness: 150, damping: 20 });
-
-  // Mapeo de posición a rotación
-  const rotateX = useTransform(mouseY, [-0.5, 0.5], [15, -15]);
-  const rotateY = useTransform(mouseX, [-0.5, 0.5], [-15, 15]);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    x.set((e.clientX - rect.left) / rect.width - 0.5);
-    y.set((e.clientY - rect.top) / rect.height - 0.5);
-  };
-
-  const resetTilt = () => {
-    x.set(0);
-    y.set(0);
-  };
-
-  return (
-    <Flex minW="100%" h="500px" align="center" justify="space-around" px={{ base: 10, md: 20 }}>
-      {/* BLOQUE DE TEXTO */}
-      <MotionBox 
-        maxW="40%" 
-        p={10} 
-        borderRadius="3xl" 
-        zIndex={2}
-        initial={{ opacity: 0, x: -50 }}
-        animate={isActive ? { opacity: 1, x: 0 } : { opacity: 0, x: -50 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-      >
-        <MotionHeading as="h2" size="xl" mb={4} color="green.800">
-          {item.title}
-        </MotionHeading>
-
-        {item.id !== -1 && (
-          <MotionText fontSize="md" fontWeight="bold" color="green.600" mb={4}>
-            📅 {item.date_start === item.date_end ? item.date_start : `${item.date_start} al ${item.date_end}`} 
-            <br /> 📍 {item.place}
-          </MotionText>
-        )}
-
-        <Text fontSize="lg" color="gray.600" noOfLines={4} lineHeight="1.6">
-          {item.description}
-        </Text>
-      </MotionBox>
-
-      {/* IMAGEN CON PERSPECTIVA 3D */}
-      <Box 
-        w="45%" 
-        style={{ perspective: 1200 }}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={resetTilt}
-        zIndex={2}
-      >
-        <MotionBox
-          style={{ rotateX, rotateY, rotateZ: -6 }}
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={isActive ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          whileHover={{ scale: 1.02 }}
-        >
-          {/* Sombra dinámica */}
-          <Box
-            position="absolute"
-            inset="5"
-            bg="blackAlpha.300"
-            filter="blur(40px)"
-            transform="translateY(20px)"
-            zIndex={-1}
-          />
-          <Image
-            src={item.image}
-            alt={item.title}
-            borderRadius="3xl"
-            boxShadow="2xl"
-            cursor={item.id !== -1 ? "pointer" : "default"}
-            onClick={() => item.id !== -1 && router.push(`/actividad/${item.id}`)}
-            objectFit="cover"
-            maxH="400px"
-            w="100%"
-          />
-        </MotionBox>
-      </Box>
-    </Flex>
-  );
-};
-
-// --- Componente Principal ---
 export default function Carousel({ activities }: CarouselProps) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const router = useRouter();
 
-  const items = useMemo(() => {
-    if (!activities || activities.length === 0) {
-      return [{
-        id: -1,
-        title: "Bienvenido a Gestión Social",
-        description: "Descubre nuestros grupos de extensión y sus actividades.",
-        image: "https://unsplash.com",
-        date_start: "", date_end: "", place: "",
-      }];
-    }
-    const today = new Date().toISOString().split('T')[0];
-    return [...activities]
-      .filter((a) => a.date_end >= today)
-      .sort((a, b) => a.date_start.localeCompare(b.date_start))
-      .slice(0, 5);
-  }, [activities]);
+  const today = normalizeDate(new Date());
 
-  const next = () => setIndex((i) => (i + 1) % items.length);
-  const prev = () => setIndex((i) => (i - 1 + items.length) % items.length);
+  const upcomingOrOngoing = activities.filter((item) => {
+    const start = normalizeDate(parseDate(item.date_start));
+    const end = normalizeDate(parseDate(item.date_end));
+    return start > today || (start <= today && end >= today);
+  });
+
+  // Ordenamiento cronológico
+  upcomingOrOngoing.sort((a, b) => {
+    const dateA = parseDate(a.date_start).getTime();
+    const dateB = parseDate(b.date_start).getTime();
+    return dateA - dateB;
+  });
+
+  let items = upcomingOrOngoing.slice(0, 5);
+
+  const placeholder: Activity = {
+    id: -1,
+    title: "Próximas Actividades Universitarias",
+    description: "Mantente al tanto de las actividades de extensión e impacto social organizadas por nuestros grupos.",
+    image: "/image-1.png",
+    date_start: "",
+    date_end: "",
+    place: "Universidad Central de Venezuela",
+    group: "",
+    area: [],
+  };
+
+  if (items.length === 0) items = [placeholder];
+
+  const length = items.length;
 
   useEffect(() => {
-    if (paused || items.length <= 1) return;
-    const interval = setInterval(next, 6000);
+    if (paused || length <= 1) return;
+    const interval = setInterval(() => {
+      setIndex((prev) => (prev + 1) % length);
+    }, 4500);
     return () => clearInterval(interval);
-  }, [paused, items.length, index]);
+  }, [paused, length]);
 
   return (
-    <Box
-      position="relative"
-      w="100%"
-      maxW="1400px"
-      mx="auto"
-      h="500px"
-      overflow="hidden"
-      bgGradient="linear(to-br, gray.50, green.100)"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-    >
-      {/* FONDO: NUBE 1 */}
-      <MotionBox
-        position="absolute"
-        top="-10%"
-        left="-5%"
-        w="60%"
-        h="80%"
-        bg="radial-gradient(circle, white 0%, rgba(255,255,255,0) 70%)"
-        filter="blur(60px)"
-        opacity={0.7}
-        zIndex={0}
-        animate={{ x: [-20, 20], y: [0, 30] }}
-        transition={{ duration: 8, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
-      />
-
-      {/* FONDO: NUBE 2 */}
-      <MotionBox
-        position="absolute"
-        bottom="-15%"
-        right="-5%"
-        w="50%"
-        h="70%"
-        bg="radial-gradient(circle, white 0%, rgba(255,255,255,0) 70%)"
-        filter="blur(80px)"
-        opacity={0.6}
-        zIndex={0}
-        animate={{ x: [20, -20], y: [0, -40] }}
-        transition={{ duration: 10, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
-      />
-
-      {/* TRACK DE SLIDES (Con soporte Drag/Swipe) */}
-      <MotionFlex
-        position="relative"
-        zIndex={1}
-        display="flex"
-        cursor="grab"
-        _active={{ cursor: "grabbing" }}
-        drag="x"
-        dragConstraints={{ left: 0, right: 0 }}
-        onDragEnd={(_, info) => {
-          if (info.offset.x < -100) next();
-          else if (info.offset.x > 100) prev();
-        }}
-        animate={{ x: `-${index * 100}%` }}
-        transition={{ type: "spring", stiffness: 200, damping: 25 }}
+    <Box maxW="container.xl" mx="auto" px={0} py={6}>
+      <Grid
+        templateColumns={{ base: "1fr", lg: "1.5fr 1fr" }}
+        gap={8}
+        alignItems="stretch"
       >
-        {items.map((item, i) => (
-          <Slide key={i} item={item} router={router} isActive={index === i} />
-        ))}
-      </MotionFlex>
+        {/* COLUMNA 1: CARRUSEL CON EFECTO FADE */}
+        <Box
+          position="relative"
+          minH={{ base: "500px", md: "580px" }}
+          onMouseEnter={() => setPaused(true)}
+          onMouseLeave={() => setPaused(false)}
+        >
+          {items.map((item, i) => {
+            const isActive = i === index;
+            const dateRangeLabel = formatActivityDateRange(item.date_start, item.date_end);
 
-      {/* CONTROLES */}
-      {items.length > 1 && (
-        <>
-          <IconButton
-            aria-label="Anterior"
-            icon={<ChevronLeftIcon boxSize={8} />}
-            position="absolute"
-            left="4"
-            top="50%"
-            transform="translateY(-50%)"
-            onClick={prev}
-            variant="ghost"
-            colorScheme="green"
-            rounded="full"
-            zIndex={10}
-            _hover={{ bg: "whiteAlpha.800" }}
-          />
-          <IconButton
-            aria-label="Siguiente"
-            icon={<ChevronRightIcon boxSize={8} />}
-            position="absolute"
-            right="4"
-            top="50%"
-            transform="translateY(-50%)"
-            onClick={next}
-            variant="ghost"
-            colorScheme="green"
-            rounded="full"
-            zIndex={10}
-            _hover={{ bg: "whiteAlpha.800" }}
-          />
-        </>
-      )}
+            return (
+              <Box
+                key={item.id !== -1 ? item.id : `placeholder-${i}`}
+                position={isActive ? "relative" : "absolute"}
+                top={0}
+                left={0}
+                w="100%"
+                h="100%"
+                opacity={isActive ? 1 : 0}
+                visibility={isActive ? "visible" : "hidden"}
+                transition="opacity 0.8s ease-in-out, visibility 0.8s ease-in-out"
+                bg="white"
+                borderRadius="2xl"
+                overflow="hidden"
+                boxShadow="2xl"
+                border="1px solid"
+                borderColor="gray.100"
+                display="flex"
+                flexDirection="column"
+              >
+                {/* Imagen superior */}
+                <Box position="relative" w="100%" h={{ base: "220px", md: "300px" }} overflow="hidden" bg="gray.100">
+                  <Image
+                    src={item.image}
+                    alt={item.title}
+                    w="100%"
+                    h="100%"
+                    objectFit="cover"
+                    fallbackSrc="/imagen-no-disponible.jpg"
+                  />
+                  {item.group && (
+                    <Badge
+                      position="absolute"
+                      top={4}
+                      left={4}
+                      bg="primary"
+                      color="white"
+                      px={3}
+                      py={1}
+                      borderRadius="full"
+                      fontSize="xs"
+                      textTransform="uppercase"
+                      boxShadow="md"
+                    >
+                      {item.group}
+                    </Badge>
+                  )}
+                </Box>
 
-      {/* INDICADORES (DOTS) */}
-      <Flex position="absolute" bottom="8" w="100%" justify="center" gap={2} zIndex={10}>
-        {items.map((_, i) => (
+                {/* Contenido / Data inferior */}
+                <VStack align="flex-start" justify="space-between" flex={1} p={{ base: 6, md: 8 }} spacing={4}>
+                  <VStack align="flex-start" spacing={2} w="100%">
+                    {item.id !== -1 && (
+                      <Text fontSize="xs" fontWeight="bold" color="secondary" textTransform="uppercase" letterSpacing="wider">
+                        📅 {dateRangeLabel} — 📍 {item.place}
+                      </Text>
+                    )}
+
+                    <Text fontSize={{ base: "xl", md: "2xl" }} fontWeight="extrabold" color="gray.800" lineHeight="tight">
+                      {item.title}
+                    </Text>
+
+                    <Text fontSize="md" color="gray.600" noOfLines={3}>
+                      {item.description}
+                    </Text>
+                  </VStack>
+
+                  {item.id !== -1 && (
+                    <PrimaryButton
+                      size="md"
+                      onClick={() => router.push(`/actividad/${item.id}`)}
+                    >
+                      Ver detalles de la actividad
+                    </PrimaryButton>
+                  )}
+                </VStack>
+              </Box>
+            );
+          })}
+        </Box>
+
+        {/* COLUMNA 2: BANNER Y BOTÓN DE ACTIVIDADES */}
+        <Box
+          position="relative"
+          borderRadius="2xl"
+          overflow="hidden"
+          boxShadow="xl"
+          minH={{ base: "320px", lg: "auto" }}
+          display="flex"
+          flexDirection="column"
+          justifyContent="center"
+          alignItems="center"
+          p={{ base: 8, md: 12 }}
+          textAlign="center"
+        >
+          {/* Fondo con imagen y overlay de color institucional */}
           <Box
-            key={i}
-            w={i === index ? "40px" : "12px"}
-            h="6px"
-            borderRadius="full"
-            bg={i === index ? "green.500" : "green.200"}
-            transition="all 0.4s ease"
-            cursor="pointer"
-            onClick={() => setIndex(i)}
+            position="absolute"
+            top={0}
+            left={0}
+            w="100%"
+            h="100%"
+            backgroundImage="url('/background-1.jpg')"
+            backgroundSize="cover"
+            backgroundPosition="center"
+            filter="brightness(0.6)"
+            zIndex={0}
           />
-        ))}
-      </Flex>
+          <Box
+            position="absolute"
+            top={0}
+            left={0}
+            w="100%"
+            h="100%"
+            bg="linear-gradient(135deg, rgba(1, 143, 124, 0.85) 0%, rgba(1, 105, 91, 0.95) 100%)"
+            zIndex={1}
+          />
+
+          <VStack zIndex={2} spacing={6} maxW="400px">
+            <Text fontSize={{ base: "2xl", md: "3xl" }} fontWeight="black" color="white" lineHeight="shorter">
+              Explora la lista completa de actividades
+            </Text>
+            <Text fontSize="sm" color="whiteAlpha.900">
+              Descubre talleres, conferencias, jornadas y otras actividades realizadas por los Grupos de Extensión de la UCV.
+            </Text>
+            <NextLink href="/actividades" passHref>
+              <SecondaryButton size="lg" px={8}>
+                Ver todas las actividades
+              </SecondaryButton>
+            </NextLink>
+          </VStack>
+        </Box>
+      </Grid>
     </Box>
   );
 }

@@ -1,6 +1,12 @@
 import React from 'react';
+import { Metadata } from "next";
 import { Flex, Box } from "@chakra-ui/react";
 import { RegisterForm } from "@/components/formularios/registro-form";
+
+export const metadata: Metadata = {
+  title: "Registro de Usuario | GSU",
+  description: "Registro de usuario en nuestro portal web.",
+};
 
 export default function RegisterPage() {
   return (

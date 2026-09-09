@@ -4,16 +4,15 @@ import React, { useEffect, useState } from "react";
 import { VStack, Box, Link as ChakraLink } from "@chakra-ui/react";
 import NextLink from "next/link";
 import { useAuth } from "@/app/context/auth-context";
-import { testLog } from "@/data/testLog";
 
 export const AdminFacultyNavbar = () => {
   const { user } = useAuth();
   const [estado, setEstado] = useState(null);
 
-  const role = user?.role || null;
+  const primaryRole = user?.roles?.[0] || null;
   const userId = user?.id || null;
 
-  const FacultyDash = role === "Facultad";
+  const FacultyDash = user?.roles?.includes("faculty_admin") || user?.roles?.includes("Facultad");
 
   // Items disponibles
   const fullNavItems = [

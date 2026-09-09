@@ -14,30 +14,26 @@ import {
     MenuItem,
     IconButton,
     Image as ChakraImage,
+  Text,
 } from "@chakra-ui/react";
 import React from "react";
 import NextLink from 'next/link';
 import { useRouter, usePathname } from "next/navigation"; 
 import { FaUserCircle } from "react-icons/fa";
 import { useAuth } from "@/app/context/auth-context";
-import { useGlobalData } from "../../app/context/global-data-context";
+import { SecondaryButton } from "../ui/buttons";
 import { ColorModeSwitcher } from "../ui/color-mode-switcher";
-import { 
-    PrimaryButton, 
-    GhostButton,
-    SecondaryButton, 
-} from "../ui/buttons";
 
 export const Navbar = () => {
     const { isAuthenticated, logout, isHydrated, user } = useAuth();
 
     const menuButtonColor = useColorModeValue("primary.500", "whiteAlpha.900");
 
-    const userRole = user?.role || null;
+    const userRole = (user?.roles || []).map(r => r.toLowerCase().trim());
     
-    const showAdminPanel = userRole === "Admin";
-    const showGroupPanel = userRole === "Invitado" || userRole === "Grupo";
-    const showFacultyPanel = userRole === "Facultad";
+    const showAdminPanel = userRole.includes('root') || userRole.includes('deu_admin');
+    const showGroupPanel = userRole.includes('visitante') || userRole.includes('group_admin') || userRole.includes('group_helper');
+    const showFacultyPanel = userRole.includes('faculty_admin');
 
     const router = useRouter();
     const pathname = usePathname();
@@ -63,7 +59,7 @@ export const Navbar = () => {
                             width={{ base: "40px", md: "50px" }}
                             height="auto"
                         />
-                        <Heading size={{ base: "md", md: "lg" }} color={useColorModeValue("primary.500", "primary.300")}>
+                        <Heading size={{ base: "md", md: "lg" }} color="white">
                             Gestión Social Universitaria
                         </Heading>
                     </Flex>
@@ -73,11 +69,11 @@ export const Navbar = () => {
 
                 {/* Navegación principal */}
                 <HStack spacing={14} ml={5}>
-                    <NextLink href="/grupos">
-                        <Heading size={{ base: "sm", md: "md" }}>Grupos</Heading>
+                    <NextLink href="/grupos" passHref>
+                        <Heading size={{ base: "sm", md: "md" }} color="white">Grupos</Heading>
                     </NextLink>
-                    <NextLink href="/actividades">
-                        <Heading size={{ base: "sm", md: "md" }}>Actividades</Heading>
+                    <NextLink href="/actividades" passHref>
+                        <Heading size={{ base: "sm", md: "md" }} color="white">Actividades</Heading>
                     </NextLink>
                 </HStack>
 
@@ -101,6 +97,7 @@ export const Navbar = () => {
                                             objectFit="cover"
                                             border="3px solid"
                                             borderColor="secondary"
+                                            fallbackSrc="/imagen-no-disponible.jpg"
                                         />
                                     ) : (
                                         <FaUserCircle size="28px" />
@@ -108,7 +105,9 @@ export const Navbar = () => {
                                 } 
                                 variant="ghost"
                                 borderRadius="full"
-                                color={menuButtonColor}
+                                color="white"
+                                _hover={{ bg: "whiteAlpha.200" }}
+                                _active={{ bg: "whiteAlpha.300" }}
                             />
                                 <MenuList>
                                     {showAdminPanel && (
@@ -126,7 +125,7 @@ export const Navbar = () => {
                                             Panel de Facultad
                                         </MenuItem>
                                     )}
-                                    <MenuItem onClick={handleLogout}>
+                                    <MenuItem onClick={handleLogout} fontWeight="bold" color="danger">
                                         Cerrar Sesión
                                     </MenuItem>
                                 </MenuList>

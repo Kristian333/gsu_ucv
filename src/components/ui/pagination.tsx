@@ -15,6 +15,8 @@ interface PaginationProps {
 export function Pagination({ currentPage, totalPages, basePath = "", queryParams = {} }: PaginationProps) {
     const router = useRouter();
 
+    if (totalPages <= 1) return null;
+
     const getPageNumbers = () => {
         const pageNumbers = [];
         const maxPagesToShow = 5; // Cantidad máxima de botones a mostrar
@@ -63,7 +65,6 @@ export function Pagination({ currentPage, totalPages, basePath = "", queryParams
 
     const handlePageClick = (page: number) => router.push(buildUrl(page));
 
-
     const handlePrevious = () => currentPage > 1 && router.push(buildUrl(currentPage - 1));
 
     const handleNext = () => currentPage < totalPages && router.push(buildUrl(currentPage + 1));
@@ -80,7 +81,7 @@ export function Pagination({ currentPage, totalPages, basePath = "", queryParams
                             key={index}
                             onClick={() => handlePageClick(page)}
                             variant={page === currentPage ? 'solid' : 'outline'}
-                            colorScheme={page === currentPage ? 'blue' : 'gray'}
+                            colorScheme={page === currentPage ? 'secondary' : 'gray'}
                         >
                             {page}
                         </Button>

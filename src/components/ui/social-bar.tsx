@@ -1,5 +1,6 @@
 'use client'
 import React from "react";
+import Image from "next/image";
 
 const socialLinks = [
   {
@@ -92,7 +93,13 @@ export const SocialSidebar: React.FC = () => {
               onMouseEnter={() => setHoveredIndex(index)}
               onMouseLeave={() => setHoveredIndex(null)}
             >
-              <img src={item.icon} alt={`${item.label} Icon`} style={styles.icon} />
+              <Image
+                src={item.icon}
+                alt={`${item.label} Icon`}
+                width={27}
+                height={27}
+                style={styles.icon}
+              />
               <span
                 style={{
                   ...styles.span,

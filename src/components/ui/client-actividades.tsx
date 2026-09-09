@@ -7,6 +7,7 @@ import React from 'react';
 import { Heading, Paragraph } from "@/components/ui/tipografia";
 import { Pagination } from "@/components/ui/pagination";
 import { useRouter } from 'next/navigation';
+import { formatActivityDateRange } from "@/utils/common";
 
 interface ActivityProps {
     id: string;
@@ -19,9 +20,14 @@ interface ActivityProps {
     group: string;
 }
 
+interface GroupOption {
+    id: string;
+    nombre: string;
+}
+
 interface ClientActivitiesProps {
     activities: ActivityProps[];
-    allGroups: string[]; 
+    allGroups: GroupOption[];
     currentPage: number;
     totalPages: number;
     currentSearch: string;
@@ -30,11 +36,10 @@ interface ClientActivitiesProps {
 }
 
 const ActivityCard = ({ title, description, image, date_start, date_end, place, group }: ActivityProps) => {
-    const placeholderImage = "https://placehold.co/400x400/cccccc/ffffff/png?text=Imagen+no+encontrada";
+    const placeholderImage = "/imagen-no-disponible.jpg";
 
     // Formato de fecha
-    const displayDate =
-        date_start === date_end ? date_start : `${date_start} al ${date_end}`;
+    const displayDate = formatActivityDateRange(date_start, date_end);
 
     return (
         <Card
@@ -69,7 +74,7 @@ const ActivityCard = ({ title, description, image, date_start, date_end, place, 
             <CardBody flex="2" display="flex" flexDirection="column" justifyContent="flex-start">
                 <Stack spacing={3}>
                     <Heading size="lg">{title}</Heading>
-                    <Text fontSize="md" color="gray.600">📅 {displayDate}</Text>
+                    {displayDate && <Text fontSize="md" color="gray.600">📅 {displayDate}</Text>}
                     <Text fontSize="md" color="gray.600">📍 {place}</Text>
                     {group && <Text fontSize="md" color="gray.600">👥 {group}</Text>}
                     <Paragraph>
@@ -97,9 +102,13 @@ export function ClientActivities({
     const [status, setStatus] = React.useState(currentStatus);
 
     function updateURL(newSearch: string, newGroup: string, newStatus: string) {
-        router.push(
-            `/actividades?page=1&search=${encodeURIComponent(newSearch)}&group=${encodeURIComponent(newGroup)}&status=${encodeURIComponent(newStatus)}`
-        );
+        const params = new URLSearchParams();
+        params.set("page", "1"); // Al cambiar un filtro siempre volvemos a la página 1
+        if (newSearch) params.set("search", newSearch);
+        if (newGroup) params.set("group", newGroup);
+        if (newStatus) params.set("status", newStatus);
+
+        router.push(`/actividades?${params.toString()}`);
     }
 
     return (
@@ -138,13 +147,13 @@ export function ClientActivities({
                         borderRadius: "8px",
                         border: "1px solid #ccc",
                         minWidth: "200px",
-                        maxWidth: "210px",
+                        maxWidth: "250px",
                         whiteSpace: "nowrap",
                     }}
                 >
                     <option value="">Todos los grupos</option>
                     {allGroups.map(g => (
-                        <option key={g} value={g}>{g}</option>
+                        <option key={g.id} value={g.id}>{g.nombre}</option>
                     ))}
                 </select>
 
@@ -165,7 +174,7 @@ export function ClientActivities({
                 >
                     <option value="">Todos los estados</option>
                     <option value="futura">Futuras</option>
-                    <option value="curso">En curso</option>
+                    <option value="en_curso">En curso</option>
                     <option value="finalizada">Finalizadas</option>
                 </select>
             </Box>
@@ -184,8 +193,17 @@ export function ClientActivities({
                 ))}
             </SimpleGrid>
             
-            {/* Agrega el componente de paginación aquí */}
-            <Pagination currentPage={currentPage} totalPages={totalPages} />
+            {/* Paginación */}
+            <Pagination 
+                currentPage={currentPage} 
+                totalPages={totalPages} 
+                basePath="/actividades"
+                queryParams={{
+                    ...(currentSearch ? { search: currentSearch } : {}),
+                    ...(currentGroup ? { group: currentGroup } : {}),
+                    ...(currentStatus ? { status: currentStatus } : {}),
+                }}
+            />
         </Box>
     );
 }

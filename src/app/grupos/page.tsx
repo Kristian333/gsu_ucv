@@ -1,38 +1,66 @@
 // /app/grupos/page.tsx
 import React from 'react';
-import { Box, Text } from '@chakra-ui/react';
+import { Metadata } from "next";
 import { ClientGroups } from '@/components/ui/client-grupos';
-import { mockGroupItems } from "@/data/gruposMock";
+import { apiServerRequest } from "@/utils/apiServer";
 
-interface GetGroupsParams {
-  page: number;
-  limit: number;
-  search?: string;
-  faculty?: string;
+interface GroupBackend {
+    id: any;
+    nombre?: string;
+    facultad?: string | string[];
+    imagen_url?: string;
 }
 
-// Esta función ahora acepta los parámetros de paginación
-async function getGroups({ page, limit, search = "", faculty = "" }: GetGroupsParams) {
-    // Filtrar primero
-    let filtered = mockGroupItems.filter(g =>
-        g.title.toLowerCase().includes(search.toLowerCase())
-    );
+interface PageScope {
+    page: number;
+    per_page: number;
+    total_pages: number;
+    total_records: number;
+}
 
-    if (faculty) {
-        filtered = filtered.filter(g => g.faculty === faculty);
+interface GetGroupsResponse {
+    grupos?: GroupBackend[];
+    groups?: GroupBackend[];
+    page_scope?: PageScope;
+    PageScope?: PageScope;
+}
+
+export const metadata: Metadata = {
+  title: "Grupos de Extensión | GSU",
+  description: "Lista completa de nuestros grupos de extensión universitaria.",
+};
+
+async function getGroupsFromServer(page: number, limit: number, search: string, faculty: string) {
+    try {
+        const queryParams = new URLSearchParams({
+            page: String(page),
+            per_page: String(limit),
+            active: "true",
+        });
+
+        if (search) {
+            queryParams.append("q", search);
+        }
+
+        if (faculty) {
+            queryParams.append("faculty", faculty);
+        }
+
+        const responseData: GetGroupsResponse = await apiServerRequest(`groups?${queryParams.toString()}`, {
+            next: { revalidate: 0 } 
+        });
+
+        const rawGroups = responseData?.grupos || responseData?.groups || [];
+        const scope = responseData?.page_scope || responseData?.PageScope;
+
+        return {
+            groups: rawGroups,
+            totalPages: scope?.total_pages || (rawGroups.length < limit ? page : page + 1),
+        };
+    } catch (error) {
+        console.error("PUBLIC GROUPS SERVER - Error cargando grupos:", error);
+        return { groups: [], totalPages: 1 };
     }
-
-    // ORDENAR ALFABÉTICAMENTE ANTES DE PAGINAR
-    filtered = filtered.sort((a, b) => a.title.localeCompare(b.title));
-
-    // Paginación 
-    const totalGroups = filtered.length;
-    const totalPages = Math.ceil(totalGroups / limit);
-    const start = (page - 1) * limit;
-    const end = start + limit;
-    const groups = filtered.slice(start, end);
-
-    return { groups, totalPages };
 }
 
 interface GruposPageProps {
@@ -41,13 +69,31 @@ interface GruposPageProps {
 
 export default async function GruposPage({ searchParams }: GruposPageProps) {
     const page = Number(searchParams.page) || 1;
-    const limit = 12; // Cuantos grupos por página
+    const limit = 12; // Grupos por página (4 columnas)
     const search = searchParams.search || "";
     const faculty = searchParams.faculty || "";
 
-    const { groups, totalPages } = await getGroups({ page, limit, search, faculty });
+    const { groups: rawGroups, totalPages } = await getGroupsFromServer(page, limit, search, faculty);
+
+    const mappedGroups = rawGroups.map((g: GroupBackend) => ({
+        id: String(g.id),
+        title: g.nombre || "Sin nombre asignado",
+        faculty: Array.isArray(g.facultad) 
+            ? g.facultad 
+            : g.facultad 
+                ? [g.facultad] 
+                : ["No asignada"], 
+        image: g.imagen_url || "/imagen-no-disponible.jpg"
+    }));
 
     return (
-        <ClientGroups groups={groups} currentPage={page} totalPages={totalPages} currentSearch={search} currentFaculty={faculty} />
+        <ClientGroups 
+            groups={mappedGroups} 
+            currentPage={page} 
+            totalPages={totalPages} 
+            currentSearch={search} 
+            currentFaculty={faculty} 
+            limit={limit}
+        />
     );
 }

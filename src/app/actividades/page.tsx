@@ -1,65 +1,74 @@
 // /app/actividades/page.tsx
 import React from 'react';
-import { Box, Text } from '@chakra-ui/react';
+import { Metadata } from "next";
 import { ClientActivities } from '@/components/ui/client-actividades';
-import { mockActivityItems } from "@/data/actividadesMock";
+import { apiServerRequest } from "@/utils/apiServer";
+import { formatDateToClient } from "@/utils/common";
 
-function getUniqueGroups() {
-    const groups = mockActivityItems.map(a => a.group).filter(Boolean);
-    return Array.from(new Set(groups));
+interface ActivityBackend {
+    id: string;
+    group_id?: string;
+    nombre_grupo?: string;
+    nombre: string;
+    descripcion: string;
+    fecha_inicio?: string;
+    fecha_fin?: string;
+    ubicacion: string;
+    area_conocimiento?: string;
+    aliados?: string;
+    participantes_estimados?: number;
+    participantes_reales?: number;
+    financiamiento?: string;
+    observaciones?: string;
+    cubierta?: string;
 }
 
-function filterActivities(data: any[], search: string, group: string, status: string) {
-    const today = new Date().toISOString().split("T")[0];
-
-    return data.filter(act => {
-        const matchesSearch =
-            search.trim() === "" ||
-            act.title.toLowerCase().includes(search.toLowerCase()) ||
-            act.description.toLowerCase().includes(search.toLowerCase());
-
-        const matchesGroup =
-            group === "" || act.group === group;
-
-        let matchesStatus = true;
-        if (status === "futura") {
-            matchesStatus = act.date_start > today;
-        } else if (status === "curso") {
-            matchesStatus = act.date_start <= today && act.date_end >= today;
-        } else if (status === "finalizada") {
-            matchesStatus = act.date_end < today;
-        }
-
-        return matchesSearch && matchesGroup && matchesStatus;
-    });
+interface GroupOption {
+  id: string;
+  nombre: string;
 }
 
-function sortActivities(data: any[]) {
-    const today = new Date().toISOString().split("T")[0];
+// Traer lista de grupos para poblar el dropdown de filtro
+function formatDateDDMMYYYY(date: Date): string {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+}
 
-    const upcomingOrOngoing = [];
-    const past = [];
+async function getAllGroups(): Promise<GroupOption[]> {
+    const allGroups: GroupOption[] = [];
+    let page = 1;
+    const perPage = 50; // Traer páginas grandes para minimizar peticiones
+    let totalPages = 1;
 
-    for (const act of data) {
-       
-        if (act.date_start > today) {
-            upcomingOrOngoing.push(act);
-        } else if (act.date_start <= today && act.date_end >= today) {
-            upcomingOrOngoing.push(act);
-        } else {
-            past.push(act);
-        }
+    try {
+        do {
+            const responseData = await apiServerRequest(`groups?page=${page}&per_page=${perPage}`, { cache: 'no-store' });
+            const rawGroups = responseData?.grupos || responseData?.Groups || [];
+            const pageScope = responseData?.pagina || responseData?.PageScope || {};
+
+            const count = pageScope.count || rawGroups.length;
+            totalPages = Math.ceil(count / perPage) || 1;
+
+            for (const g of rawGroups) {
+                if (g.id && g.nombre) {
+                    allGroups.push({
+                        id: String(g.id),
+                        nombre: g.nombre,
+                    });
+                }
+            }
+
+            page++;
+        } while (page <= totalPages);
+
+        return allGroups;
+    } catch (error) {
+        console.error("ACTIVIDADES SERVER - Error obteniendo grupos completos:", error);
+        return allGroups;
     }
-
-    upcomingOrOngoing.sort((a, b) => (a.date_start > b.date_start ? 1 : -1));
-
-
-    past.sort((a, b) => (a.date_end < b.date_end ? 1 : -1));
-
-    // Concatenar ambos grupos
-    return [...upcomingOrOngoing, ...past];
 }
-
 
 async function getActivities({
     page,
@@ -74,18 +83,87 @@ async function getActivities({
     group: string;
     status: string;
 }) {
-    const filtered = filterActivities(mockActivityItems, search, group, status);
+    try {
+        const queryParams = new URLSearchParams();
+        queryParams.set("page", page.toString());
+        queryParams.set("per_page", limit.toString());
+        queryParams.set("order", "desc");
 
-    const sorted = sortActivities(filtered);
+        if (group) {
+            queryParams.set("group_id", group);
+        }
 
-    const start = (page - 1) * limit;
-    const end = start + limit;
+        if (search) {
+            queryParams.set("name", search); 
+        }
 
-    const activities = sorted.slice(start, end);
-    const totalActivities = sorted.length;
-    const totalPages = Math.ceil(totalActivities / limit);
+        // --- Manejo de Filtros por Rango de Fecha / Estado ---
+        const now = new Date();
 
-    return { activities, totalPages };
+        if (status === "futura") {
+            // Actividades con fecha posterior a hoy
+            const tomorrow = new Date(now);
+            tomorrow.setDate(now.getDate() + 1);
+
+            const farFuture = new Date(now);
+            farFuture.setFullYear(now.getFullYear() + 5);
+
+            queryParams.set("start_date", formatDateDDMMYYYY(tomorrow));
+            queryParams.set("end_date", formatDateDDMMYYYY(farFuture));
+            
+        } else if (status === "en_curso") {
+            // Actividades en el día de hoy
+            const todayStr = formatDateDDMMYYYY(now);
+            queryParams.set("start_date", todayStr);
+            queryParams.set("end_date", todayStr);
+
+        } else if (status === "finalizada") {
+            // Actividades anteriores a hoy
+            const yesterday = new Date(now);
+            yesterday.setDate(now.getDate() - 1);
+
+            const pastDate = new Date("2000-01-01");
+
+            queryParams.set("start_date", formatDateDDMMYYYY(pastDate));
+            queryParams.set("end_date", formatDateDDMMYYYY(yesterday));
+        }
+
+        const responseData = await apiServerRequest(`activities?${queryParams.toString()}`, {
+            cache: 'no-store'
+        });
+
+        const rawActivities: ActivityBackend[] = responseData?.actividades || responseData?.Activities || [];
+        const pageScope = responseData?.pagina || responseData?.PageScope || {};
+
+        // Total de páginas calculadas desde el conteo que retorna el backend
+        const totalCount = pageScope.count ?? rawActivities.length;
+        const totalPages = Math.ceil(totalCount / limit) || 1;
+
+        // Mapeo al formato consumido por la interfaz de usuario
+        const mappedActivities = rawActivities.map((act) => {
+            const rawStart = act.fecha_inicio || "";
+            const rawEnd = act.fecha_fin || act.fecha_inicio || "";
+
+            return {
+                id: String(act.id),
+                title: act.nombre || "Actividad sin título",
+                description: act.descripcion || "",
+                image: act.cubierta || null,
+                date_start: formatDateToClient(rawStart),
+                date_end: formatDateToClient(rawEnd),
+                place: act.ubicacion || "Universidad Central de Venezuela",
+                group: act.nombre_grupo || (act.group_id ? `Grupo #${act.group_id}` : "")
+            };
+        });
+
+        return {
+            activities: mappedActivities,
+            totalPages
+        };
+    } catch (error) {
+        console.error("ACTIVIDADES SERVER - Error trayendo actividades:", error);
+        return { activities: [], totalPages: 1 };
+    }
 }
 
 interface ActividadesPageProps {
@@ -97,6 +175,11 @@ interface ActividadesPageProps {
     };
 }
 
+export const metadata: Metadata = {
+  title: "Actividades de Extensión | GSU",
+  description: "Lista completa de nuestras actividades de extensión universitaria.",
+};
+
 export default async function ActividadesPage({ searchParams }: ActividadesPageProps) {
     const page = Number(searchParams.page) || 1;
     const search = searchParams.search || "";
@@ -104,20 +187,16 @@ export default async function ActividadesPage({ searchParams }: ActividadesPageP
     const status = searchParams.status || "";
     const limit = 6; // Cantidad de actividades por página
 
-    const uniqueGroups = getUniqueGroups();
-
-    const { activities, totalPages } = await getActivities({
-        page,
-        limit,
-        search,
-        group,
-        status,
-    });
+    // Obtención paralela de grupos y actividades
+    const [allGroups, { activities, totalPages }] = await Promise.all([
+        getAllGroups(),
+        getActivities({ page, limit, search, group, status })
+    ]);
 
     return (
         <ClientActivities
             activities={activities}
-            allGroups={uniqueGroups}
+            allGroups={allGroups}
             currentPage={page}
             totalPages={totalPages}
             currentSearch={search}

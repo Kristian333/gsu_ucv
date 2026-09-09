@@ -1,24 +1,25 @@
 // app/grupo/[groupId]/GroupClientPage.tsx
 "use client";
 
-import { Box, Flex, Heading, Text, Image, VStack, Divider, SimpleGrid } from "@chakra-ui/react";
+import { Box, Flex, Heading, Text, Image, VStack, Divider, Button } from "@chakra-ui/react";
 import NextLink from "next/link";
 import React, { useState } from "react";
+import { formatListToString } from "@/utils/common";
 
-interface GroupItem {
+export interface GroupItem {
   id: string;
   title: string;
   image: string;
   objetive: string;
-  fundation?: string;
+  foundation?: string;
   email?: string;
   phone?: string;
   faculty?: string;
   awards?: { awardName: string; awarddate: number }[] | string;
 }
 
-interface ActivityItem {
-  id: number;
+export interface ActivityItem {
+  id: string | number;
   title: string;
   image: string;
   group: string;
@@ -26,37 +27,17 @@ interface ActivityItem {
 
 interface Props {
   groupId: string;
-  groups: GroupItem[];
+  group: GroupItem;
   activities: ActivityItem[];
 }
 
-export default function GroupClientPage({ groupId, groups, activities }: Props) {
-  
-  // Normalizamos ambos a string
-  const id = String(groupId);
-
-  const group = groups.find((g) => String(g.id) === id);
-
-  // Grupo no Encontrado
-  if (!group) {
-    return (
-      <Box maxW="4xl" mx="auto" p={10} textAlign="center">
-        <Heading size="lg">Grupo no encontrado</Heading>
-        <Text mt={4}>No existe un grupo con el ID {groupId}.</Text>
-      </Box>
-    );
-  }
-
-  const activitiesForGroup = activities
-      .filter((a) => a.group === group.title)
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 4);
-
-  // Reconocimientos: ordenar por awarddate
+export default function GroupClientPage({ groupId, group, activities }: Props) {
   const awards = Array.isArray(group.awards)
     ? [...group.awards].sort((a, b) => b.awarddate - a.awarddate)
     : [];
   
+  const facultyDisplay = formatListToString(group.faculty);
+
   const [showAllAwards, setShowAllAwards] = useState(false);
   
   {/* Pagina del Grupo */}
@@ -77,6 +58,7 @@ export default function GroupClientPage({ groupId, groups, activities }: Props) 
             border="5px solid"
             borderColor="primary"
             shadow="lg"
+            fallbackSrc="/imagen-no-disponible.jpg"
           />
 
           {/* Info básica */}
@@ -85,9 +67,9 @@ export default function GroupClientPage({ groupId, groups, activities }: Props) 
               {group.title}
             </Heading>
 
-            {group.faculty && (
+            {facultyDisplay && (
               <Text fontSize="xl" color="gray.600">
-                <strong>Facultad:</strong> {group.faculty}
+                <strong>Facultad:</strong> {facultyDisplay}
               </Text>
             )}
 
@@ -103,9 +85,9 @@ export default function GroupClientPage({ groupId, groups, activities }: Props) 
               </Text>
             )}
 
-            {group.fundation && (
+            {group.foundation && (
               <Text fontSize="lg" color="gray.500">
-                📅 Fundado en {group.fundation}
+                📅 Fundado en {group.foundation}
               </Text>
             )}
           </VStack>
@@ -133,12 +115,12 @@ export default function GroupClientPage({ groupId, groups, activities }: Props) 
           </Heading>
 
           {/* Actividades aqui*/}
-          <Flex gap={6} wrap="wrap">
-            {activitiesForGroup.length === 0 && (
-              <Text color="gray.500">Este grupo no tiene actividades registradas.</Text>
+          <Flex gap={6} wrap="wrap" justify={{ base: "center", md: "flex-start" }}>
+            {activities.length === 0 && (
+              <Text color="gray.500">Este grupo no tiene actividades destacadas actualmente.</Text>
             )}
 
-            {activitiesForGroup.map((activity) => (
+            {activities.map((activity) => (
               <NextLink
                 key={activity.id}
                 href={`/actividad/${activity.id}`}
@@ -163,6 +145,7 @@ export default function GroupClientPage({ groupId, groups, activities }: Props) 
                     w="100%"
                     h="200px"
                     objectFit="cover"
+                    fallbackSrc="/imagen-no-disponible.jpg"
                   />
 
                   <Box p={4}>
@@ -173,6 +156,23 @@ export default function GroupClientPage({ groupId, groups, activities }: Props) 
                 </Box>
               </NextLink>
             ))}
+          </Flex>
+
+          {/* Botón para redirigir a /actividades filtrado por este grupo */}
+          <Flex justify="center" mt={8}>
+            <NextLink href={`/actividades?group=${groupId}`} passHref>
+              <Button
+                colorScheme="secondary"
+                bg="secondary"
+                color="white"
+                size="md"
+                px={6}
+                _hover={{ opacity: 0.9, transform: "scale(1.02)" }}
+                transition="all 0.2s ease"
+              >
+                Ver todas las actividades
+              </Button>
+            </NextLink>
           </Flex>
         </Box>
 
@@ -236,16 +236,6 @@ export default function GroupClientPage({ groupId, groups, activities }: Props) 
             </Box>
           </>
         )}
-
-        {/* Galeria */}
-        <Box>
-          <Heading size="lg" mb={4} color="primary">
-            Galería
-          </Heading>
-
-          {/* Galeria aqui*/}
-
-        </Box>
 
       </VStack>
     </Box>

@@ -3,15 +3,17 @@
 
 import { Box, SimpleGrid, Card, CardBody, Stack, Image, Text } from "@chakra-ui/react";
 import NextLink from 'next/link';
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Heading, Paragraph } from "@/components/ui/tipografia";
 import { Pagination } from "@/components/ui/pagination";
 import { useRouter } from 'next/navigation';
+import { FACULTADES_FILTRO } from "@/constants/facultades";
+import { formatListToString } from "@/utils/common";
 
 interface GroupProps {
     id: string;
     title: string;
-    faculty: string;
+    faculty: string[];
     image: string | null;
 }
 
@@ -21,10 +23,13 @@ interface ClientGroupsProps {
     totalPages: number;
     currentSearch?: string;
     currentFaculty?: string;
+    limit: number;
 }
 
 const GroupCard = ({ title, faculty, image }: Omit<GroupProps, 'id'>) => {
-    const placeholderImage = "https://placehold.co/400x200/cccccc/ffffff/png?text=Imagen+no+encontrada";
+    const placeholderImage = "/imagen-no-disponible.jpg";
+    const facultyDisplay = formatListToString(faculty);
+
     return (
         <Card overflow="hidden" variant="unstyled" display="flex" flexDirection="column" justifyContent="center" alignItems="center" role="group">
             <Box overflow="hidden" display="flex" justifyContent="center" alignItems="center" width="100%" height="268px" borderRadius="full" mx="auto">
@@ -62,7 +67,7 @@ const GroupCard = ({ title, faculty, image }: Omit<GroupProps, 'id'>) => {
                     >
                         <Heading size="md">{title}</Heading>
                     </Box>
-                    <Paragraph>{faculty}</Paragraph>
+                    <Paragraph>{facultyDisplay}</Paragraph>
                 </Stack>
             </CardBody>
         </Card>
@@ -71,33 +76,58 @@ const GroupCard = ({ title, faculty, image }: Omit<GroupProps, 'id'>) => {
 
 export function ClientGroups({ groups, currentPage, totalPages, currentSearch = "", currentFaculty = "" }: ClientGroupsProps) {
     
-    //Estados del buscador y filtro
     const router = useRouter();
-    const [search, setSearch] = React.useState("");
-    const [facultyFilter, setFacultyFilter] = React.useState("");
-    const [filterMenuOpen, setFilterMenuOpen] = React.useState(false);
+    const [search, setSearch] = useState(currentSearch);
+    const [filterMenuOpen, setFilterMenuOpen] = useState(false);
     
-    const faculties = ["Agronomía", "Arquitectura y Urbanismo", "Ciencias", "Ciencias Económicas y Sociales", "Farmacia", "Humanidades y Educación", "Ingeniería", "Ciencias Jurídicas y Políticas", "Medicina", "Odontología", "Veterinaria", "DEU"];
+    // Sincronizar el input local si cambia la URL
+    useEffect(() => {
+        setSearch(currentSearch);
+    }, [currentSearch]);
 
-    // Ordenar alfabeticamente por nombre
-    const sortedGroups = [...groups].sort((a, b) => a.title.localeCompare(b.title));
+    const updateUrl = useCallback((newSearch: string, newFaculty: string) => {
+        const query = new URLSearchParams();
+        query.set("page", "1"); // Siempre resetear a página 1 al filtrar
+        
+        if (newSearch) {
+            query.set("search", newSearch);
+        }
 
-    // Actualizar URL al cambiar search o faculty
-    const handleSearchChange = (value: string) => {
-        setSearch(value);
-        router.push(`/grupos?page=1&search=${encodeURIComponent(value)}&faculty=${encodeURIComponent(facultyFilter)}`);
-    };
+        if (newFaculty) {
+            query.set("faculty", newFaculty);
+        }
+
+        router.push(`/grupos?${query.toString()}`);
+    }, [router]);
+
+    // Debounce para actualizar la URL tras escribir en el buscador
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (search !== currentSearch) {
+                updateUrl(search, currentFaculty);
+            }
+        }, 400);
+
+        return () => clearTimeout(timer);
+    }, [search, currentSearch, currentFaculty, updateUrl]);
 
     const handleFacultyChange = (faculty: string) => {
-        setFacultyFilter(faculty);
         setFilterMenuOpen(false);
-        router.push(`/grupos?page=1&search=${encodeURIComponent(search)}&faculty=${encodeURIComponent(faculty)}`);
+        updateUrl(search, faculty);
     };
+
+    const getDisplayFacultyName = (faculty: string) => {
+        if (!faculty) return "";
+        if (faculty === "DEU") return "Otros";
+        return faculty.replace(/_/g, " ");
+    };
+
+    const displayFaculty = getDisplayFacultyName(currentFaculty);
 
     return (
         <Box maxW="container.xl" mx="auto" py={10} px={6}>
             
-            {/*Buscador y Filtro */}
+            {/* Buscador y Filtro */}
             <Box display="flex" gap={4} mb={8} flexWrap="wrap" justifyContent="center" width="100%">
                 
                 {/* Buscador */}
@@ -105,7 +135,7 @@ export function ClientGroups({ groups, currentPage, totalPages, currentSearch = 
                     type="text"
                     placeholder="Buscar grupo..."
                     value={search}
-                    onChange={(e) => handleSearchChange(e.target.value)}
+                    onChange={(e) => setSearch(e.target.value)}
                     style={{
                         padding: "10px 15px",
                         borderRadius: "8px",
@@ -122,25 +152,28 @@ export function ClientGroups({ groups, currentPage, totalPages, currentSearch = 
                             padding: "10px 15px",
                             borderRadius: "8px",
                             border: "1px solid #ccc",
-                            background: "primary",
-                            whiteSpace: "nowrap"
+                            background: "white",
+                            whiteSpace: "nowrap",
+                            cursor: "pointer"
                         }}
                         onClick={() => setFilterMenuOpen(!filterMenuOpen)}
                     >
-                        {facultyFilter ? `Facultad: ${facultyFilter}` : "Filtrar por facultad"}
+                        {displayFaculty ? `Facultad: ${displayFaculty}` : "Filtrar por facultad"}
                     </button>
 
                     {filterMenuOpen && (
                         <Box
                             position="absolute"
                             top="45px"
-                            left={0}
+                            right={0}
                             bg="white"
                             boxShadow="lg"
                             borderRadius="md"
                             zIndex={10}
                             p={2}
-                            minW="160px"
+                            minW="220px"
+                            maxH="300px"
+                            overflowY="auto"
                         >
                             <Box
                                 p={2}
@@ -151,33 +184,37 @@ export function ClientGroups({ groups, currentPage, totalPages, currentSearch = 
                                 (Mostrar todos)
                             </Box>
 
-                            {faculties.map((f) => (
-                                <Box
-                                    key={f}
-                                    p={2}
-                                    cursor="pointer"
-                                    _hover={{ bg: "gray.100" }}
-                                    onClick={() => handleFacultyChange(f)}
-                                >
-                                    {f}
-                                </Box>
-                            ))}
+                            {FACULTADES_FILTRO.map((f) => {
+                                const label = f === "DEU" ? "Otros" : f;
+                                return (
+                                    <Box
+                                        key={f}
+                                        p={2}
+                                        cursor="pointer"
+                                        bg={currentFaculty === f ? "gray.100" : "transparent"}
+                                        _hover={{ bg: "gray.100" }}
+                                        onClick={() => handleFacultyChange(f)}
+                                    >
+                                        {label}
+                                    </Box>
+                                );
+                            })}
                         </Box>
                     )}
                 </Box>
             </Box>
             
             {/* Mensaje cuando no hay grupos */}
-            {sortedGroups.length === 0 && (
+            {groups.length === 0 && (
                 <Box textAlign="center" py={10}>
-                <Text fontSize="xl">No se encontraron grupos.</Text>
+                <Text fontSize="xl">No se encontraron grupos registrados.</Text>
                 </Box>
             )}
 
             {/* Grid con 4 columnas */}
-            {sortedGroups.length > 0 && (
+            {groups.length > 0 && (
                 <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={10} textAlign="center">
-                    {sortedGroups.map(group => (
+                    {groups.map(group => (
                         <NextLink href={`/grupo/${group.id}`} passHref key={group.id}>
                             <GroupCard
                                 title={group.title}
@@ -190,8 +227,18 @@ export function ClientGroups({ groups, currentPage, totalPages, currentSearch = 
             )}
             
             {/* Paginación */}
-            {sortedGroups.length > 0 && (
-            <Pagination currentPage={currentPage} totalPages={totalPages} />
+            {groups.length > 0 && (
+                <Box mt={8}>
+                    <Pagination 
+                        currentPage={currentPage} 
+                        totalPages={totalPages} 
+                        basePath="/grupos"
+                        queryParams={{
+                            ...(search ? { search } : {}),
+                            ...(currentFaculty ? { faculty: currentFaculty } : {})
+                        }}
+                    />
+                </Box>
              )}
         </Box>
     );

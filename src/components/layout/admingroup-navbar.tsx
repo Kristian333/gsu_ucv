@@ -1,57 +1,66 @@
+// /components/layout/admingroup-navbar.tsx
+"use client";
+
 import React, { useEffect, useState } from "react";
-import { VStack, Box, Link as ChakraLink } from "@chakra-ui/react";
+import { VStack, Box, Link as ChakraLink, Text, SkeletonText } from "@chakra-ui/react";
 import NextLink from "next/link";
 import { useAuth } from "@/app/context/auth-context";
-import { testLog } from "@/data/testLog";
-
-// Función que lee el test.log simulado
-function obtenerEstadoDesdeLog(userId, role) {
-  const eventos = testLog.filter((l) => l.id === userId);
-  if (eventos.length === 0) return null;
-
-  // Si es un rol de grupo, buscamos su última validación de info
-  if (role === "Grupo") {
-    const info = eventos.filter((e) => e.evento === "GrupoInfoValida").pop();
-    return info || null;
-  }
-  return eventos[eventos.length - 1];
-}
+import { apiRequest } from "@/components/formularios/api";
 
 export const AdminGroupNavbar = () => {
-  const { user } = useAuth();
-  const [estado, setEstado] = useState(null);
-
+  const { user, isHydrated } = useAuth();
+  const [infoAlDia, setInfoAlDia] = useState<boolean>(false);
+  const [nombreGrupo, setNombreGrupo] = useState<string>("Buscando grupo...");
+  const [loading, setLoading] = useState<boolean>(true);
 
   const rolesArray = (user?.roles || []).map(r => r.toLowerCase().trim());
-  const userId = user?.id || null;
-
-  let role = "Invitado"; 
-  if (rolesArray.includes('group_admin') || rolesArray.includes('group_helper')) {
-    role = "Grupo";
-  }
-  // ---------------------------------------
-
-  let infoAlDia = false;
-  const GroupDash = role === "Grupo";
+  const esVisitante = rolesArray.includes("visitante");
 
   useEffect(() => {
-    if (!userId) return;
-    const data = obtenerEstadoDesdeLog(userId, role);
-    setEstado(data);
-  }, [userId, role]);
+    if (!isHydrated) return;
 
-
-  if (GroupDash && estado?.date) {
-    const fecha = new Date(estado.date);
-    const limite = new Date(fecha);
-    limite.setFullYear(limite.getFullYear() + 1);
-
-    if (new Date() <= limite) {
-      infoAlDia = true;
+    if (!user?.groupId) {
+      setInfoAlDia(false);
+      setNombreGrupo(esVisitante ? "Aplicante de Grupo" : "Sin Grupo Asociado");
+      setLoading(false);
+      return;
     }
-  }
 
- 
+    async function verificarVigenciaGrupo() {
+      try {
+        // 🔄 Contingencia:
+        const dataGrupos = await apiRequest("groups?per_page=100", { method: "GET" });
+        const lista = dataGrupos.grupos || dataGrupos.Groups || dataGrupos.groups || [];
+        
+        const miGrupo = lista.find((g: any) => String(g.id) === String(user?.groupId));
+        
+        if (miGrupo) {
+          setNombreGrupo(miGrupo.nombre);
+
+          const fechaRaw = miGrupo.actualizado_en;
+          if (fechaRaw) {
+            const fechaActualizacion = new Date(fechaRaw);
+            const fechaLimite = new Date(fechaActualizacion);
+            fechaLimite.setFullYear(fechaLimite.getFullYear() + 1);
+
+            const hoy = new Date();
+            setInfoAlDia(hoy < fechaLimite);
+          } else {
+            setInfoAlDia(false);
+          }
+        }
+      } catch (error) {
+        console.error("Error validando vigencia del grupo:", error);
+        setNombreGrupo("Error de conexión");
+        setInfoAlDia(false);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    verificarVigenciaGrupo();
+  }, [user?.groupId, isHydrated, esVisitante]);
+
   const fullNavItems = [
     { label: "Inicio", href: "/admingroup/dashboard" },
     { label: "Planificar Actividad", href: "/admingroup/crear_actividad" },
@@ -60,13 +69,19 @@ export const AdminGroupNavbar = () => {
     { label: "Estadísticas", href: "/admingroup/estadisticas" },
   ];
 
-
   const invitadoNavItems = [
     { label: "Inicio", href: "/admingroup/dashboard" },
   ];
+  
+  const navItems = (infoAlDia && !esVisitante) ? fullNavItems : invitadoNavItems;
 
-  // Selección de items
-  let navItems = (role === "Grupo" && infoAlDia) ? fullNavItems : invitadoNavItems;
+  if (loading || !isHydrated) {
+    return (
+      <Box w="250px" bg="primary" p={6} minH="100vh">
+        <SkeletonText mt="4" noOfLines={4} spacing="4" skeletonHeight="2" />
+      </Box>
+    );
+  }
 
   return (
     <Box
@@ -76,9 +91,10 @@ export const AdminGroupNavbar = () => {
       p={6}
       display="flex"
       flexDirection="column"
+      justifyContent="space-between"
       minH="100vh"
     >
-      <VStack align="start" spacing={0} w="full">
+      <VStack align="start" spacing={0} w="full" flex="1">
         {navItems.map((item) => (
           <Box key={item.href} w="full">
             <ChakraLink
@@ -96,6 +112,18 @@ export const AdminGroupNavbar = () => {
           </Box>
         ))}
       </VStack>
+
+      <Box pt={4} borderTop="2px dashed rgba(255,255,255,0.3)">
+        <Text fontSize="xs" color="gray.300" textTransform="uppercase" letterSpacing="wider">
+          Grupo:
+        </Text>
+        <Text fontSize="md" fontWeight="black" color="teal.200" noOfLines={1}>
+          {nombreGrupo}
+        </Text>
+        <Text fontSize="xx-small" color={infoAlDia ? "green.300" : "orange.300"} mt={1}>
+          ● {infoAlDia ? "Información al día" : "Actualización requerida"}
+        </Text>
+      </Box>
     </Box>
   );
 };
