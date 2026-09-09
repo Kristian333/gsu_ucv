@@ -74,11 +74,12 @@ export default function UsuarioGrupoDetalle({ usuario }: { usuario: UserDetailBa
       toast({
         title: "Identidad confirmada, mostrando contraseña",
         status: "success",
-        bgColor: "primary",
-        color: "white",
         duration: 4000,
         isClosable: true,
-        position: "bottom-right",
+        position: "bottom-right",containerStyle: {
+          backgroundColor: "var(--chakra-colors-primary, #319795)",
+          color: "white",
+        },
       });
     } else {
       toast({

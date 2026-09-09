@@ -64,7 +64,8 @@ const traducirRolParaModal = (rol: string): string => {
 };
 
 export function UsersTable({ initialUsers }: UsersTableProps) {
-  const { user: currentUser, loading: authLoading } = useAuth();
+  const { user: currentUser, isHydrated } = useAuth();
+  const authLoading = !isHydrated;
   const router = useRouter();
   const toast = useToast();
 

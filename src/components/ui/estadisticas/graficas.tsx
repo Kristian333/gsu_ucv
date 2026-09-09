@@ -47,7 +47,7 @@ const ChartWrapper = ({ children }: { children: React.ReactNode }) => (
   </div>
 );
 
-export const SimpleBarCharts: React.FC<ChartProps> = ({ datos, valorx, valory, valory2, nombreLeyenda, nombreLeyenda2 }) => (
+export const SimpleBarCharts: React.FC<ChartProps> = ({ datos, valorx, valory = '', valory2, nombreLeyenda, nombreLeyenda2 }) => (
   <ChartWrapper>
     <BarChart data={datos} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
       <CartesianGrid strokeDasharray="4 1 2" />
@@ -55,37 +55,40 @@ export const SimpleBarCharts: React.FC<ChartProps> = ({ datos, valorx, valory, v
       <YAxis />
       <Tooltip />
       <Legend />
-      <Bar dataKey={valory} fill="#6b48ff" name={nombreLeyenda || valory} />
-      <Bar dataKey={valory2} fill="#1ee3cf" name={nombreLeyenda2 || valory2} />
+      {valory && <Bar dataKey={valory} fill="#6b48ff" name={nombreLeyenda || valory} />}
+      {valory2 && <Bar dataKey={valory2} fill="#1ee3cf" name={nombreLeyenda2 || valory2} />}
     </BarChart>
   </ChartWrapper>
 );
 
-export const StackedAreaCharts: React.FC<ChartProps> = ({ datos, valorx, valory, valory2 }) => (
+export const StackedAreaCharts: React.FC<ChartProps> = ({ datos, valorx, valory = '', valory2 }) => (
   <ChartWrapper>
     <AreaChart data={datos} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
       <CartesianGrid strokeDasharray="3 3" />
       <XAxis dataKey={valorx} />
       <YAxis />
       <Tooltip />
-      <Area type="monotone" dataKey={valory} stackId="1" stroke='#8884d8' fill="#8884d8" name="Real" />
-      <Area type="monotone" dataKey={valory2} stackId="1" stroke='#82caed' fill="#fad3cf" name="Meta" />
+      {valory && <Area type="monotone" dataKey={valory} stackId="1" stroke='#8884d8' fill="#8884d8" name="Real" />}
+      {valory2 && <Area type="monotone" dataKey={valory2} stackId="1" stroke='#82caed' fill="#fad3cf" name="Meta" />}
     </AreaChart>
   </ChartWrapper>
 );
 
-export const SimpleRadarChart: React.FC<ChartProps> = ({ datos, valorx, valory, valory2 }) => (
+export const SimpleRadarChart: React.FC<ChartProps> = ({ datos, valorx, valory = '', valory2 }) => (
   <ChartWrapper>
     <RadarChart outerRadius="80%" data={datos}>
-      <PolarGrid /><PolarAngleAxis dataKey={valorx} /><PolarRadiusAxis /><Tooltip />
-      <Radar name="Real" dataKey={valory} stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
-      <Radar name="Meta" dataKey={valory2} stroke="#82caed" fill="#82caed" fillOpacity={0.6} />
+      <PolarGrid />
+      <PolarAngleAxis dataKey={valorx} />
+      <PolarRadiusAxis />
+      <Tooltip />
+      {valory && <Radar name="Real" dataKey={valory} stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />}
+      {valory2 && <Radar name="Meta" dataKey={valory2} stroke="#82caed" fill="#82caed" fillOpacity={0.6} />}
       <Legend />
     </RadarChart>
   </ChartWrapper>
 );
 
-export const SimpleBarCharts1: React.FC<ChartProps> = ({ datos, valorx, valory, nombreLeyenda }) => (
+export const SimpleBarCharts1: React.FC<ChartProps> = ({ datos, valorx, valory = '', nombreLeyenda }) => (
   <ChartWrapper>
     <BarChart data={datos} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
       <CartesianGrid strokeDasharray="4 1 2" />
@@ -93,17 +96,19 @@ export const SimpleBarCharts1: React.FC<ChartProps> = ({ datos, valorx, valory, 
       <YAxis />
       <Tooltip />
       <Legend />
-      <Bar dataKey={valory} fill="#6b48ff" name={nombreLeyenda || valory} />
+      {valory && <Bar dataKey={valory} fill="#6b48ff" name={nombreLeyenda || valory} />}
     </BarChart>
   </ChartWrapper>
 );
 
-export const DoublePieChart: React.FC<ChartProps> = ({ datos, valorx, valory, valory2 }) => (
+export const DoublePieChart: React.FC<ChartProps> = ({ datos, valorx, valory = '', valory2 }) => (
   <ChartWrapper>
     <PieChart>
-      <Pie data={datos} dataKey={valory} nameKey={valorx} cx="50%" cy="50%" outerRadius={80} fill="#8884d8" label>
-        {datos.map((_, index) => <Cell key={`c1-${index}`} fill={COLORS[index % COLORS.length]} />)}
-      </Pie>
+      {valory && (
+        <Pie data={datos} dataKey={valory} nameKey={valorx} cx="50%" cy="50%" outerRadius={80} fill="#8884d8" label>
+          {datos.map((_, index) => <Cell key={`c1-${index}`} fill={COLORS[index % COLORS.length]} />)}
+        </Pie>
+      )}
       {valory2 && <Pie data={datos} dataKey={valory2} nameKey={valorx} cx="50%" cy="50%" innerRadius={100} outerRadius={130} fill="#82ca9d" label fillOpacity={0.4} />}
       <Tooltip /><Legend />
     </PieChart>
@@ -128,7 +133,7 @@ export const GraficaAreasPorAnio: React.FC<{ datos: any[]; valorx: string; areas
   );
 };
 
-export const SimpleBarChartsHorizontal: React.FC<ChartProps> = ({ datos, valorx, valory, valory2, nombreLeyenda, nombreLeyenda2 }) => {
+export const SimpleBarChartsHorizontal: React.FC<ChartProps> = ({ datos, valorx, valory = '',  valory2, nombreLeyenda, nombreLeyenda2 }) => {
 
   const alturaCalculada = datos && datos.length > 0 ? (datos.length * 55) + 100 : 450;
 
@@ -141,8 +146,8 @@ export const SimpleBarChartsHorizontal: React.FC<ChartProps> = ({ datos, valorx,
           <YAxis dataKey={valorx} type="category" tick={{ fontSize: 13 }} />
           <Tooltip />
           <Legend />
-          <Bar dataKey={valory} fill="#6b48ff" name={nombreLeyenda || valory} />
-          <Bar dataKey={valory2} fill="#1ee3cf" name={nombreLeyenda2 || valory2} />
+          {valory && <Bar dataKey={valory} fill="#6b48ff" name={nombreLeyenda || valory} />}
+          {valory2 && <Bar dataKey={valory2} fill="#1ee3cf" name={nombreLeyenda2 || valory2} />}
         </BarChart>
       </ResponsiveContainer>
     </div>

@@ -47,7 +47,8 @@ export default function SolicitudDetalleClientPage({
   requestId,
 }: SolicitudDetalleClientPageProps) {
   const router = useRouter();
-  const { user, token, loading: authLoading } = useAuth();
+  const { user, token, isHydrated } = useAuth();
+  const authLoading = !isHydrated;
   const toast = useToast();
 
   const [solicitud, setSolicitud] = useState<GroupResourceRequest | null>(null);
