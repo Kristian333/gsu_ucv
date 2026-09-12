@@ -1,65 +1,38 @@
 // /components/layout/admingroup-navbar.tsx
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { VStack, Box, Link as ChakraLink, Text, SkeletonText } from "@chakra-ui/react";
 import NextLink from "next/link";
 import { useAuth } from "@/app/context/auth-context";
-import { apiRequest } from "@/components/formularios/api";
 
 export const AdminGroupNavbar = () => {
   const { user, isHydrated } = useAuth();
-  const [infoAlDia, setInfoAlDia] = useState<boolean>(false);
-  const [nombreGrupo, setNombreGrupo] = useState<string>("Buscando grupo...");
-  const [loading, setLoading] = useState<boolean>(true);
 
-  const rolesArray = (user?.roles || []).map(r => r.toLowerCase().trim());
+  if (!isHydrated) {
+    return (
+      <Box w="250px" bg="primary" p={6} minH="100vh">
+        <SkeletonText mt="4" noOfLines={4} spacing="4" skeletonHeight="2" />
+      </Box>
+    );
+  }
+
+  const rolesArray = (user?.roles || []).map((r) => r.toLowerCase().trim());
+  const esGrupo = rolesArray.includes("group_admin") || rolesArray.includes("group_helper");
   const esVisitante = rolesArray.includes("visitante");
 
-  useEffect(() => {
-    if (!isHydrated) return;
+  let infoAlDia = false;
+  if (user?.groupUpdatedAt) {
+    const fechaActualizacion = new Date(user.groupUpdatedAt);
+    const fechaLimite = new Date(fechaActualizacion);
+    fechaLimite.setFullYear(fechaLimite.getFullYear() + 1);
 
-    if (!user?.groupId) {
-      setInfoAlDia(false);
-      setNombreGrupo(esVisitante ? "Aplicante de Grupo" : "Sin Grupo Asociado");
-      setLoading(false);
-      return;
-    }
+    const hoy = new Date();
+    infoAlDia = hoy < fechaLimite;
+  }
 
-    async function verificarVigenciaGrupo() {
-      try {
-        // 🔄 Contingencia:
-        const dataGrupos = await apiRequest("groups?per_page=100", { method: "GET" });
-        const lista = dataGrupos.grupos || dataGrupos.Groups || dataGrupos.groups || [];
-        
-        const miGrupo = lista.find((g: any) => String(g.id) === String(user?.groupId));
-        
-        if (miGrupo) {
-          setNombreGrupo(miGrupo.nombre);
-
-          const fechaRaw = miGrupo.actualizado_en;
-          if (fechaRaw) {
-            const fechaActualizacion = new Date(fechaRaw);
-            const fechaLimite = new Date(fechaActualizacion);
-            fechaLimite.setFullYear(fechaLimite.getFullYear() + 1);
-
-            const hoy = new Date();
-            setInfoAlDia(hoy < fechaLimite);
-          } else {
-            setInfoAlDia(false);
-          }
-        }
-      } catch (error) {
-        console.error("Error validando vigencia del grupo:", error);
-        setNombreGrupo("Error de conexión");
-        setInfoAlDia(false);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    verificarVigenciaGrupo();
-  }, [user?.groupId, isHydrated, esVisitante]);
+  const esGrupoActivo = Boolean(user?.groupActive);
+  const nombreGrupo = user?.group || (esVisitante ? "Aplicante de Grupo" : "Sin Grupo Asociado");
 
   const fullNavItems = [
     { label: "Inicio", href: "/admingroup/dashboard" },
@@ -72,21 +45,13 @@ export const AdminGroupNavbar = () => {
   const invitadoNavItems = [
     { label: "Inicio", href: "/admingroup/dashboard" },
   ];
-  
-  const navItems = (infoAlDia && !esVisitante) ? fullNavItems : invitadoNavItems;
 
-  if (loading || !isHydrated) {
-    return (
-      <Box w="250px" bg="primary" p={6} minH="100vh">
-        <SkeletonText mt="4" noOfLines={4} spacing="4" skeletonHeight="2" />
-      </Box>
-    );
-  }
+  const navItems = (infoAlDia && esGrupoActivo && !esVisitante) ? fullNavItems : invitadoNavItems;
 
   return (
     <Box
       w="250px"
-      bg="primary" 
+      bg="primary"
       color="white"
       p={6}
       display="flex"
@@ -113,17 +78,21 @@ export const AdminGroupNavbar = () => {
         ))}
       </VStack>
 
-      <Box pt={4} borderTop="2px dashed rgba(255,255,255,0.3)">
-        <Text fontSize="xs" color="gray.300" textTransform="uppercase" letterSpacing="wider">
-          Grupo:
-        </Text>
-        <Text fontSize="md" fontWeight="black" color="teal.200" noOfLines={1}>
-          {nombreGrupo}
-        </Text>
-        <Text fontSize="xx-small" color={infoAlDia ? "green.300" : "orange.300"} mt={1}>
-          ● {infoAlDia ? "Información al día" : "Actualización requerida"}
-        </Text>
-      </Box>
+      {esGrupo && (
+        <Box pt={4} borderTop="2px dashed rgba(255,255,255,0.3)">
+          <Text fontSize="xs" color="gray.300" textTransform="uppercase" letterSpacing="wider">
+            Grupo:
+          </Text>
+          <Text fontSize="md" fontWeight="black" color="teal.200" noOfLines={1}>
+            {nombreGrupo}
+          </Text>
+          <Text fontSize="xx-small" color={(infoAlDia && esGrupoActivo) ? "green.300" : "orange.300"} mt={1}>
+            ● {!esGrupoActivo
+                ? "Grupo Inactivo" 
+                : (infoAlDia ? "Información al día" : "Actualización requerida")}
+          </Text>
+        </Box>
+      )}
     </Box>
   );
 };

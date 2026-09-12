@@ -37,36 +37,19 @@ function formatDateDDMMYYYY(date: Date): string {
 }
 
 async function getAllGroups(): Promise<GroupOption[]> {
-    const allGroups: GroupOption[] = [];
-    let page = 1;
-    const perPage = 50; // Traer páginas grandes para minimizar peticiones
-    let totalPages = 1;
-
     try {
-        do {
-            const responseData = await apiServerRequest(`groups?page=${page}&per_page=${perPage}`, { cache: 'no-store' });
-            const rawGroups = responseData?.grupos || responseData?.Groups || [];
-            const pageScope = responseData?.pagina || responseData?.PageScope || {};
+        const responseData = await apiServerRequest('groups?simplelist=true', { cache: 'no-store' });
+        const rawGroups = responseData?.grupos || (Array.isArray(responseData) ? responseData : []);
 
-            const count = pageScope.count || rawGroups.length;
-            totalPages = Math.ceil(count / perPage) || 1;
-
-            for (const g of rawGroups) {
-                if (g.id && g.nombre) {
-                    allGroups.push({
-                        id: String(g.id),
-                        nombre: g.nombre,
-                    });
-                }
-            }
-
-            page++;
-        } while (page <= totalPages);
-
-        return allGroups;
+        return rawGroups
+            .filter((g: any) => g.id && g.nombre)
+            .map((g: any) => ({
+                id: String(g.id),
+                nombre: g.nombre,
+            }));
     } catch (error) {
-        console.error("ACTIVIDADES SERVER - Error obteniendo grupos completos:", error);
-        return allGroups;
+        console.error("ACTIVIDADES SERVER - Error obteniendo grupos:", error);
+        return [];
     }
 }
 

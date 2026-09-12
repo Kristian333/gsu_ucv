@@ -13,6 +13,8 @@ export interface AuthUser {
     roles: string[];
     group?: string;
     groupId?: string;
+    groupActive?: boolean;
+    groupUpdatedAt?: string;
     facultad?: string;
 }
 

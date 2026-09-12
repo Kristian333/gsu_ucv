@@ -15,6 +15,7 @@ import {
 import { useAuth } from "@/app/context/auth-context";
 import { apiRequest } from "@/components/formularios/api";
 import { DashboardCard } from "@/components/ui/dashboard-card";
+import { ContactSupportCard } from "@/components/ui/contact-support-card";
 import { FacultyDashboardResponse } from "@/types/dashboard";
 
 export function FacultyDashboardClient() {
@@ -97,19 +98,7 @@ export function FacultyDashboardClient() {
       </SimpleGrid>
 
       {/* Bloque de Soporte Técnico DEU */}
-      <Box mt={12} mx="auto" maxW="600px" p={8} bg="gray.100" borderRadius="lg" textAlign="center">
-        <Text fontSize="lg" fontWeight="bold">
-          Soporte Técnico DEU
-        </Text>
-        <Text fontSize="md" mt={2}>
-          📧 deu.depgsu@gmail.com
-        </Text>
-        <Text fontSize="md">📱 412-5502096</Text>
-        <Divider my={4} borderColor="gray.300" />
-        <Text fontSize="md" mt={2}>
-          Caracas, UCV, Edif. Biblioteca Central, Piso 5
-        </Text>
-      </Box>
+      <ContactSupportCard title="Soporte Técnico DEU" />
     </Box>
   );
 }

@@ -17,67 +17,58 @@ import NextLink from "next/link";
 import { useAuth } from "@/app/context/auth-context";
 import { apiRequest } from "@/components/formularios/api";
 import { DashboardCard } from "@/components/ui/dashboard-card";
+import { ContactSupportCard } from "@/components/ui/contact-support-card";
 import { GroupDashboardResponse } from "@/types/dashboard";
 
 export function GroupDashboardContent() {
   const { user, isHydrated } = useAuth();
-  const [miGrupo, setMiGrupo] = useState<any | null>(null);
   const [metrics, setMetrics] = useState<GroupDashboardResponse | null>(null);
-  const [loadingGrupo, setLoadingGrupo] = useState<boolean>(true);
-  const [infoAlDia, setInfoAlDia] = useState<boolean>(false);
+  const [loadingMetrics, setLoadingMetrics] = useState<boolean>(true);
 
   const rolesArray = (user?.roles || []).map((r) => r.toLowerCase().trim());
   const GroupDash = rolesArray.includes("group_admin") || rolesArray.includes("group_helper");
   const VisitanteDash = rolesArray.includes("visitante");
 
+  // Validación de la fecha de actualización del grupo
+  let infoAlDia = false;
+  if (user?.groupUpdatedAt) {
+    const fechaActualizacion = new Date(user.groupUpdatedAt);
+    const fechaLimite = new Date(fechaActualizacion);
+    fechaLimite.setFullYear(fechaLimite.getFullYear() + 1);
+
+    const hoy = new Date();
+    infoAlDia = hoy < fechaLimite;
+  }
+
+  const esGrupoActivo = Boolean(user?.groupActive);
+  const tieneGrupoAsociado = Boolean(user?.groupId);
+
   useEffect(() => {
     if (!isHydrated) return;
 
-    const groupId = user?.groupId;
-    
-    if (!groupId) {
-      setLoadingGrupo(false);
+    if (!user?.groupId || !esGrupoActivo || !infoAlDia) {
+      setLoadingMetrics(false);
       return;
     }
 
-    async function cargarDetalleGrupo() {
+    async function cargarMetricas() {
       try {
-        // 🔄 Contingencia:
-        const dataGrupos = await apiRequest("groups?per_page=100", { method: "GET" });
-        const lista = dataGrupos.grupos || dataGrupos.Groups || dataGrupos.groups || [];
-        
-        const grupoEncontrado = lista.find((g: any) => String(g.id) === String(groupId));
-        
-        if (grupoEncontrado) {
-          setMiGrupo(grupoEncontrado);
-          
-          const fechaRaw = grupoEncontrado.actualizado_en;
-          if (fechaRaw) {
-            const fechaActualizacion = new Date(fechaRaw);
-            const fechaLimite = new Date(fechaActualizacion);
-            fechaLimite.setFullYear(fechaLimite.getFullYear() + 1);
-
-            const hoy = new Date();
-            setInfoAlDia(hoy < fechaLimite);
-          }
-        }
-
         const metricsData: GroupDashboardResponse = await apiRequest(
-          `groups/${groupId}/dashboard`,
+          `groups/${user?.groupId}/dashboard`,
           { method: "GET" }
         );
         setMetrics(metricsData);
       } catch (error) {
-        console.error("Error obteniendo detalles del grupo en dashboard:", error);
+        console.error("Error obteniendo métricas del grupo:", error);
       } finally {
-        setLoadingGrupo(false);
+        setLoadingMetrics(false);
       }
     }
 
-    cargarDetalleGrupo();
-  }, [user?.groupId, isHydrated]);
+    cargarMetricas();
+  }, [user?.groupId, esGrupoActivo, infoAlDia, isHydrated]);
 
-  if (!isHydrated || loadingGrupo) {
+  if (!isHydrated || (GroupDash && loadingMetrics)) {
     return (
       <Center minH="80vh">
         <VStack spacing={4}>
@@ -88,16 +79,13 @@ export function GroupDashboardContent() {
     );
   }
 
-  const esGrupoActivo = miGrupo ? ( miGrupo.activo ?? false) : false;
-
   const mostrar = {
-    crearGrupo: VisitanteDash && !miGrupo,
-    sinValidar: VisitanteDash && miGrupo && !esGrupoActivo,
-    corregir: false,
-    validada: VisitanteDash && miGrupo && esGrupoActivo,
-    bienvenidaGrupo: GroupDash && infoAlDia,
-    validarGrupo: GroupDash && !infoAlDia,
-    rechazada: false,
+    crearGrupo: VisitanteDash && !tieneGrupoAsociado,
+    sinValidar: VisitanteDash && tieneGrupoAsociado && !esGrupoActivo,
+    validada: VisitanteDash && tieneGrupoAsociado && esGrupoActivo,
+    bienvenidaGrupo: GroupDash && infoAlDia && esGrupoActivo,
+    validarGrupo: GroupDash && !infoAlDia && esGrupoActivo,
+    grupoInactivo: GroupDash && !esGrupoActivo,
   };
 
   return (
@@ -161,7 +149,7 @@ export function GroupDashboardContent() {
 
           {mostrar.validarGrupo && (
             <VStack spacing={4}>
-              <Text fontSize="xl" textAlign="center">
+              <Text fontSize="xl" textAlign="center" fontWeight="medium">
                 ¡Atención! Necesitas actualizar y validar la información anual de tu Grupo de Extensión.
               </Text>
               <NextLink href="/admingroup/validar_grupo" passHref>
@@ -169,6 +157,14 @@ export function GroupDashboardContent() {
                   Validar información
                 </Button>
               </NextLink>
+            </VStack>
+          )}
+
+          {mostrar.grupoInactivo && (
+            <VStack spacing={4} maxW="600px" textAlign="center">
+              <Text fontSize="xl" fontWeight="semibold" color="red.600">
+                El grupo no está activo actualmente. Por favor comunicarse con la DEU mediante los contactos provistos abajo.
+              </Text>
             </VStack>
           )}
           
@@ -188,27 +184,7 @@ export function GroupDashboardContent() {
       )}
       
       {/* Tarjeta de Contacto Estática Fija */}
-      <Box
-        mt={12}
-        w="100%"
-        maxW="600px"
-        p={8}
-        bg="gray.100"
-        borderRadius="lg"
-        boxShadow="md"
-        textAlign="center"
-      >
-        <Text fontSize="lg">Para más información:</Text>
-        <Text fontSize="md" mt={2}>📧 deu.depgsu@gmail.com</Text>
-        <Text fontSize="md">📱 412-5502096</Text>
-
-        <Divider my={4} />
-
-        <Text fontSize="lg">Dirección de Extensión:</Text>
-        <Text fontSize="md" mt={2}>
-        Caracas, UCV, Edif. Biblioteca Central, Piso 5
-        </Text>
-      </Box>
+      <ContactSupportCard title="Para más información:" />
       
     </VStack>
   );

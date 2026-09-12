@@ -7,16 +7,10 @@ import {
   Heading, useToast, Box, Text, Link 
 } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/app/context/auth-context";
+import { useAuth, AuthUser } from "@/app/context/auth-context";
 import { apiRequest } from "@/components/formularios/api";
 import { getDashboardRouteByRoles } from "@/utils/redirectByRole";
 import { getFacultyImagePath } from "@/utils/common";
-
-interface GroupBackendItem {
-  id: any;
-  propietario?: { id: any };
-  imagen_url?: string;
-}
 
 export function LoginForm() {
   const [nombreUsuario, setNombreUsuario] = useState(""); 
@@ -43,18 +37,19 @@ export function LoginForm() {
         body: JSON.stringify({ usuario: nombreUsuario, password: password }),
       });
 
-      if (data.token) {
-        localStorage.setItem("token", data.token);
-      }
-
-      if (data.facultad) {
-        localStorage.setItem("facultad", data.facultad);
-      }
-
+      const token = data.token;
+      const facultad = data.facultad || "";
+      const groupId = data.grupoId || "";
+      const groupName = data.nombreGrupo || "";
       const infoUsuario = data.usuario;
+
       if (!infoUsuario) {
         throw new Error("No se recibieron datos del perfil del usuario.");
       }
+
+      if (token) localStorage.setItem("token", token);
+      if (facultad) localStorage.setItem("facultad", facultad);
+      if (groupId) localStorage.setItem("group_id", groupId);
 
       const roles = (infoUsuario.roles || []).map((r: string) => r.toLowerCase().trim());
       const esAdminGlobal = roles.includes("root") || roles.includes("deu_admin");
@@ -67,45 +62,47 @@ export function LoginForm() {
       if (esAdminGlobal) {
         userAvatar = "/logo.png";
       } else if (esFacultad) {
-        userAvatar = getFacultyImagePath(data.facultad || infoUsuario.facultad);
+        userAvatar = getFacultyImagePath(facultad || infoUsuario.facultad);
       }
 
-      const usuarioCompleto = {
+      let groupActive: boolean | undefined = undefined;
+      let groupUpdatedAt: string | undefined = undefined;
+
+      if (esGrupo && groupId) {
+        try {
+          const groupDetail = await apiRequest(`groups/${groupId}`, {
+            method: "GET",
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          });
+
+          if (groupDetail) {
+            groupActive = groupDetail.activo;
+            groupUpdatedAt = groupDetail.actualizado_en;
+
+            // Si el grupo tiene logo personalizado, se utiliza como avatar
+            if (groupDetail.imagen_url) {
+              userAvatar = groupDetail.imagen_url;
+            }
+          }
+        } catch (errGroup) {
+          console.error("No se pudieron cargar los detalles adicionales del grupo:", errGroup);
+        }
+      }
+
+      const usuarioCompleto: AuthUser = {
         id: String(infoUsuario.id),
         name: infoUsuario.nombre || infoUsuario.name || "",
         correo: infoUsuario.correo || "",
         avatar: userAvatar,
         roles: infoUsuario.roles || [],
-        groupId: "",
-        facultad: data.facultad || "" 
+        groupId: groupId,
+        group: groupName,
+        groupActive: groupActive,
+        groupUpdatedAt: groupUpdatedAt,
+        facultad: facultad,
       };
 
-      // Resolución inmediata si maneja roles de grupo operativo
-      if (esGrupo) {
-        try {
-          const dataGrupos = await apiRequest("groups?per_page=100", { method: "GET" });
-          const lista: GroupBackendItem[] = dataGrupos.grupos || [];
-          
-          const miGrupoAsociado = lista.find(g => 
-            g.propietario && String(g.propietario.id).trim() === String(infoUsuario.id).trim()
-          );
-
-          if (miGrupoAsociado) {
-            const idEncontrado = String(miGrupoAsociado.id);
-            localStorage.setItem("group_id", idEncontrado);
-            usuarioCompleto.groupId = idEncontrado;
-
-            // Si el backend trajo la imagen del grupo, se la asignamos como avatar
-            if (miGrupoAsociado.imagen_url) {
-              usuarioCompleto.avatar = miGrupoAsociado.imagen_url;
-            }
-          }
-        } catch (errGroup) {
-          console.error("No se pudo pre-cargar el ID del grupo en el login:", errGroup);
-        }
-      }
-
-      login(usuarioCompleto);
+      login(usuarioCompleto, token);
 
       toast({ title: "¡Bienvenido!", status: "success", duration: 2000 });
 

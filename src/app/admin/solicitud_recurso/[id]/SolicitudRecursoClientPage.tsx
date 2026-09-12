@@ -5,10 +5,10 @@ import {
   Box, Flex, VStack, HStack, Heading, FormControl, FormLabel,
   Button, Text, useToast, useDisclosure, IconButton, Select, Modal, ModalOverlay,
   ModalContent, ModalHeader, ModalBody, ModalFooter, ModalCloseButton,
-  Spinner, Code
+  Spinner, Code, Input, InputGroup, InputLeftAddon
 } from "@chakra-ui/react";
-import { 
-   FileText, Eye, CheckCircle, XCircle, ArrowLeft
+import {
+  FileText, Eye, CheckCircle, XCircle, ArrowLeft
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/auth-context";
@@ -30,6 +30,7 @@ export default function SolicitudRecursoClientPage({ requestId, generalData }: S
   const [submitting, setSubmitting] = useState(false);
   const [solicitud, setSolicitud] = useState<any>(null);
   const [contenido, setContenido] = useState<string>("");
+  const [codigoFormato, setCodigoFormato] = useState<string>("");
   const [, setIsDirty] = useState(false);
 
   // Selección de firmante de la DEU
@@ -50,6 +51,9 @@ export default function SolicitudRecursoClientPage({ requestId, generalData }: S
       if (result.contenido) {
         setContenido(result.contenido);
         setTimeout(() => setIsDirty(false), 50);
+      }
+      if (result.codigo_formato || result.codigoFormato) {
+        setCodigoFormato(result.codigo_formato || result.codigoFormato);
       }
     } catch (error) {
       toast({
@@ -114,8 +118,8 @@ export default function SolicitudRecursoClientPage({ requestId, generalData }: S
         status: "success",
       });
 
-    // Actualizar estado local inmediatamente para cambiar la UI y ocultar botones
-    setSolicitud((prev: any) => prev ? { ...prev, estado: "approved" } : prev);
+      // Actualizar estado local inmediatamente para cambiar la UI y ocultar botones
+      setSolicitud((prev: any) => prev ? { ...prev, estado: "approved" } : prev);
 
       await fetchSolicitud();
     } catch (error: any) {
@@ -144,8 +148,8 @@ export default function SolicitudRecursoClientPage({ requestId, generalData }: S
         status: "info",
       });
 
-    // Actualizar estado local inmediatamente
-    setSolicitud((prev: any) => prev ? { ...prev, estado: "rejected" } : prev);
+      // Actualizar estado local inmediatamente
+      setSolicitud((prev: any) => prev ? { ...prev, estado: "rejected" } : prev);
 
       await fetchSolicitud();
     } catch (error: any) {
@@ -278,6 +282,26 @@ export default function SolicitudRecursoClientPage({ requestId, generalData }: S
       {/* EDITOR DE CONTENIDO Y CARTA DE LA SOLICITUD */}
       <Box bg="white" p={6} borderRadius="xl" shadow="md" mb={6}>
         <VStack spacing={4} align="stretch">
+          
+          {/* CAMPO CÓDIGO DE FORMATO */}
+          <FormControl maxW="380px">
+            <FormLabel fontSize="xs" fontWeight="bold">
+              Código del Formato
+            </FormLabel>
+            <InputGroup size="sm">
+              <InputLeftAddon fontWeight="bold" bg="gray.100" color="gray.700">
+                DEU-GSU /
+              </InputLeftAddon>
+              <Input 
+                placeholder="Ej. 001-2026" 
+                value={codigoFormato}
+                onChange={(e) => setCodigoFormato(e.target.value)}
+                focusBorderColor="blue.500"
+              />
+            </InputGroup>
+          </FormControl>
+
+          {/* EDITOR DE TEXTO */}
           <FormControl>
             <FormLabel fontWeight="bold">Contenido de la Solicitud / Documentación Presentada</FormLabel>
             <RichTextEditor 
@@ -376,6 +400,7 @@ export default function SolicitudRecursoClientPage({ requestId, generalData }: S
         tipoSolicitud={solicitud?.tipo || "Solicitud de Recurso"}
         modeloCarta={contenido}
         generalData={getSelectedFirmanteData()}
+        codigoFormato={codigoFormato}
         mode={previewMode}
         onConfirmApprove={handleConfirmApprove}
       />
