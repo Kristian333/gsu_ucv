@@ -261,14 +261,14 @@ export const RegisterForm = () => {
             </Button>
           )}
           {step < 2 && (
-            <Button onClick={handleNext} colorScheme="teal" size="lg" mt={4} w="full">
+            <Button onClick={handleNext} colorScheme="primary" size="lg" mt={4} w="full">
               Siguiente
             </Button>
           )}
           {step === 2 && (
             <Button
               type="submit"
-              colorScheme="teal"
+              colorScheme="primary"
               size="lg"
               mt={4}
               w="full"
@@ -282,7 +282,7 @@ export const RegisterForm = () => {
 
       <Text mt={6} textAlign="center" fontSize="sm" color="gray.600">
         ¿Ya tienes cuenta?{" "}
-        <Link href="/login" color="teal.500" fontWeight="bold">
+        <Link href="/login" color="secondary.500" fontWeight="bold">
           Inicia Sesión
         </Link>
       </Text>

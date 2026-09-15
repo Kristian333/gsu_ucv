@@ -138,7 +138,7 @@ export function LoginForm() {
           <FormControl isRequired>
             <FormLabel fontWeight="medium" color="gray.600">Usuario</FormLabel>
             <Input 
-              type="text" placeholder="Tu usuario" variant="outline" focusBorderColor="green.500"
+              type="text" placeholder="Tu usuario" variant="outline" focusBorderColor="primary.500"
               value={nombreUsuario} onChange={(e) => setNombreUsuario(e.target.value)} 
             />
           </FormControl>
@@ -146,13 +146,13 @@ export function LoginForm() {
           <FormControl isRequired>
             <FormLabel fontWeight="medium" color="gray.600">Contraseña</FormLabel>
             <Input 
-              type="password" placeholder="••••••••" variant="outline" focusBorderColor="green.500"
+              type="password" placeholder="••••••••" variant="outline" focusBorderColor="primary.500"
               value={password} onChange={(e) => setPassword(e.target.value)} 
             />
           </FormControl>
 
           <Button 
-            type="submit" bg="#38A169" color="white" _hover={{ bg: "#2F855A" }}
+            type="submit" bg="primary.500" color="white" _hover={{ bg: "primary.600" }}
             width="full" size="lg" fontSize="xl" py={7} isLoading={isLoading}
             loadingText="Verificando..." boxShadow="0 4px 12px rgba(66, 153, 225, 0.3)"
           >
@@ -161,7 +161,7 @@ export function LoginForm() {
 
           <Text color="gray.500" fontSize="sm">
             ¿No tienes cuenta?{" "}
-            <Link href="/registro" color="blue.500" fontWeight="bold">Crea tu perfil ahora</Link>
+            <Link href="/registro" color="secondary.500" fontWeight="bold">Crea tu perfil ahora</Link>
           </Text>
         </VStack>
       </form>
