@@ -22,7 +22,7 @@ export function AdminNavbar() {
     { name: 'Formatos de Solicitudes', href: '/admin/formatos' },
   ];
 
-  const rightLink = { name: 'Info DEU', href: '/admin/info_general' };
+  const rightLink = { name: 'Información (DEU)', href: '/admin/info_general' };
 
   return (
     <Box 

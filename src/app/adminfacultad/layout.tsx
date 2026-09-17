@@ -31,7 +31,7 @@ export default function FacultyLayout({ children }: { children: React.ReactNode 
   }
 
   return (
-    <Flex minH="100vh">
+    <Flex direction="column" minH="100vh">
       <AdminFacultyNavbar />
       <Box flex="1" p={10} bg="white">{children}</Box>
     </Flex>

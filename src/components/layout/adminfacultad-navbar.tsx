@@ -1,61 +1,54 @@
+// src/components/layout/adminfacultad-navbar.tsx
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { VStack, Box, Link as ChakraLink } from "@chakra-ui/react";
+import { Box, Flex, Link as ChakraLink, useColorModeValue } from "@chakra-ui/react";
 import NextLink from "next/link";
-import { useAuth } from "@/app/context/auth-context";
+import { usePathname } from 'next/navigation';
 
-export const AdminFacultyNavbar = () => {
-  const { user } = useAuth();
-  const [estado, setEstado] = useState(null);
+export function AdminFacultyNavbar() {
+  const pathname = usePathname();
+  const linkColor = useColorModeValue('gray.600', 'gray.300');
+  const activeLinkColor = 'blue.600';
+  const activeLinkBg = useColorModeValue('gray.100', 'gray.700');
+  const hoverBg = useColorModeValue('gray.50', 'gray.700');
 
-  const primaryRole = user?.roles?.[0] || null;
-  const userId = user?.id || null;
-
-  const FacultyDash = user?.roles?.includes("faculty_admin") || user?.roles?.includes("Facultad");
-
-  // Items disponibles
-  const fullNavItems = [
-    { label: "Inicio", href: "/adminfacultad/dashboard" },
-    { label: "Solicitudes", href: "/adminfacultad/solicitudes" },
-    { label: "Grupos", href: "/adminfacultad/grupos" },
+  const mainLinks = [
+    { name: "Inicio", href: "/adminfacultad/dashboard" },
+    { name: "Solicitudes", href: "/adminfacultad/solicitudes" },
+    { name: "Grupos", href: "/adminfacultad/grupos" },
   ];
-
-  // Elección según rol
-  let navItems = fullNavItems;
 
   return (
     <Box
-      w="250px"
-      bg="primary"
-      color="white"
-      p={6}
-      display="flex"
-      flexDirection="column"
-      justifyContent="flex-start"
+      bg={useColorModeValue('white', 'gray.800')} 
+      borderBottom="1px" 
+      borderColor={useColorModeValue('gray.200', 'gray.700')}
+      py={4}
+      px={8}
+      shadow="sm"
     >
-      <VStack align="start" spacing={0}>
-        {navItems.map((item) => (
-          <Box key={item.href} w="full">
-            <ChakraLink
-              as={NextLink}
-              href={item.href}
-              display="block"
-              py={3}
-              fontWeight="bold"
-              px={2}
-              _hover={{ textDecoration: "none", bg: "teal.500" }}
-            >
-              {item.label}
-            </ChakraLink>
-
-            {/* Borde de separación excepto en el último */}
-            
-            <Box borderBottom="1px solid rgba(255,255,255,0.4)"/>
-            
-          </Box>
-        ))}
-      </VStack>
+      <Flex as="nav" align="center" justify="space-between" wrap="wrap" gap={4}>
+        <Flex gap={4} wrap="wrap">
+          {mainLinks.map((link) => {
+            const isActive = pathname.startsWith(link.href);
+            return (
+              <NextLink key={link.name} href={link.href} passHref legacyBehavior>
+                <ChakraLink
+                  px={4}
+                  py={2}
+                  rounded="md"
+                  fontWeight="medium"
+                  _hover={{ textDecoration: 'none', bg: hoverBg }}
+                  color={isActive ? activeLinkColor : linkColor}
+                  bg={isActive ? activeLinkBg : 'transparent'}
+                >
+                  {link.name}
+                </ChakraLink>
+              </NextLink>
+            );
+          })}
+        </Flex>
+      </Flex>
     </Box>
   );
-};
+}
