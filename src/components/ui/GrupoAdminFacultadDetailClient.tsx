@@ -7,6 +7,7 @@ import { Center, Spinner, Box } from "@chakra-ui/react";
 import GrupoDetalle from "@/components/ui/GrupoDetalle";
 import { useAuth } from "@/app/context/auth-context";
 import { GroupDetailBackend } from "@/types/group";
+import { formatListToString, parseFacultiesList } from "@/utils/common";
 
 interface Props {
   grupo: GroupDetailBackend | null;
@@ -18,17 +19,28 @@ export default function GrupoAdminFacultadDetailClient({ grupo }: Props) {
 
   const userFaculty = user?.facultad || (typeof window !== "undefined" ? localStorage.getItem("facultad") || "" : "");
 
+  const grupoFacultadStr = grupo ? formatListToString(grupo.facultad) : "";
+
+  const perteneceAFacultad = (
+    facultadGrupo: GroupDetailBackend["facultad"] | undefined | null, 
+    facultadUsuario: string
+  ) => {
+    if (!facultadGrupo || !facultadUsuario) return false;
+    const facultades = parseFacultiesList(facultadGrupo);
+    const usuarioNorm = facultadUsuario.trim().toLowerCase();
+    
+    return facultades.some((f) => f.trim().toLowerCase() === usuarioNorm);
+  };
+
+  const esAccesoValido = grupo && userFaculty ? perteneceAFacultad(grupo.facultad, userFaculty) : true;
+
   useEffect(() => {
     if (!isHydrated) return;
 
-    // Si el grupo existe pero no pertenece a la facultad del usuario actual, redirigir inmediatamente
-    if (grupo && userFaculty) {
-      const normalize = (str: string) => str.trim().toLowerCase();
-      if (normalize(grupo.facultad) !== normalize(userFaculty)) {
-        router.replace("/adminfacultad/grupos");
-      }
+    if (grupo && userFaculty && !esAccesoValido) {
+      router.replace("/adminfacultad/grupos");
     }
-  }, [grupo, userFaculty, isHydrated, router]);
+  }, [grupo, userFaculty, isHydrated, esAccesoValido, router]);
 
   if (!isHydrated) {
     return (
@@ -38,7 +50,7 @@ export default function GrupoAdminFacultadDetailClient({ grupo }: Props) {
     );
   }
 
-  if (grupo && userFaculty && grupo.facultad.trim().toLowerCase() !== userFaculty.trim().toLowerCase()) {
+  if (grupo && userFaculty && !esAccesoValido) {
     return (
       <Center py={20}>
         <Spinner size="xl" color="red.500" />

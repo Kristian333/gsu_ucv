@@ -1,4 +1,4 @@
-// app/admin/usuarios/[id]/page.tsx
+// app/admin/grupo/[id]/page.tsx
 
 import { apiServerRequest } from "@/utils/apiServer";
 import GrupoDetalle from "@/components/ui/GrupoDetalle";

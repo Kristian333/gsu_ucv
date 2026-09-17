@@ -1,4 +1,4 @@
-// app/admin/grupos/[id]/layout.tsx
+// app/admin/grupo/[id]/layout.tsx
 
 "use client";
 
