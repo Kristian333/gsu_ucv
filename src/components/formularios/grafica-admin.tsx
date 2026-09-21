@@ -121,15 +121,17 @@ export default function DashboardAdmin() {
     try {
       setLoadingBackend(true);
       
+      const queryParams = new URLSearchParams({
+        anio_actual: anioEspecifico.toString(),
+        desde_anio: desdeAnio.toString(),
+        hasta_anio: hastaAnio.toString(),
+      });
+
+      TIPOS_ACTIVIDAD.forEach((area) => queryParams.append("areas_maestras", area));
+
       const [resAnalytics, resGrupos] = await Promise.all([
-        apiRequest("analytics", {
-          method: 'POST',
-          body: JSON.stringify({
-            anio_actual: anioEspecifico,
-            desde_anio: desdeAnio,
-            hasta_anio: hastaAnio,
-            areas_maestras: TIPOS_ACTIVIDAD
-          })
+        apiRequest(`analytics?${queryParams.toString()}`, {
+          method: 'GET'
         }),
         apiRequest("groups?simplelist=true", {
           method: 'GET'

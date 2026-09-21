@@ -140,15 +140,17 @@ export default function GraficaGrupos({ idGrupo }: GraficaGruposProps) {
     try {
       setLoadingBackend(true);
 
-      const response = await apiRequest("analytics", {
-        method: 'POST',
-        body: JSON.stringify({
-          anio_actual: anioEspecifico,
-          desde_anio: desdeAnio,
-          hasta_anio: hastaAnio,
-          areas_maestras: TIPOS_ACTIVIDAD,
-          group_id: grupoIdDetectado
-        })
+      const queryParams = new URLSearchParams({
+        anio_actual: anioEspecifico.toString(),
+        desde_anio: desdeAnio.toString(),
+        hasta_anio: hastaAnio.toString(),
+        group_id: grupoIdDetectado
+      });
+
+      TIPOS_ACTIVIDAD.forEach((area) => queryParams.append("areas_maestras", area));
+
+      const response = await apiRequest(`analytics?${queryParams.toString()}`, {
+        method: 'GET'
       });
 
       if (response && (response.error || response.status === 500 || response.status === 400)) {
