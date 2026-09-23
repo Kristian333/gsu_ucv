@@ -11,6 +11,7 @@ import { useAuth, AuthUser } from "@/app/context/auth-context";
 import { apiRequest } from "@/components/formularios/api";
 import { getDashboardRouteByRoles } from "@/utils/redirectByRole";
 import { getFacultyImagePath } from "@/utils/common";
+import { getLoginErrorMessage } from "@/utils/errorMapper";
 
 export function LoginForm() {
   const [nombreUsuario, setNombreUsuario] = useState(""); 
@@ -110,11 +111,14 @@ export function LoginForm() {
       window.location.href = targetRoute;
 
     } catch (error: any) {
+      const userFriendlyMessage = getLoginErrorMessage(error?.message);
+
       toast({ 
         title: "Error de acceso", 
-        description: error.message || "Credenciales incorrectas", 
+        description: userFriendlyMessage, 
         status: "error",
-        duration: 4000
+        duration: 4000,
+        isClosable: true,
       });
     } finally {
       setIsLoading(false);

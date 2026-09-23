@@ -7,7 +7,7 @@ import { Center, Spinner, Box } from "@chakra-ui/react";
 import GrupoDetalle from "@/components/ui/GrupoDetalle";
 import { useAuth } from "@/app/context/auth-context";
 import { GroupDetailBackend } from "@/types/group";
-import { formatListToString, parseFacultiesList } from "@/utils/common";
+import { parseFacultiesList } from "@/utils/common";
 
 interface Props {
   grupo: GroupDetailBackend | null;
@@ -19,17 +19,22 @@ export default function GrupoAdminFacultadDetailClient({ grupo }: Props) {
 
   const userFaculty = user?.facultad || (typeof window !== "undefined" ? localStorage.getItem("facultad") || "" : "");
 
-  const grupoFacultadStr = grupo ? formatListToString(grupo.facultad) : "";
+  const normalize = (str: string) =>
+    str
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim();
 
   const perteneceAFacultad = (
-    facultadGrupo: GroupDetailBackend["facultad"] | undefined | null, 
+    facultadGrupo: GroupDetailBackend["facultad"] | undefined | null,
     facultadUsuario: string
   ) => {
     if (!facultadGrupo || !facultadUsuario) return false;
     const facultades = parseFacultiesList(facultadGrupo);
-    const usuarioNorm = facultadUsuario.trim().toLowerCase();
-    
-    return facultades.some((f) => f.trim().toLowerCase() === usuarioNorm);
+    const usuarioNorm = normalize(facultadUsuario);
+
+    return facultades.some((f) => normalize(f) === usuarioNorm);
   };
 
   const esAccesoValido = grupo && userFaculty ? perteneceAFacultad(grupo.facultad, userFaculty) : true;
@@ -50,7 +55,11 @@ export default function GrupoAdminFacultadDetailClient({ grupo }: Props) {
     );
   }
 
-  if (grupo && userFaculty && !esAccesoValido) {
+  if (!grupo) {
+    return <GrupoDetalle grupo={null} />;
+  }
+
+  if (userFaculty && !esAccesoValido) {
     return (
       <Center py={20}>
         <Spinner size="xl" color="red.500" />

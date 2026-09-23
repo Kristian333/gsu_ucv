@@ -19,11 +19,12 @@ export async function apiServerRequest(endpoint: string, options: RequestInit = 
   Object.assign(headers, options.headers);
 
   if (!(options.body instanceof FormData)) {
-    if (!headers['Content-Type']) {
+    if (!headers['Content-Type'] && !headers['content-type']) {
       headers['Content-Type'] = 'application/json';
     }
   } else {
     delete headers['Content-Type'];
+    delete headers['content-type'];
   }
 
   const response = await fetch(url, {
@@ -33,9 +34,26 @@ export async function apiServerRequest(endpoint: string, options: RequestInit = 
 
   if (response.status === 204) return null;
 
-  const data = await response.json();
+  const text = await response.text();
+  let data: any = {};
+
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = { message: text };
+    }
+  }
+
   if (!response.ok) {
-    throw new Error(data.message || 'Error en la petición desde el servidor');
+    const errorMessage =
+      data.error ||
+      data.safe_message ||
+      data.message ||
+      data.mensaje ||
+      `HTTP_${response.status}`;
+
+    throw new Error(errorMessage);
   }
 
   return data;

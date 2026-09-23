@@ -1,19 +1,18 @@
 // app/adminfacultad/grupo/[id]/page.tsx
+import { cache } from "react";
 import { Metadata } from "next";
 import { GroupDetailBackend } from "@/types/group";
+import { apiServerRequest } from "@/utils/apiServer";
 import GrupoAdminFacultadDetailClient from "@/components/ui/GrupoAdminFacultadDetailClient";
 
-async function getGroupData(id: string): Promise<GroupDetailBackend | null> {
+const getGroupData = cache(async (id: string): Promise<GroupDetailBackend | null> => {
   try {
-    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
-    const res = await fetch(`${apiBaseUrl}/groups/${id}`, { cache: "no-store" });
-    if (!res.ok) return null;
-    return await res.json();
+    return await apiServerRequest(`groups/${id}`, { cache: "no-store" });
   } catch (error) {
-    console.error("Error cargando grupo:", error);
+    console.error(`[SSR] Error cargando grupo ${id}:`, error);
     return null;
   }
-}
+});
 
 export async function generateMetadata({
   params,

@@ -30,10 +30,27 @@ export async function apiRequest(
   });
   
   const text = await response.text();
-  const data = text ? JSON.parse(text) : {};
+  let data: any = {};
+
+  // Parseo seguro de JSON
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = { message: text };
+    }
+  }
 
   if (!response.ok) {
-    throw new Error(data.message || 'Error en la petición');
+    // Busca claves comunes de error retornadas por el backend
+    const errorMessage =
+      data.error ||
+      data.safe_message ||
+      data.message ||
+      data.mensaje ||
+      `HTTP_${response.status}`;
+
+    throw new Error(errorMessage);
   }
   return data;
 }
