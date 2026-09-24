@@ -1,20 +1,16 @@
 import { NextResponse } from "next/server";
 import puppeteer from "puppeteer-core";
-import chromium from "@sparticuz/chromium";
 
 export async function POST(request: Request) {
   try {
     const { htmlContent } = await request.json();
-    const isLocal = process.env.NODE_ENV === "development";
 
-    const executablePath = isLocal
-      ? process.env.CHROMIUM_EXECUTABLE_PATH || "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
-      : await chromium.executablePath();
+    const executablePath =
+      process.env.CHROMIUM_EXECUTABLE_PATH ||
+      "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
 
     const browser = await puppeteer.launch({
-      args: isLocal
-        ? ["--no-sandbox", "--disable-setuid-sandbox"]
-        : [...chromium.args, "--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
+      args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
       defaultViewport: { width: 1280, height: 1024 },
       executablePath,
       headless: true,
