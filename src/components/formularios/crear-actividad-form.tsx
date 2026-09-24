@@ -212,6 +212,27 @@ export default function CrearActividadForm() {
       formData.append("cubierta", imageFile);
     }
 
+    // ==========================================
+    // IMPRESIÓN 1: ANTES DEL ENVÍO AL BACKEND
+    // ==========================================
+    console.group("🚀 [FRONTEND] Enviando Formulario de Actividad a Backend");
+    console.log("📌 Resumen del Payload (FormData):");
+    console.log(`• Título: ${form.nombre.trim()}`);
+    console.log(`• Descripción: ${form.descripcion.trim()}`);
+    console.log(`• Fecha Inicio: ${form.fecha_inicio}`);
+    console.log(`• Fecha Fin: ${esMultidia ? form.fecha_fin : form.fecha_inicio}`);
+    console.log(`• Ubicación: ${direccionCompleta}`);
+    console.log(`• Áreas de Conocimiento:`, form.area_conocimiento.map(a => a.toUpperCase()));
+    console.log(`• Financiamiento: ${form.financiamiento === "SI" ? (form.financing_org.trim() || "SI").toUpperCase() : "NO"}`);
+    console.log(`• Group ID: ${user.groupId}`);
+    console.log(`• Subido Por (User ID): ${userIdNum}`);
+    console.log(`• Archivo de Imagen:`, imageFile ? {
+      nombre: imageFile.name,
+      tamano: `${(imageFile.size / 1024).toFixed(2)} KB`,
+      tipo: imageFile.type
+    } : "Sin archivo");
+    console.groupEnd();
+
     try {
       const token = localStorage.getItem("token") || ""; 
 
@@ -222,6 +243,11 @@ export default function CrearActividadForm() {
           "Authorization": `Bearer ${token}` 
         }
       });
+
+      // ==========================================
+      // IMPRESIÓN 2: DESPUÉS DE LA RESPUESTA
+      // ==========================================
+      console.log("✅ [FRONTEND] Respuesta recibida del servidor backend:", response);
 
       if (response && (response.error || response.status === 500 || response.status === 400)) {
         throw new Error(response.message || "El servidor backend rechazó la petición.");
@@ -234,6 +260,7 @@ export default function CrearActividadForm() {
       });
       router.push("/admingroup/nuestras_actividades");
     } catch (error: any) {
+      console.error("❌ [FRONTEND] Error capturado durante el proceso de creación:", error);
       const friendlyMessage = getActivityErrorMessage(error.message);
       toast({ title: "Error al crear actividad", description: friendlyMessage, status: "error" });
     } finally {
