@@ -3,7 +3,7 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ["@chakra-ui/react"],
     serverActions: true,
-    serverExternalPackages: ["puppeteer-core", "@sparticuz/chromium"],
+    serverComponentsExternalPackages: ["puppeteer-core", "@sparticuz/chromium"],
   },
   images: {
     remotePatterns: [
