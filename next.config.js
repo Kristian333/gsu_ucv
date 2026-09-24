@@ -1,9 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    experimental: {
-        optimizePackageImports: ["@chakra-ui/react"],
-        serverActions: true,
-      },
+  experimental: {
+    optimizePackageImports: ["@chakra-ui/react"],
+    serverActions: true,
+    serverExternalPackages: ["puppeteer-core", "@sparticuz/chromium"],
+  },
   images: {
     remotePatterns: [
       {
@@ -17,7 +18,6 @@ const nextConfig = {
       },
     ],
   },
-  serverExternalPackages: ["puppeteer-core", "@sparticuz/chromium"],
 };
 
 module.exports = nextConfig;
