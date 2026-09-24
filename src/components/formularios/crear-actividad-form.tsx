@@ -151,7 +151,7 @@ export default function CrearActividadForm() {
         status: "error",
         duration: 5000,
         isClosable: true,
-        position: "top",
+        position: "bottom",
       });
     }
 

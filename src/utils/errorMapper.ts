@@ -4,9 +4,15 @@ const GLOBAL_ERRORS: Record<string, string> = {
   "network error": "No hay conexión a internet. Revisa tu red.",
   "failed to fetch": "No se pudo conectar con el servidor. Revisa tu conexión a internet.",
 
+  // Autenticación y Tokens
+  "invalid or expired authorization token": "Tu sesión ha expirado. Por favor inicia sesión de nuevo.",
+  "token is expired": "Tu sesión ha expirado. Por favor inicia sesión de nuevo.",
+  "invalid authorization token": "Sesión inválida. Por favor inicia sesión de nuevo.",
+  "unauthorized": "Tu sesión ha expirado. Por favor inicia sesión de nuevo.",
+  "http_401": "Tu sesión ha expirado o no estás autorizado. Por favor inicia sesión de nuevo.",
+
   // Servidor y estado HTTP general
   "internal server error": "Ocurrió un problema en el servidor. Inténtalo más tarde.",
-  "unauthorized": "Tu sesión ha expirado. Por favor inicia sesión de nuevo.",
   "http_500": "Error interno del servidor. Inténtalo más tarde.",
   "http_502": "El servidor de la DEU no responde momentáneamente. Inténtalo más tarde.",
   "http_503": "El servicio no está disponible temporalmente. Inténtalo más tarde.",

@@ -223,6 +223,8 @@ export function InfoGeneralEditor({ initialData, onSave }: InfoGeneralEditorProp
       const success = await onSave(formData)
       setIsSaving(false)
       if (success) {
+        setFormData({ ...formData }) 
+        
         toast({
           title: 'Información actualizada correctamente',
           status: 'success',

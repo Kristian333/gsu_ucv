@@ -1,16 +1,24 @@
 import { NextResponse } from "next/server";
-import puppeteer from "puppeteer";
+import puppeteer from "puppeteer-core";
+import chromium from "@sparticuz/chromium";
 
 export async function POST(request: Request) {
   try {
     const { htmlContent } = await request.json();
+    const isLocal = process.env.NODE_ENV === "development";
 
     const browser = await puppeteer.launch({
+      args: isLocal ? ["--no-sandbox"] : chromium.args,
+      defaultViewport: { width: 1280, height: 1024 },
+      executablePath: isLocal
+        ? process.env.CHROMIUM_EXECUTABLE_PATH || "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+        : await chromium.executablePath(),
       headless: true,
     });
+
     const page = await browser.newPage();
     
-    // Inyectamos el HTML completo estructurado
+    // Inyectamos el HTML estructurado
     await page.setContent(htmlContent, { waitUntil: "load" });
 
     // Generamos el PDF con las dimensiones exactas de hoja Carta (Letter)
@@ -25,7 +33,7 @@ export async function POST(request: Request) {
 
     const pdfBuffer = Buffer.from(pdfUint8Array);
 
-    return new NextResponse(pdfBuffer, {
+    return new NextResponse(pdfBuffer as unknown as BodyInit, {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
