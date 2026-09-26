@@ -87,9 +87,38 @@ export default function CrearActividadForm() {
         fecha_inicio: value,
         fecha_fin: value,
       }));
-    } else {
-      setForm((prev) => ({ ...prev, [name]: value }));
+      return;
     }
+
+    if (esMultidia && name === "fecha_fin") {
+      if (form.fecha_inicio && value && value < form.fecha_inicio) {
+        toast({
+          title: "Incongruencia en las fechas",
+          description: "La fecha de finalización no puede ser anterior a la fecha de inicio.",
+          status: "error",
+          duration: 4000,
+          isClosable: true,
+        });
+        setForm((prev) => ({ ...prev, fecha_fin: "" }));
+        return;
+      }
+    }
+
+    if (esMultidia && name === "fecha_inicio") {
+      if (form.fecha_fin && value && form.fecha_fin < value) {
+        toast({
+          title: "Incongruencia en las fechas",
+          description: "La fecha de inicio no puede ser posterior a la fecha de finalización. La fecha fin ha sido reiniciada.",
+          status: "error",
+          duration: 4000,
+          isClosable: true,
+        });
+        setForm((prev) => ({ ...prev, fecha_inicio: value, fecha_fin: "" }));
+        return;
+      }
+    }
+
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleMultidiaChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -183,11 +212,11 @@ export default function CrearActividadForm() {
     formData.append("ubicacion", direccionCompleta);
 
     form.area_conocimiento.forEach((area) => {
-      formData.append("area_conocimiento", area.toUpperCase());
+      formData.append("area_conocimiento", area);
     });
 
     if (form.financiamiento === "SI") {
-      formData.append("financiamiento", (form.financing_org.trim() || "SI").toUpperCase());
+      formData.append("financiamiento", (form.financing_org.trim() || "SI"));
     } else {
       formData.append("financiamiento", "NO");
     }
@@ -212,27 +241,6 @@ export default function CrearActividadForm() {
       formData.append("cubierta", imageFile);
     }
 
-    // ==========================================
-    // IMPRESIÓN 1: ANTES DEL ENVÍO AL BACKEND
-    // ==========================================
-    console.group("🚀 [FRONTEND] Enviando Formulario de Actividad a Backend");
-    console.log("📌 Resumen del Payload (FormData):");
-    console.log(`• Título: ${form.nombre.trim()}`);
-    console.log(`• Descripción: ${form.descripcion.trim()}`);
-    console.log(`• Fecha Inicio: ${form.fecha_inicio}`);
-    console.log(`• Fecha Fin: ${esMultidia ? form.fecha_fin : form.fecha_inicio}`);
-    console.log(`• Ubicación: ${direccionCompleta}`);
-    console.log(`• Áreas de Conocimiento:`, form.area_conocimiento.map(a => a.toUpperCase()));
-    console.log(`• Financiamiento: ${form.financiamiento === "SI" ? (form.financing_org.trim() || "SI").toUpperCase() : "NO"}`);
-    console.log(`• Group ID: ${user.groupId}`);
-    console.log(`• Subido Por (User ID): ${userIdNum}`);
-    console.log(`• Archivo de Imagen:`, imageFile ? {
-      nombre: imageFile.name,
-      tamano: `${(imageFile.size / 1024).toFixed(2)} KB`,
-      tipo: imageFile.type
-    } : "Sin archivo");
-    console.groupEnd();
-
     try {
       const token = localStorage.getItem("token") || ""; 
 
@@ -243,11 +251,6 @@ export default function CrearActividadForm() {
           "Authorization": `Bearer ${token}` 
         }
       });
-
-      // ==========================================
-      // IMPRESIÓN 2: DESPUÉS DE LA RESPUESTA
-      // ==========================================
-      console.log("✅ [FRONTEND] Respuesta recibida del servidor backend:", response);
 
       if (response && (response.error || response.status === 500 || response.status === 400)) {
         throw new Error(response.message || "El servidor backend rechazó la petición.");
@@ -260,7 +263,6 @@ export default function CrearActividadForm() {
       });
       router.push("/admingroup/nuestras_actividades");
     } catch (error: any) {
-      console.error("❌ [FRONTEND] Error capturado durante el proceso de creación:", error);
       const friendlyMessage = getActivityErrorMessage(error.message);
       toast({ title: "Error al crear actividad", description: friendlyMessage, status: "error" });
     } finally {

@@ -10,6 +10,7 @@ import {
   Textarea,
   FormLabel,
   FormControl,
+  FormErrorMessage,
   Button,
   FormHelperText,
   Image,
@@ -22,6 +23,7 @@ import { apiRequest } from "@/components/formularios/api";
 import { useAuth } from "@/app/context/auth-context";
 import { validateGroupAccess } from "@/utils/auth-guards";
 import { getActivityStatus, formatActivityDateRange } from "@/utils/common";
+import { getActivityErrorMessage } from "@/utils/errorMapper";
 
 interface ReporteFormProps {
   id: string;
@@ -35,6 +37,7 @@ export default function ReporteClientPage({ id }: ReporteFormProps) {
   const [loadingActividad, setLoadingActividad] = useState(true);
   const [errorCarga, setErrorCarga] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   const [permisoConcedido, setPermisoConcedido] = useState(false);
 
@@ -44,7 +47,7 @@ export default function ReporteClientPage({ id }: ReporteFormProps) {
     fecha_inicio: "",
     fecha_fin: "",
     descripcion: "",
-    area_conocimiento: "",
+    area_conocimiento: [] as string[],
     financiamiento: "",
     group_id: "",
   });
@@ -59,6 +62,28 @@ export default function ReporteClientPage({ id }: ReporteFormProps) {
 
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
+
+  const isDriveUrlValid = (url: string) => {
+    if (!url.trim()) return false;
+    try {
+      const parsedUrl = new URL(url);
+      return (
+        parsedUrl.hostname === "drive.google.com" ||
+        parsedUrl.hostname === "www.drive.google.com"
+      );
+    } catch {
+      return false;
+    }
+  };
+
+  const errors = {
+    numMembers: submitted && (numMembers === "" || Number(numMembers) < 0),
+    expectedBeneficiaries: submitted && (expectedBeneficiaries === "" || Number(expectedBeneficiaries) < 0),
+    actualBeneficiaries: submitted && (actualBeneficiaries === "" || Number(actualBeneficiaries) < 0),
+    galleryUrl: submitted && (!galleryUrl.trim() || !isDriveUrlValid(galleryUrl)),
+    attendeeFile: submitted && !attendeeFile,
+    imageFile: submitted && !imageFile && !previewImage,
+  };
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -83,7 +108,7 @@ export default function ReporteClientPage({ id }: ReporteFormProps) {
               status: "error",
               duration: 4000,
               isClosable: true,
-              position: "top"
+              position: "top",
             });
             router.push("/admingroup/nuestras_actividades");
             return;
@@ -101,7 +126,7 @@ export default function ReporteClientPage({ id }: ReporteFormProps) {
               status: "warning",
               duration: 5000,
               isClosable: true,
-              position: "top"
+              position: "top",
             });
             router.push("/admingroup/nuestras_actividades");
             return;
@@ -109,26 +134,33 @@ export default function ReporteClientPage({ id }: ReporteFormProps) {
 
           const grupoActividad = data.group_id ?? data.groupId;
 
+          let areasArray: string[] = [];
+          if (Array.isArray(data.area_conocimiento)) {
+            areasArray = data.area_conocimiento;
+          } else if (typeof data.area_conocimiento === "string" && data.area_conocimiento.length > 0) {
+            areasArray = data.area_conocimiento.split(",").map((a: string) => a.trim());
+          }
+
           setActividadBase({
             nombre: data.nombre || "",
             ubicacion: data.ubicacion || "",
             fecha_inicio: data.fecha_inicio || "",
             fecha_fin: data.fecha_fin || "",
             descripcion: data.descripcion || "",
-            area_conocimiento: data.area_conocimiento || "",
+            area_conocimiento: areasArray,
             financiamiento: data.financiamiento || "",
             group_id: String(grupoActividad),
           });
 
-          setPreviewImage(data.reporte_url || data.reporte || null);
+          setPreviewImage(data.reporte_url || data.reporte || data.cubierta || null);
 
-          setNumMembers(data.participantes_grupo || "");
+          setNumMembers(data.participantes_grupo ?? "");
           setAllies(data.aliados || "");
-          setExpectedBeneficiaries(data.participantes_estimados || "");
-          setActualBeneficiaries(data.participantes_reales || "");
+          setExpectedBeneficiaries(data.participantes_estimados ?? "");
+          setActualBeneficiaries(data.participantes_reales ?? "");
           setGalleryUrl(data.galeria_url || "");
           setObservations(data.observaciones || "");
-          
+
           setPermisoConcedido(true);
         } else {
           throw new Error("La actividad solicitada no existe en el sistema.");
@@ -181,10 +213,55 @@ export default function ReporteClientPage({ id }: ReporteFormProps) {
       </Center>
     );
   }
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isHydrated || !permisoConcedido) return;
+
+    setSubmitted(true);
+
+    const camposFaltantes: string[] = [];
+
+    if (!imageFile && !previewImage) {
+      camposFaltantes.push("• Imagen de la Actividad");
+    }
+    if (numMembers === "" || Number(numMembers) < 0) {
+      camposFaltantes.push("• Número de Miembros del Grupo");
+    }
+    if (expectedBeneficiaries === "" || Number(expectedBeneficiaries) < 0) {
+      camposFaltantes.push("• Personas Estimadas a Beneficiar");
+    }
+    if (actualBeneficiaries === "" || Number(actualBeneficiaries) < 0) {
+      camposFaltantes.push("• Personas Realmente Beneficiadas");
+    }
+    if (!galleryUrl.trim()) {
+      camposFaltantes.push("• Reporte Fotográfico (Enlace de Drive)");
+    } else if (!isDriveUrlValid(galleryUrl)) {
+      camposFaltantes.push("• El enlace del Reporte Fotográfico debe ser un dominio de Google Drive (drive.google.com)");
+    }
+    if (!attendeeFile) {
+      camposFaltantes.push("• Listado de Asistencia");
+    }
+
+    if (camposFaltantes.length > 0) {
+      return toast({
+        title: "Campos faltantes o inválidos",
+        description: (
+          <Box mt={2}>
+            <Text mb={1}>Por favor complete o corrija los siguientes datos obligatorios:</Text>
+            {camposFaltantes.map((campo, idx) => (
+              <Text key={idx} fontSize="sm">
+                {campo}
+              </Text>
+            ))}
+          </Box>
+        ),
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+    }
 
     if (!user?.groupId) {
       toast({
@@ -193,7 +270,7 @@ export default function ReporteClientPage({ id }: ReporteFormProps) {
         status: "error",
         duration: 5000,
         isClosable: true,
-        position: "top"
+        position: "top",
       });
       return;
     }
@@ -206,15 +283,33 @@ export default function ReporteClientPage({ id }: ReporteFormProps) {
     formData.append("fecha_inicio", actividadBase.fecha_inicio);
     formData.append("fecha_fin", actividadBase.fecha_fin);
     formData.append("descripcion", actividadBase.descripcion);
-    formData.append("area_conocimiento", actividadBase.area_conocimiento);
+
+    if (Array.isArray(actividadBase.area_conocimiento)) {
+      actividadBase.area_conocimiento.forEach((area) => {
+        formData.append("area_conocimiento", area);
+      });
+    } else if (actividadBase.area_conocimiento) {
+      formData.append("area_conocimiento", actividadBase.area_conocimiento);
+    }
+
     formData.append("financiamiento", actividadBase.financiamiento);
-    formData.append("group_id", actividadBase.group_id);
+
+    const groupIdNum = parseInt(String(actividadBase.group_id || user.groupId), 10);
+    if (!isNaN(groupIdNum)) {
+      formData.append("group_id", String(groupIdNum));
+    }
+
+    const userIdNum = parseInt(String(user?.id), 10);
+    if (!isNaN(userIdNum)) {
+      formData.append("subido_por", String(userIdNum));
+    }
+
     formData.append("participantes_grupo", String(numMembers || 0));
-    formData.append("aliados", allies || "");
+    formData.append("aliados", allies.trim() || "");
     formData.append("participantes_estimados", String(expectedBeneficiaries || 0));
     formData.append("participantes_reales", String(actualBeneficiaries || 0));
-    formData.append("galeria_url", galleryUrl || "");
-    formData.append("observaciones", observations || "");
+    formData.append("galeria_url", galleryUrl.trim() || "");
+    formData.append("observaciones", observations.trim() || "");
 
     if (imageFile) {
       formData.append("cubierta", imageFile);
@@ -225,7 +320,7 @@ export default function ReporteClientPage({ id }: ReporteFormProps) {
 
     try {
       const token = localStorage.getItem("token") || "";
-      
+
       const response = await apiRequest(`activities/${id}`, {
         method: "PUT",
         body: formData,
@@ -248,9 +343,10 @@ export default function ReporteClientPage({ id }: ReporteFormProps) {
 
       router.push("/admingroup/nuestras_actividades");
     } catch (error: any) {
+      const friendlyMessage = getActivityErrorMessage(error.message);
       toast({
-        title: "Error al guardar",
-        description: error.message || "Ocurrió un problema de conexión con el backend.",
+        title: "Error al guardar el reporte",
+        description: friendlyMessage,
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -284,7 +380,7 @@ export default function ReporteClientPage({ id }: ReporteFormProps) {
 
       <form onSubmit={handleSubmit}>
         <VStack spacing={5} align="stretch">
-          <FormControl isRequired>
+          <FormControl isRequired isInvalid={errors.imageFile}>
             <FormLabel mb={1}>Imagen de la Actividad</FormLabel>
             <FormHelperText mb={3}>
               Sube la imagen representativa del evento ejecutado para actualizar el registro visual.
@@ -300,10 +396,13 @@ export default function ReporteClientPage({ id }: ReporteFormProps) {
               />
             )}
             <Input type="file" accept="image/*" onChange={handleImageChange} pt={1} />
+            {errors.imageFile && (
+              <FormErrorMessage>Debe adjuntar una imagen representativa de la actividad.</FormErrorMessage>
+            )}
           </FormControl>
 
           {/* Campos Editables */}
-          <FormControl isRequired>
+          <FormControl isRequired isInvalid={errors.numMembers}>
             <FormLabel>Número de Miembros del Grupo</FormLabel>
             <Input
               type="number"
@@ -311,8 +410,11 @@ export default function ReporteClientPage({ id }: ReporteFormProps) {
               onChange={(e) => setNumMembers(e.target.value === "" ? "" : Number(e.target.value))}
             />
             <FormHelperText>
-              Indique el número de integrantes del grupo que participaron en la ejecución de la actividad
+              Indique el número de integrantes del grupo que participaron en la ejecución de la actividad.
             </FormHelperText>
+            {errors.numMembers && (
+              <FormErrorMessage>Indique una cantidad válida de miembros del grupo.</FormErrorMessage>
+            )}
           </FormControl>
 
           <FormControl>
@@ -324,25 +426,31 @@ export default function ReporteClientPage({ id }: ReporteFormProps) {
             />
           </FormControl>
 
-          <FormControl isRequired>
+          <FormControl isRequired isInvalid={errors.expectedBeneficiaries}>
             <FormLabel>Número de personas que estimaban beneficiar con la actividad</FormLabel>
             <Input
               type="number"
               value={expectedBeneficiaries}
               onChange={(e) => setExpectedBeneficiaries(e.target.value === "" ? "" : Number(e.target.value))}
             />
+            {errors.expectedBeneficiaries && (
+              <FormErrorMessage>Indique la cantidad estimada de beneficiarios.</FormErrorMessage>
+            )}
           </FormControl>
 
-          <FormControl isRequired>
+          <FormControl isRequired isInvalid={errors.actualBeneficiaries}>
             <FormLabel>Número de personas realmente beneficiadas con la actividad</FormLabel>
             <Input
               type="number"
               value={actualBeneficiaries}
               onChange={(e) => setActualBeneficiaries(e.target.value === "" ? "" : Number(e.target.value))}
             />
+            {errors.actualBeneficiaries && (
+              <FormErrorMessage>Indique la cantidad real de beneficiarios.</FormErrorMessage>
+            )}
           </FormControl>
 
-          <FormControl isRequired>
+          <FormControl isRequired isInvalid={errors.galleryUrl}>
             <FormLabel>Reporte Fotográfico</FormLabel>
             <Input
               type="url"
@@ -351,11 +459,18 @@ export default function ReporteClientPage({ id }: ReporteFormProps) {
               onChange={(e) => setGalleryUrl(e.target.value)}
             />
             <FormHelperText>
-              Por favor, subir las fotos que mejor representen la actividad realizada a drive y compartir link. La carpeta de drive debe ser especifica para la actividad y el acceso debe ser publico.
+              Por favor, subir las fotos que mejor representen la actividad realizada a Google Drive y compartir el enlace. La carpeta debe ser específica y con acceso público.
             </FormHelperText>
+            {errors.galleryUrl && (
+              <FormErrorMessage>
+                {!galleryUrl.trim()
+                  ? "El enlace a la galería es obligatorio."
+                  : "El enlace debe pertenecer al dominio drive.google.com."}
+              </FormErrorMessage>
+            )}
           </FormControl>
 
-          <FormControl isRequired>
+          <FormControl isRequired isInvalid={errors.attendeeFile}>
             <FormLabel>Listado de Asistencia (.pdf, .xlsx, .xls)</FormLabel>
             <Input
               type="file"
@@ -363,6 +478,9 @@ export default function ReporteClientPage({ id }: ReporteFormProps) {
               onChange={(e) => setAttendeeFile(e.target.files?.[0] || null)}
               pt={1}
             />
+            {errors.attendeeFile && (
+              <FormErrorMessage>Debe adjuntar el archivo con la lista de asistencia.</FormErrorMessage>
+            )}
           </FormControl>
 
           <FormControl>

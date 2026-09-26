@@ -36,7 +36,6 @@ export const RegisterForm = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [generalError, setGeneralError] = useState('');
 
   const [isLoading, setIsLoading] = useState(false);
   const toast = useToast();
@@ -91,8 +90,8 @@ export const RegisterForm = () => {
     if (!isValid) {
       toast({
         title: "Campos incompletos",
-        description: "Por favor completar todos los campos de esta sección antes de continuar a la siguiente.",
-        status: "warning",
+        description: "Por favor completa todos los campos de esta sección antes de continuar.",
+        status: "error",
         duration: 4000,
         isClosable: true,
       });
@@ -123,18 +122,29 @@ export const RegisterForm = () => {
     }
 
     setFieldErrors(errors);
-    return Object.keys(errors).length === 0;
+
+    const isValid = Object.keys(errors).length === 0;
+
+    if (!isValid) {
+      toast({
+        title: "Campos incompletos o inválidos",
+        description: "Por favor revisa los campos señalados en el formulario.",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+    }
+
+    return isValid;
   };
 
   const handleNext = () => {
-    setGeneralError('');
     if (validateStep1()) {
       setStep(2);
     }
   };
 
   const handleBack = () => {
-    setGeneralError('');
     setFieldErrors({});
     setStep(1);
   };
@@ -147,7 +157,6 @@ export const RegisterForm = () => {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setGeneralError('');
 
     if (!validateStep2()) {
       return;
@@ -186,7 +195,14 @@ export const RegisterForm = () => {
       router.push("/login");
     } catch (err: any) {
       const friendlyMessage = getRegisterErrorMessage(err.message);
-      setGeneralError(friendlyMessage);
+      
+      toast({
+        title: "Error en el registro",
+        description: friendlyMessage,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -209,14 +225,6 @@ export const RegisterForm = () => {
       <Heading as="h1" size="xl" textAlign="center" mb={6}>
         Crear Cuenta
       </Heading>
-
-      {generalError && (
-        <Box bg="red.50" borderLeft="4px solid" borderColor="red.500" p={3} mb={4} rounded="md">
-          <Text color="red.700" fontSize="sm" fontWeight="medium">
-            {generalError}
-          </Text>
-        </Box>
-      )}
 
       <form onSubmit={handleRegister} noValidate>
         <Stack spacing={4}>

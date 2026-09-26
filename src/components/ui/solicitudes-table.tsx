@@ -202,10 +202,12 @@ export function SolicitudesTable({ mode = 'admin', defaultFaculty, groupId }: So
   };
 
   const handleRowClick = (id: string) => {
-    let route = "";
     if (mode === 'group') {
-     route = `/admingroup/solicitud/${id}`;
-    } else if (mode === 'faculty') {
+      return;
+    }
+
+    let route = "";
+    if (mode === 'faculty') {
       route = `/adminfacultad/solicitud/${id}`;
     } else {
       route = activeTab === 'groups'
@@ -311,7 +313,7 @@ export function SolicitudesTable({ mode = 'admin', defaultFaculty, groupId }: So
                 <Tr
                   key={item.id}
                   onClick={() => handleRowClick(item.id)}
-                  _hover={{ bg: 'gray.100', cursor: 'pointer' }}
+                  _hover={mode !== 'group' ? { bg: 'gray.100', cursor: 'pointer' } : undefined}
                   transition="background 0.15s ease-in-out"
                 >
                   {mode !== 'group' && <Td fontWeight="medium">{item.grupo_nombre || item.grupo_id}</Td>}

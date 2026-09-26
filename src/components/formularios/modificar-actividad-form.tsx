@@ -7,6 +7,7 @@ import {
   Flex,
   FormControl,
   FormLabel,
+  FormErrorMessage,
   Input,
   Select,
   Checkbox,
@@ -26,6 +27,7 @@ import { apiRequest } from "@/components/formularios/api";
 import { useAuth } from "@/app/context/auth-context";
 import { validateGroupAccess } from "@/utils/auth-guards";
 import { TIPOS_ACTIVIDAD } from "@/constants/types";
+import { getActivityErrorMessage } from "@/utils/errorMapper";
 
 interface ModificarActividadFormProps {
   id: string;
@@ -39,7 +41,8 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
   const [loadingActividad, setLoadingActividad] = useState(true);
   const [errorCarga, setErrorCarga] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  
+  const [submitted, setSubmitted] = useState(false);
+
   const [permisoConcedido, setPermisoConcedido] = useState(false);
   const [esMultidia, setEsMultidia] = useState(false);
   const [inicialEsMultidia, setInicialEsMultidia] = useState(false);
@@ -64,7 +67,21 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
 
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [newImageFile, setNewImageFile] = useState<File | null>(null);
-  
+
+  const errors = {
+    nombre: submitted && !form.nombre.trim(),
+    pais: submitted && !locationParts.pais.trim(),
+    estado: submitted && !locationParts.estado.trim(),
+    municipio: submitted && !locationParts.municipio.trim(),
+    detalle: submitted && !locationParts.detalle.trim(),
+    fecha_inicio: submitted && !form.fecha_inicio,
+    fecha_fin: submitted && esMultidia && !form.fecha_fin,
+    area_conocimiento: submitted && form.area_conocimiento.length === 0,
+    financiamiento: submitted && !form.financiamiento,
+    financing_org: submitted && form.financiamiento === "SI" && !form.financing_org.trim(),
+    descripcion: submitted && !form.descripcion.trim(),
+  };
+
   const verificarSiYaIniciOOPaso = (fechaInicioString: string): boolean => {
     if (!fechaInicioString) return false;
     const fechaInicioFormateada = fechaInicioString.substring(0, 10);
@@ -131,7 +148,6 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
           const fInicio = data.fecha_inicio ? data.fecha_inicio.substring(0, 10) : "";
           const fFin = data.fecha_fin ? data.fecha_fin.substring(0, 10) : "";
 
-          // Comprobamos si vino con fechas distintas desde la BD
           const tieneFechasDiferentes = Boolean(fInicio && fFin && fInicio !== fFin);
           setEsMultidia(tieneFechasDiferentes);
           setInicialEsMultidia(tieneFechasDiferentes);
@@ -147,7 +163,7 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
             financing_org: esSi ? data.financiamiento : "",
           });
 
-          setPreviewImage(data.reporte_url || data.reporte || null);
+          setPreviewImage(data.reporte_url || data.reporte || data.cubierta || null);
 
           if (data.ubicacion && data.ubicacion.includes(",")) {
             const partes = data.ubicacion.split(",").map((p: string) => p.trim());
@@ -186,23 +202,50 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
 
-    // Si no es multidía y cambia la fecha de inicio, mantenemos fecha_fin alineada
     if (!esMultidia && name === "fecha_inicio") {
       setForm((prev) => ({
         ...prev,
         fecha_inicio: value,
         fecha_fin: value,
       }));
-    } else {
-      setForm((prev) => ({ ...prev, [name]: value }));
+      return;
     }
+
+    if (esMultidia && name === "fecha_fin") {
+      if (form.fecha_inicio && value && value < form.fecha_inicio) {
+        toast({
+          title: "Incongruencia en las fechas",
+          description: "La fecha de finalización no puede ser anterior a la fecha de inicio.",
+          status: "error",
+          duration: 4000,
+          isClosable: true,
+        });
+        setForm((prev) => ({ ...prev, fecha_fin: "" }));
+        return;
+      }
+    }
+
+    if (esMultidia && name === "fecha_inicio") {
+      if (form.fecha_fin && value && form.fecha_fin < value) {
+        toast({
+          title: "Incongruencia en las fechas",
+          description: "La fecha de inicio no puede ser posterior a la fecha de finalización. La fecha fin ha sido reiniciada.",
+          status: "error",
+          duration: 4000,
+          isClosable: true,
+        });
+        setForm((prev) => ({ ...prev, fecha_inicio: value, fecha_fin: "" }));
+        return;
+      }
+    }
+
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleMultidiaChange = (e: ChangeEvent<HTMLInputElement>) => {
     const isChecked = e.target.checked;
     setEsMultidia(isChecked);
 
-    // Al desactivar multidía, igualamos fecha_fin con fecha_inicio
     if (!isChecked && form.fecha_inicio) {
       setForm((prev) => ({ ...prev, fecha_fin: prev.fecha_inicio }));
     }
@@ -252,6 +295,44 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
   const handleSave = async () => {
     if (!isHydrated || !permisoConcedido) return;
 
+    setSubmitted(true);
+
+    const camposFaltantes: string[] = [];
+
+    if (!form.nombre.trim()) camposFaltantes.push("• Título de la Actividad");
+    if (!locationParts.pais.trim()) camposFaltantes.push("• Ubicación: País");
+    if (!locationParts.estado.trim()) camposFaltantes.push("• Ubicación: Estado");
+    if (!locationParts.municipio.trim()) camposFaltantes.push("• Ubicación: Municipio");
+    if (!locationParts.detalle.trim()) camposFaltantes.push("• Ubicación: Dirección Específica");
+    if (!form.fecha_inicio) camposFaltantes.push("• Fecha de Inicio / Realización");
+    if (esMultidia && !form.fecha_fin) camposFaltantes.push("• Fecha de Finalización");
+    if (form.area_conocimiento.length === 0) camposFaltantes.push("• Área de Conocimiento");
+    if (!form.financiamiento) camposFaltantes.push("• Financiamiento");
+    if (form.financiamiento === "SI" && !form.financing_org.trim()) {
+      camposFaltantes.push("• Organización Financiadora");
+    }
+    if (!form.descripcion.trim()) camposFaltantes.push("• Descripción de la Actividad");
+
+    if (camposFaltantes.length > 0) {
+      return toast({
+        title: "Campos faltantes",
+        description: (
+          <Box mt={2}>
+            <Text mb={1}>Por favor complete los siguientes campos obligatorios:</Text>
+            {camposFaltantes.map((campo, idx) => (
+              <Text key={idx} fontSize="sm">
+                {campo}
+              </Text>
+            ))}
+          </Box>
+        ),
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+    }
+
     if (!user?.groupId) {
       toast({
         title: "Identificación de Grupo Requerida",
@@ -266,30 +347,32 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
 
     setLoading(true);
     const formData = new FormData();
-    formData.append("nombre", form.nombre);
-    formData.append("descripcion", form.descripcion);
+    formData.append("nombre", form.nombre.trim());
+    formData.append("descripcion", form.descripcion.trim());
     formData.append("fecha_inicio", form.fecha_inicio); 
     formData.append("fecha_fin", esMultidia ? form.fecha_fin : form.fecha_inicio);
     const { pais, estado, municipio, detalle } = locationParts;
-    const direccionCompleta = `${pais}, ${estado}, ${municipio}, ${detalle}`;
+    const direccionCompleta = `${pais.trim()}, ${estado.trim()}, ${municipio.trim()}, ${detalle.trim()}`;
     formData.append("ubicacion", direccionCompleta);
-    if (form.area_conocimiento && form.area_conocimiento.length > 0) {
-      form.area_conocimiento.forEach((area) => {
-        formData.append("area_conocimiento", area);
-      });
-    } else {
-      formData.append("area_conocimiento", "Otros");
-    }
+
+    form.area_conocimiento.forEach((area) => {
+      formData.append("area_conocimiento", area);
+    });
 
     if (form.financiamiento === "SI") {
-      formData.append("financiamiento", (form.financing_org || "SI").toUpperCase());
+      formData.append("financiamiento", (form.financing_org.trim() || "SI"));
     } else {
       formData.append("financiamiento", "NO");
     }
 
-    formData.append("group_id", String(user.groupId));
-    if (user?.id) {
-      formData.append("subido_por", String(user.id));
+    const groupIdNum = parseInt(String(user.groupId), 10);
+    if (!isNaN(groupIdNum)) {
+      formData.append("group_id", String(groupIdNum));
+    }
+
+    const userIdNum = parseInt(String(user?.id), 10);
+    if (!isNaN(userIdNum)) {
+      formData.append("subido_por", String(userIdNum));
     }
 
     if (newImageFile) {
@@ -318,7 +401,8 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
       });
       router.push("/admingroup/nuestras_actividades");
     } catch (error: any) {
-      toast({ title: "Error", description: error.message, status: "error" });
+      const friendlyMessage = getActivityErrorMessage(error.message);
+      toast({ title: "Error al actualizar actividad", description: friendlyMessage, status: "error" });
     } finally {
       setLoading(false);
     }
@@ -341,7 +425,8 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
       <Heading mb={6}>Modificar Actividad</Heading>
 
       <VStack spacing={5} align="stretch">
-        <FormControl isRequired>
+        {/* Título */}
+        <FormControl isRequired isInvalid={errors.nombre}>
           <FormLabel>Título de la Actividad</FormLabel>
           <Input
             name="nombre"
@@ -349,8 +434,12 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
             onChange={handleChange}
             placeholder="Nombre de Actividad"
           />
+          {errors.nombre && (
+            <FormErrorMessage>Este campo es obligatorio.</FormErrorMessage>
+          )}
         </FormControl>
 
+        {/* Imagen Cubierta */}
         <FormControl>
           <FormLabel mb={1}>Imagen Referencial de la Actividad</FormLabel>
           <Text fontSize="xs" color="gray.500" mb={3} lineHeight="tall" bg="primary.50/50" p={2} borderRadius="md" borderLeft="3px solid" borderColor="primary.400">
@@ -369,10 +458,11 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
           <Input type="file" accept="image/*" onChange={handleImageChange} pt={1} />
         </FormControl>
 
-        <Box border="1px" borderColor="gray.100" p={4} borderRadius="md" bg="gray.50">
+        {/* Ubicación */}
+        <Box border="1px" borderColor={errors.pais || errors.estado || errors.municipio || errors.detalle ? "red.500" : "gray.100"} p={4} borderRadius="md" bg={errors.pais || errors.estado || errors.municipio || errors.detalle ? "red.50" : "gray.50"}>
           <Heading size="sm" mb={4}>Ubicación de la Actividad*</Heading>
           <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-            <FormControl isRequired>
+            <FormControl isRequired isInvalid={errors.pais}>
               <FormLabel fontSize="sm">País</FormLabel>
               <Input
                 name="pais"
@@ -381,8 +471,12 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
                 onChange={handleLocationChange}
                 placeholder="Ej: Venezuela"
               />
+              {errors.pais && (
+                <FormErrorMessage>El país es requerido.</FormErrorMessage>
+              )}
             </FormControl>
-            <FormControl isRequired>
+
+            <FormControl isRequired isInvalid={errors.estado}>
               <FormLabel fontSize="sm">Estado</FormLabel>
               <Input
                 name="estado"
@@ -391,8 +485,12 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
                 onChange={handleLocationChange}
                 placeholder="Ej: Carabobo"
               />
+              {errors.estado && (
+                <FormErrorMessage>El estado es requerido.</FormErrorMessage>
+              )}
             </FormControl>
-            <FormControl isRequired>
+
+            <FormControl isRequired isInvalid={errors.municipio}>
               <FormLabel fontSize="sm">Municipio</FormLabel>
               <Input
                 name="municipio"
@@ -401,8 +499,12 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
                 onChange={handleLocationChange}
                 placeholder="Ej: Valencia"
               />
+              {errors.municipio && (
+                <FormErrorMessage>El municipio es requerido.</FormErrorMessage>
+              )}
             </FormControl>
-            <FormControl isRequired>
+
+            <FormControl isRequired isInvalid={errors.detalle}>
               <FormLabel fontSize="sm">Dirección Específica</FormLabel>
               <Input
                 name="detalle"
@@ -411,22 +513,25 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
                 onChange={handleLocationChange}
                 placeholder="Ej: Av. Bolívar, Edif. X"
               />
+              {errors.detalle && (
+                <FormErrorMessage>La dirección específica es requerida.</FormErrorMessage>
+              )}
             </FormControl>
           </SimpleGrid>
         </Box>
 
         <Box width="100%" height="1px" bg="gray.200" mx="auto" my={2} borderRadius="full" />
 
-        {/* Checkbox con texto adaptativo según el origen de la data */}
+        {/* Multidía */}
         <FormControl>
           <Checkbox isChecked={esMultidia} onChange={handleMultidiaChange} colorScheme="primary">
             {getCheckboxLabel()}
           </Checkbox>
         </FormControl>
 
-        {/* Renderizado condicional de los campos de fecha */}
+        {/* Fechas */}
         {!esMultidia ? (
-          <FormControl isRequired>
+          <FormControl isRequired isInvalid={errors.fecha_inicio}>
             <FormLabel>Fecha de Realización</FormLabel>
             <Input
               type="date"
@@ -434,10 +539,13 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
               value={form.fecha_inicio}
               onChange={handleChange}
             />
+            {errors.fecha_inicio && (
+              <FormErrorMessage>Seleccione la fecha de realización.</FormErrorMessage>
+            )}
           </FormControl>
         ) : (
           <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-            <FormControl isRequired>
+            <FormControl isRequired isInvalid={errors.fecha_inicio}>
               <FormLabel>Fecha de Inicio</FormLabel>
               <Input
                 type="date"
@@ -445,9 +553,12 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
                 value={form.fecha_inicio}
                 onChange={handleChange}
               />
+              {errors.fecha_inicio && (
+                <FormErrorMessage>Seleccione la fecha de inicio.</FormErrorMessage>
+              )}
             </FormControl>
 
-            <FormControl isRequired>
+            <FormControl isRequired isInvalid={errors.fecha_fin}>
               <FormLabel>Fecha de Finalización</FormLabel>
               <Input
                 type="date"
@@ -456,11 +567,15 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
                 onChange={handleChange}
                 min={form.fecha_inicio}
               />
+              {errors.fecha_fin && (
+                <FormErrorMessage>Seleccione la fecha de finalización.</FormErrorMessage>
+              )}
             </FormControl>
           </SimpleGrid>
         )}
         
-        <FormControl isRequired>
+        {/* Área de Conocimiento */}
+        <FormControl isRequired isInvalid={errors.area_conocimiento}>
           <FormLabel>ÁREA DE CONOCIMIENTO</FormLabel>
           <CheckboxGroup
             value={form.area_conocimiento}
@@ -474,19 +589,26 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
               ))}
             </VStack>
           </CheckboxGroup>
+          {errors.area_conocimiento && (
+            <FormErrorMessage>Debe seleccionar al menos un área de conocimiento.</FormErrorMessage>
+          )}
         </FormControl>
 
-        <FormControl isRequired>
+        {/* Financiamiento */}
+        <FormControl isRequired isInvalid={errors.financiamiento}>
           <FormLabel>Financiamiento</FormLabel>
           <Select name="financiamiento" value={form.financiamiento} onChange={handleChange}>
             <option value="">Seleccione...</option>
             <option value="SI">SI</option>
             <option value="NO">NO</option>
           </Select>
+          {errors.financiamiento && (
+            <FormErrorMessage>Seleccione si posee financiamiento.</FormErrorMessage>
+          )}
         </FormControl>
 
         {form.financiamiento === "SI" && (
-          <FormControl isRequired>
+          <FormControl isRequired isInvalid={errors.financing_org}>
             <FormLabel>Organización Financiadora</FormLabel>
             <Input
               name="financing_org"
@@ -494,10 +616,14 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
               onChange={handleChange}
               placeholder="Nombre de la organización"
             />
+            {errors.financing_org && (
+              <FormErrorMessage>Indique el nombre de la organización financiadora.</FormErrorMessage>
+            )}
           </FormControl>
         )}
 
-        <FormControl isRequired>
+        {/* Descripción */}
+        <FormControl isRequired isInvalid={errors.descripcion}>
           <FormLabel>Descripción</FormLabel>
           <Textarea
             name="descripcion"
@@ -506,8 +632,12 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
             placeholder="Describe la actividad..."
             rows={5}
           />
+          {errors.descripcion && (
+            <FormErrorMessage>La descripción es obligatoria.</FormErrorMessage>
+          )}
         </FormControl>
         
+        {/* Botones de acción */}
         <Flex justify="space-between" mt={7}>
           <Button colorScheme="gray" onClick={() => router.back()}>
             Cancelar
