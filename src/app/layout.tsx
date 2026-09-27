@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter, Montserrat } from 'next/font/google'
+import { Providers } from "./providers"
+import './globals.css'
 import { Navbar } from "../components/layout/navbar"
 
 // Declaramos 'variable' en ambas fuentes
@@ -33,8 +35,10 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body>
-        <Navbar />
-        {children}
+        <Providers>
+          <Navbar />
+          {children}
+          </Providers>
       </body>
     </html>
   )
