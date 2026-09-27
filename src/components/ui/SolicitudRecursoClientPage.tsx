@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useCallback } from "react";
 import {
-  Box, Flex, VStack, HStack, Heading, FormControl, FormLabel,
+  Box, Flex, VStack, HStack, Heading, FormControl, FormLabel, FormErrorMessage,
   Button, Text, useToast, useDisclosure, IconButton, Select, Modal, ModalOverlay,
   ModalContent, ModalHeader, ModalBody, ModalFooter, ModalCloseButton,
-  Spinner, Code, Input, InputGroup, InputLeftAddon
+  Spinner, Code, Input, InputGroup, InputLeftAddon, Textarea
 } from "@chakra-ui/react";
 import {
   FileText, Eye, CheckCircle, XCircle, ArrowLeft
@@ -33,6 +33,9 @@ export default function SolicitudRecursoClientPage({ requestId, generalData }: S
   const [codigoFormato, setCodigoFormato] = useState<string>("");
   const [, setIsDirty] = useState(false);
 
+  const [razon, setRazon] = useState("");
+  const [razonInvalida, setRazonInvalida] = useState(false);
+
   // Selección de firmante de la DEU
   const [selectedMemberId, setSelectedMemberId] = useState<number>(1);
   const [previewMode, setPreviewMode] = useState<PreviewModalMode>("preview_previa_s_r");
@@ -54,6 +57,9 @@ export default function SolicitudRecursoClientPage({ requestId, generalData }: S
       }
       if (result.codigo_formato || result.codigoFormato) {
         setCodigoFormato(result.codigo_formato || result.codigoFormato);
+      }
+      if (result.razon) {
+        setRazon(result.razon);
       }
     } catch (error) {
       toast({
@@ -109,7 +115,8 @@ export default function SolicitudRecursoClientPage({ requestId, generalData }: S
     try {
       await apiRequest(`/admin/group-resource-requests/${requestId}/approve`, {
         method: "POST",
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: JSON.stringify({ razon: razon.trim() }),
       });
 
       toast({
@@ -135,11 +142,25 @@ export default function SolicitudRecursoClientPage({ requestId, generalData }: S
 
   // Rechazo de solicitud
   const handleReject = async () => {
+    if (!razon.trim()) {
+      setRazonInvalida(true);
+      toast({
+        title: "Razón requerida",
+        description: "Debes indicar la razón del rechazo antes de continuar.",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    setRazonInvalida(false);
     setSubmitting(true);
     try {
       await apiRequest(`/admin/group-resource-requests/${requestId}/reject`, {
         method: "POST",
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: JSON.stringify({ razon: razon.trim() }),
       });
 
       toast({
@@ -239,6 +260,11 @@ export default function SolicitudRecursoClientPage({ requestId, generalData }: S
             <Text fontSize="sm" color="gray.600">
               Grupo: <strong>{solicitud?.grupo_nombre || `#${solicitud?.grupo_id}`}</strong> | Solicitud ID: #{solicitud?.id}
             </Text>
+            {!isUnderReview && razon && razon.trim() !== "" && (
+              <Text fontSize="sm" color="gray.700" mt={1} whiteSpace="pre-line">
+                <strong>Razón:</strong> {razon}
+              </Text>
+            )}
           </VStack>
         </HStack>
 
@@ -297,6 +323,7 @@ export default function SolicitudRecursoClientPage({ requestId, generalData }: S
                 value={codigoFormato}
                 onChange={(e) => setCodigoFormato(e.target.value)}
                 focusBorderColor="blue.500"
+                isDisabled={!isUnderReview}
               />
             </InputGroup>
           </FormControl>
@@ -308,8 +335,34 @@ export default function SolicitudRecursoClientPage({ requestId, generalData }: S
               value={contenido}
               onChange={handleEditorChange}
               minHeight="300px"
+              readOnly={!isUnderReview}
             />
           </FormControl>
+
+          {/* CAMPO RAZÓN — solo mientras está en revisión */}
+          {isUnderReview && (
+            <FormControl isInvalid={razonInvalida}>
+              <FormLabel fontSize="sm" fontWeight="bold">
+                Razón (obligatoria para rechazar, opcional para aprobar)
+              </FormLabel>
+              <Textarea
+                value={razon}
+                onChange={(e) => {
+                  setRazon(e.target.value);
+                  if (razonInvalida && e.target.value.trim()) {
+                    setRazonInvalida(false);
+                  }
+                }}
+                placeholder="Escribe aquí el motivo de la decisión..."
+                rows={3}
+              />
+              {razonInvalida && (
+                <FormErrorMessage>
+                  Debes indicar una razón para rechazar la solicitud.
+                </FormErrorMessage>
+              )}
+            </FormControl>
+          )}
         </VStack>
       </Box>
 

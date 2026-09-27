@@ -16,7 +16,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function SolicitudRecursoPage({ params }: PageProps) {
-  // Pasamos el JSON estructurado completo para que el cliente arme los selectores de firmante
   return (
     <SolicitudRecursoClientPage 
       requestId={params.id} 

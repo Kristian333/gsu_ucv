@@ -7,6 +7,7 @@ export interface Approval {
   facultad: string;
   estado: string;
   revisado_en?: string;
+  razon?: string;
 }
 
 export interface GroupRequestDetails {
@@ -19,6 +20,5 @@ export interface GroupRequestDetails {
   creado_en: string;
   actualizado_en: string;
   aprobaciones: Approval[];
-  // Información detallada del grupo recuperada desde /groups/{grupo_id}
   grupo_detalle?: GroupDetailBackend | null;
 }

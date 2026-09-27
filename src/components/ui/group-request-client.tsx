@@ -29,6 +29,10 @@ import {
   ModalCloseButton,
   ModalBody,
   useDisclosure,
+  FormControl,
+  FormLabel,
+  FormErrorMessage,
+  Textarea,
 } from "@chakra-ui/react";
 import { GroupRequestDetails } from "@/types/group-request";
 import { GroupDetailBackend } from "@/types/group";
@@ -51,6 +55,9 @@ export default function GroupRequestReviewClient({ requestId }: Props) {
   const [modalType, setModalType] = useState<"approve" | "reject" | null>(null);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const [razon, setRazon] = useState("");
+  const [razonInvalida, setRazonInvalida] = useState(false);
 
   const { isOpen: isDocOpen, onOpen: onDocOpen, onClose: onDocClose } = useDisclosure();
   const [activeDocUrl, setActiveDocUrl] = useState<string | null>(null);
@@ -108,6 +115,23 @@ export default function GroupRequestReviewClient({ requestId }: Props) {
     fetchRequestDetails();
   }, [fetchRequestDetails]);
 
+  const handleOpenConfirmModal = (type: "approve" | "reject") => {
+    if (type === "reject" && !razon.trim()) {
+      setRazonInvalida(true);
+      toast({
+        title: "Razón requerida",
+        description: "Debes indicar la razón del rechazo antes de continuar.",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    setRazonInvalida(false);
+    setModalType(type);
+  };
+
   const handleAction = async () => {
     if (!modalType || !token) return;
     setLoading(true);
@@ -119,9 +143,10 @@ export default function GroupRequestReviewClient({ requestId }: Props) {
       await apiRequest(endpoint, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ razon: razon.trim() }),
       });
       setModalType(null);
-      
+
       toast({
         title: `Solicitud ${modalType === "approve" ? "aprobada" : "rechazada"}`,
         status: modalType === "approve" ? "success" : "info",
@@ -174,7 +199,7 @@ export default function GroupRequestReviewClient({ requestId }: Props) {
   return (
     <Box maxW="1200px" mx="auto" mt={10} p={8} borderRadius="lg" bg="white" shadow="md">
       <VStack spacing={8} align="stretch">
-        
+
         {/* Encabezado */}
         <Flex justify="space-between" align="center" pb={4} borderBottom="1px solid" borderColor="gray.200">
             <Box>
@@ -213,7 +238,7 @@ export default function GroupRequestReviewClient({ requestId }: Props) {
           <Heading size="md" mb={4} pb={2} borderBottom="1px solid" borderColor="gray.200">
             Información General del Grupo
           </Heading>
-          
+
           <Flex direction={{ base: "column", md: "row" }} justify="space-between" gap={6}>
             <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={4} fontSize="sm" flex="1">
               <GridItem colSpan={{ base: 1, md: 2 }}>
@@ -349,7 +374,7 @@ export default function GroupRequestReviewClient({ requestId }: Props) {
         {data.aprobaciones && data.aprobaciones.length > 0 && (
           <Box p={6} borderWidth="1px" borderRadius="lg" bg="white">
             <Heading size="md" mb={4} pb={2} borderBottom="1px solid" borderColor="gray.200">
-              Estado de Revisiones por Facultad
+              Estado de Revisiones
             </Heading>
             <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={3}>
               {data.aprobaciones.map((ap) => (
@@ -369,6 +394,11 @@ export default function GroupRequestReviewClient({ requestId }: Props) {
                         Revisado: {formatDateToClient(ap.revisado_en)}
                       </Text>
                     )}
+                    {ap.razon && ap.razon.trim() !== "" && (
+                      <Text fontSize="xs" color="gray.600" mt={1} whiteSpace="pre-line">
+                        Razón: {ap.razon}
+                      </Text>
+                    )}
                   </Box>
                   {getStatusBadge(ap.estado)}
                 </Flex>
@@ -381,18 +411,41 @@ export default function GroupRequestReviewClient({ requestId }: Props) {
         {isUnderReview && (
           <>
             <Divider />
+
+            <FormControl isInvalid={razonInvalida}>
+              <FormLabel fontSize="sm" fontWeight="semibold">
+                Razón (obligatoria para rechazar, opcional para aprobar)
+              </FormLabel>
+              <Textarea
+                value={razon}
+                onChange={(e) => {
+                  setRazon(e.target.value);
+                  if (razonInvalida && e.target.value.trim()) {
+                    setRazonInvalida(false);
+                  }
+                }}
+                placeholder="Escribe aquí el motivo de la decisión..."
+                rows={3}
+              />
+              {razonInvalida && (
+                <FormErrorMessage>
+                  Debes indicar una razón para rechazar la solicitud.
+                </FormErrorMessage>
+              )}
+            </FormControl>
+
             <Flex justify="flex-end" gap={4} pt={2}>
                 <Button
                     colorScheme="red"
                     size="md"
-                    onClick={() => setModalType("reject")}
+                    onClick={() => handleOpenConfirmModal("reject")}
                 >
                     Rechazar Solicitud
                 </Button>
                 <Button
                     colorScheme="green"
                     size="md"
-                    onClick={() => setModalType("approve")}
+                    onClick={() => handleOpenConfirmModal("approve")}
                 >
                     Aprobar Solicitud
                 </Button>
