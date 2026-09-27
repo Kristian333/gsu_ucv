@@ -330,7 +330,7 @@ export default function SolicitudRecursoClientPage({ requestId, generalData }: S
 
           {/* EDITOR DE TEXTO */}
           <FormControl>
-            <FormLabel fontWeight="bold">Contenido de la Solicitud / Documentación Presentada</FormLabel>
+            <FormLabel fontWeight="bold">Contenido de la Solicitud</FormLabel>
             <RichTextEditor 
               value={contenido}
               onChange={handleEditorChange}

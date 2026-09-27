@@ -10,6 +10,47 @@ function getAttrsString(el: HTMLElement): string {
     .join("");
 }
 
+const BLOCK_TAGS = new Set([
+  "P", "DIV", "TABLE", "UL", "OL", "H1", "H2", "H3", "H4", "H5", "H6",
+  "BLOCKQUOTE", "PRE", "HR", "FIGURE",
+]);
+
+function normalizeLooseInlineContent(root: HTMLElement) {
+  let node: ChildNode | null = root.firstChild;
+
+  const isLooseNode = (n: ChildNode): boolean => {
+    if (n.nodeType === Node.TEXT_NODE) {
+      return (n.textContent || "").trim() !== "";
+    }
+    if (n.nodeType === Node.ELEMENT_NODE) {
+      return !BLOCK_TAGS.has((n as HTMLElement).tagName);
+    }
+    return false;
+  };
+
+  while (node) {
+    const next: ChildNode | null = node.nextSibling;
+
+    if (isLooseNode(node)) {
+      const wrapper = document.createElement("p");
+      let run: ChildNode | null = node;
+
+      // Agrupa todos los nodos "sueltos" consecutivos en un mismo <p>
+      while (run && isLooseNode(run)) {
+        const runNext: ChildNode | null = run.nextSibling;
+        wrapper.appendChild(run);
+        run = runNext;
+      }
+
+      root.insertBefore(wrapper, run);
+      node = run;
+      continue;
+    }
+
+    node = next;
+  }
+}
+
 function wrapTableHeaderRows(root: HTMLElement) {
   root.querySelectorAll("table").forEach((table) => {
     if (table.querySelector("thead")) return;
@@ -56,6 +97,8 @@ export function paginateHtml(html: string): string[] {
   measureHost.style.textAlign = "justify";
   measureHost.className = "rich-text-preview";
   measureHost.innerHTML = html;
+
+  normalizeLooseInlineContent(measureHost);
 
   const styleTag = document.createElement("style");
   styleTag.textContent = LETTER_CONTENT_CSS;

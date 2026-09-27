@@ -16,7 +16,15 @@ import {
   Badge,
   Flex,
   Spinner,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverArrow,
+  PopoverCloseButton,
+  PopoverHeader,
+  PopoverBody,
 } from '@chakra-ui/react';
+import { MessageSquareText } from 'lucide-react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/app/context/auth-context'; 
@@ -50,6 +58,7 @@ interface SolicitudRecurso {
   contenido: string;
   estado: string;
   creado_en: string;
+  razon?: string;
 }
 
 type TabType = 'groups' | 'resources';
@@ -112,7 +121,7 @@ export function SolicitudesTable({ mode = 'admin', defaultFaculty, groupId }: So
     ? (facultyFromAuth || defaultFaculty || FACULTADES_FILTRO[0])
     : (facultyParam || FACULTADES_FILTRO[0]);
 
-  const currentColSpan = isGroupMode ? 3 : (showResourceCol ? 5 : 4);
+  const currentColSpan = isGroupMode ? 4 : (showResourceCol ? 5 : 4);
 
   const [facultad, setFacultad] = useState<string>(initialFaculty);
   const [status, setStatus] = useState<string>(statusParam);
@@ -298,6 +307,7 @@ export function SolicitudesTable({ mode = 'admin', defaultFaculty, groupId }: So
               {(activeTab === 'resources' || mode === 'group') && <Th>Tipo de Recurso</Th>}
               <Th>Fecha Creación</Th>
               <Th>Estado</Th>
+              {isGroupMode && <Th>Razón</Th>}
             </Tr>
           </Thead>
           <Tbody>
@@ -333,6 +343,39 @@ export function SolicitudesTable({ mode = 'admin', defaultFaculty, groupId }: So
                       {formatEstado(item.estado)}
                     </Badge>
                   </Td>
+
+                  {isGroupMode && (
+                    <Td onClick={(e) => e.stopPropagation()}>
+                      <Popover placement="left" isLazy>
+                        <PopoverTrigger>
+                          <Button
+                            size="xs"
+                            leftIcon={<MessageSquareText size={14} />}
+                            variant="outline"
+                            colorScheme="secondary"
+                          >
+                            Ver Razón
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent maxW="280px">
+                          <PopoverArrow />
+                          <PopoverCloseButton />
+                          <PopoverHeader fontWeight="bold" fontSize="sm">
+                            Razón de la decisión
+                          </PopoverHeader>
+                          <PopoverBody fontSize="sm" whiteSpace="pre-line">
+                            {item.razon && item.razon.trim() !== "" ? (
+                              item.razon
+                            ) : (
+                              <Text as="span" color="gray.400" fontStyle="italic">
+                                Razón no establecida
+                              </Text>
+                            )}
+                          </PopoverBody>
+                        </PopoverContent>
+                      </Popover>
+                    </Td>
+                  )}
                 </Tr>
               ))
             ) : (
