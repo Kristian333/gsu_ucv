@@ -349,10 +349,10 @@ export function SolicitudesTable({ mode = 'admin', defaultFaculty, groupId }: So
                       <Popover placement="left" isLazy>
                         <PopoverTrigger>
                           <Button
-                            size="xs"
+                            size="sm"
                             leftIcon={<MessageSquareText size={14} />}
                             variant="outline"
-                            colorScheme="secondary"
+                            colorScheme="primary"
                           >
                             Ver Razón
                           </Button>
@@ -360,15 +360,12 @@ export function SolicitudesTable({ mode = 'admin', defaultFaculty, groupId }: So
                         <PopoverContent maxW="280px">
                           <PopoverArrow />
                           <PopoverCloseButton />
-                          <PopoverHeader fontWeight="bold" fontSize="sm">
-                            Razón de la decisión
-                          </PopoverHeader>
                           <PopoverBody fontSize="sm" whiteSpace="pre-line">
                             {item.razon && item.razon.trim() !== "" ? (
                               item.razon
                             ) : (
                               <Text as="span" color="gray.400" fontStyle="italic">
-                                Razón no establecida
+                                Sin razón establecida
                               </Text>
                             )}
                           </PopoverBody>

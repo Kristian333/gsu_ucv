@@ -305,7 +305,7 @@ export function GroupsTable({
                     <Td px={2} py={3} textAlign="center">
                       <Button
                         size="sm"
-                        colorScheme="teal"
+                        colorScheme="primary"
                         variant="outline"
                         onClick={() => router.push(detailUrl)}
                       >

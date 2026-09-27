@@ -132,7 +132,7 @@ export function GroupDashboardContent() {
 
                 <DashboardCard
                   title="Reportes Pendientes"
-                  description="Reportes de actividades finalizadas pendientes por enviar o completar."
+                  description="Reportes de actividades finalizadas pendientes por rellenar."
                   tags={[
                     {
                       count: metrics?.reportes_pendientes ?? 0,
