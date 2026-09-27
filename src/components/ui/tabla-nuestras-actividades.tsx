@@ -137,12 +137,11 @@ export default function TablaNuestrasActividades({
                 reporte_revisado: act.reporte_revisado,
               });
 
-              // Determinar la lógica de UI por etiquetas exactas de getActivityStatus
-              const esFutura = statusInfo.label === 'Actividad Futura';
-              const enCurso = statusInfo.label === 'Actividad En Curso';
-              const esperaReporte = statusInfo.label === 'A la Espera de Reporte';
+              const sinFechas = !act.fecha_inicio && !act.fecha_fin;
+              const esFutura = statusInfo.label === 'Actividad Futura' || sinFechas;
+              const enCurso = statusInfo.label === 'Actividad En Curso' && !sinFechas;
+              const esperaReporte = statusInfo.label === 'A la Espera de Reporte' && !sinFechas;
               
-              // Solo se pueden destacar las actividades que ya pasaron de fecha
               const esFinalizada = !esFutura && !enCurso;
 
               const nombreActividad = act.nombre || "Actividad sin título";
@@ -178,7 +177,7 @@ export default function TablaNuestrasActividades({
                     <Tooltip 
                       label={
                         !esFinalizada
-                        ? "Solo se pueden destacar actividades que ya hayan finalizado"
+                          ? "Solo se pueden destacar actividades que ya hayan finalizado"
                           : esDestacado 
                             ? "Quitar de destacadas" 
                             : "Marcar como destacada"

@@ -336,11 +336,11 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
     if (!user?.groupId) {
       toast({
         title: "Identificación de Grupo Requerida",
-        description: "La actividad no se pudo actualizar, ¡no pudimos identificar tu grupo!",
+        description: "La actividad no se pudo actualizar, no pudimos identificar tu grupo. Intenta iniciar sesión nuevamente y vuelve a intentarlo.",
         status: "error",
         duration: 9000,
         isClosable: true,
-        position: "top"
+        position: "bottom"
       });
       return;
     }

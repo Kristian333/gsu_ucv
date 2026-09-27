@@ -266,11 +266,11 @@ export default function ReporteClientPage({ id }: ReporteFormProps) {
     if (!user?.groupId) {
       toast({
         title: "Identificación de Grupo Requerida",
-        description: "El reporte no se pudo guardar, ¡no pudimos identificar tu grupo!",
+        description: "La actividad no se pudo actualizar, no pudimos identificar tu grupo. Intenta iniciar sesión nuevamente y vuelve a intentarlo.",
         status: "error",
         duration: 5000,
         isClosable: true,
-        position: "top",
+        position: "bottom",
       });
       return;
     }
