@@ -32,67 +32,67 @@
         {
           "id_m": 1,
           "cargo": "Coordinadora",
-          "nombre": "Profa. Ara Tierras",
+          "nombre": "Profa. Rafael Mejías",
           "facultad": "Agronomía"
         },
         {
           "id_m": 2,
           "cargo": "Coordinador",
-          "nombre": "Prof. Jon Torres",
+          "nombre": "",
           "facultad": "Arquitectura y Urbanismo"
         },
         {
           "id_m": 3,
           "cargo": "Coordinadora",
-          "nombre": "Profa. Pepi Turing",
+          "nombre": "Profa. Yosly Hernández",
           "facultad": "Ciencias"
         },
         {
           "id_m": 4,
-          "cargo": "Coordinadora",
-          "nombre": "Profa. Mari Stonks",
+          "cargo": "Coordinador",
+          "nombre": "",
           "facultad": "Ciencias Económicas y Sociales"
         },
         {
           "id_m": 5,
-          "cargo": "Coordinadora",
-          "nombre": "Profa. Mia Omeprazol",
+          "cargo": "Coordinador",
+          "nombre": "",
           "facultad": "Farmacia"
         },
         {
           "id_m": 6,
           "cargo": "Coordinador",
-          "nombre": "Prof. Pablo Learning",
+          "nombre": "",
           "facultad": "Humanidades y Educación"
         },
         {
           "id_m": 7,
           "cargo": "Coordinador",
-          "nombre": "Prof. Napoleon Muchacho",
+          "nombre": "",
           "facultad": "Ingeniería"
         },
         {
           "id_m": 8,
           "cargo": "Coordinador",
-          "nombre": "Prof. Judge Tribunales",
+          "nombre": "",
           "facultad": "Ciencias Jurídicas y Políticas"
         },
         {
           "id_m": 9,
           "cargo": "Coordinadora",
-          "nombre": "Profa. Florence Nightingale",
+          "nombre": "Profa. Patricia Torres",
           "facultad": "Medicina"
         },
         {
           "id_m": 10,
-          "cargo": "Coordinador",
-          "nombre": "Prof. Leonardo Dientes",
+          "cargo": "Coordinadora",
+          "nombre": "Profa. Martha Espinoza",
           "facultad": "Odontología"
         },
         {
           "id_m": 11,
-          "cargo": "Coordinador",
-          "nombre": "Prof. Therian Perron",
+          "cargo": "Coordinadora",
+          "nombre": "Profa. Olymar Giménez",
           "facultad": "Ciencias Veterinarias"
         }
       ]

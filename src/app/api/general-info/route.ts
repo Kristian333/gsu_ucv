@@ -6,7 +6,7 @@ import { GeneralData } from '@/types/general-info'
 
 export const dynamic = 'force-dynamic'
 
-const jsonFilePath = path.join(process.cwd(), 'data', 'general_data.json')
+const jsonFilePath = path.join(process.cwd(), 'src', 'data', 'general_data.json')
 
 export async function GET() {
   try {

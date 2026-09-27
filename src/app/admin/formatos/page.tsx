@@ -1,6 +1,6 @@
 import { Box, Heading, Text } from '@chakra-ui/react'
 import { Metadata } from "next";
-import FormatosClientPage from "./FormatosClientPage";
+import FormatosClientPage from "@/components/ui/FormatosClientPage";
 import { getTemplates } from "./actions";
 import generalDataJson from "@/data/general_data.json";
 

@@ -197,7 +197,7 @@ export default function GroupRequestReviewClient({ requestId }: Props) {
         )}
 
         {/* Comentarios de la Solicitud */}
-        {data.comentarios && (
+        {/*{data.comentarios && (
           <Box p={4} bg="secondary.50" border="1px solid" borderColor="secondary.100" borderRadius="md">
             <Text fontWeight="bold" color="secondary.900" fontSize="sm">
               Comentario del solicitante:
@@ -206,7 +206,7 @@ export default function GroupRequestReviewClient({ requestId }: Props) {
               {data.comentarios}
             </Text>
           </Box>
-        )}
+        )}*/}
 
         {/* Información General del Grupo */}
         <Box p={6} borderWidth="1px" borderRadius="lg" bg="white">

@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import SolicitudRecursoClientPage from "./SolicitudRecursoClientPage";
+import SolicitudRecursoClientPage from "@/components/ui/SolicitudRecursoClientPage";
 import generalDataJson from "@/data/general_data.json";
 
 interface PageProps {

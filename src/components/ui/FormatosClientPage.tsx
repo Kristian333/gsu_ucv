@@ -11,7 +11,7 @@ import {
   HelpCircle, Eye, Save, XCircle, PlusCircle, Trash2
 } from "lucide-react";
 
-import { saveTemplates } from "./actions";
+import { saveTemplates } from "../../app/admin/formatos/actions";
 import TemplatePreviewModal from "@/components/ui/TemplatePreviewModal";
 import RichTextEditor from "@/components/ui/RichTextEditor";
 

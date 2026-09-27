@@ -25,19 +25,67 @@ import {
   InputRightElement,
   IconButton,
   useToast,
+  Button,
 } from "@chakra-ui/react";
-import { FiLock, FiEye, FiEyeOff, FiUserCheck, FiInfo } from "react-icons/fi";
+import { FiLock, FiRefreshCw, FiUserCheck, FiInfo } from "react-icons/fi";
 import { PrimaryButton, SecondaryButton } from "./buttons";
 import { UserDetailBackend } from "@/types/user";
+// import { apiRequest } from "@/components/formularios/api";
 
 export default function UsuarioGrupoDetalle({ usuario }: { usuario: UserDetailBackend | null }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
-  
-  // Estados para la revelación de la contraseña de la cuenta del grupo
+
+  /* Lógica de regeneración de contraseña (Deshabilitada temporalmente hasta que haya endpoint)
+
   const [adminPasswordInput, setAdminPasswordInput] = useState("");
-  const [isRevealed, setIsRevealed] = useState(false);
-  const [revealedPassword, setRevealedPassword] = useState("••••••••");
+  const [isRegenerating, setIsRegenerating] = useState(false);
+  const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
+
+  const handleRegeneratePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!adminPasswordInput.trim()) return;
+
+    setIsRegenerating(true);
+
+    try {
+      // 1. Confirmar contraseña del administrador y solicitar regeneración al backend
+      const response = await apiRequest(`/users/${usuario?.id}/reset-password`, {
+        method: "POST",
+        body: JSON.stringify({
+          admin_password: adminPasswordInput,
+        }),
+      });
+
+      if (response && response.new_password) {
+        setGeneratedPassword(response.new_password);
+        setAdminPasswordInput("");
+        onClose();
+
+        toast({
+          title: "Contraseña regenerada exitosamente",
+          description: "La nueva contraseña ha sido asignada a este usuario.",
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+          position: "bottom-right",
+        });
+      } else {
+        throw new Error(response?.message || "No se pudo regenerar la contraseña.");
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error al regenerar contraseña",
+        description: error.message || "Verifica tu contraseña de administrador e intenta de nuevo.",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+        position: "bottom-right",
+      });
+    } finally {
+      setIsRegenerating(false);
+    }
+  }; */
 
   if (!usuario) {
     return (
@@ -57,46 +105,6 @@ export default function UsuarioGrupoDetalle({ usuario }: { usuario: UserDetailBa
     (usuario.nivel_educativo && usuario.nivel_educativo.trim() !== "") ||
     (usuario.direccion && usuario.direccion.trim() !== "")
   );
-
-  const handleConfirmPassword = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!adminPasswordInput.trim()) return;
-
-    // TODO: Conectar con el endpoint de verificación de clave del admin en el backend
-    // Como fallback temporal, asignamos "nolodire"
-    // Validación temporal: la contraseña debe ser "nolodire"
-    if (adminPasswordInput === "nolodire") {
-        setRevealedPassword("nolodire");
-        setIsRevealed(true);
-        setAdminPasswordInput("");
-        onClose();
-
-      toast({
-        title: "Identidad confirmada, mostrando contraseña",
-        status: "success",
-        duration: 4000,
-        isClosable: true,
-        position: "bottom-right",containerStyle: {
-          backgroundColor: "var(--chakra-colors-primary, #319795)",
-          color: "white",
-        },
-      });
-    } else {
-      toast({
-        title: "Contraseña incorrecta",
-        description: "No tienes permisos para ver esta credencial.",
-        status: "error",
-        duration: 4000,
-        isClosable: true,
-        position: "bottom-right",
-      });
-    }
-  };
-
-  const handleToggleHide = () => {
-    setIsRevealed(false);
-    setRevealedPassword("••••••••");
-  };
 
   const formatEducativeLevel = (level?: string) => {
     if (!level) return "—";
@@ -130,45 +138,36 @@ export default function UsuarioGrupoDetalle({ usuario }: { usuario: UserDetailBa
                 Contraseña de la Cuenta
               </Text>
 
-              <HStack maxW="400px" spacing={3}>
-                <InputGroup size="md">
-                  <Input
-                    type={isRevealed ? "text" : "password"}
-                    value={revealedPassword}
-                    readOnly
-                    bg="white"
-                    focusBorderColor="primary"
-                    fontWeight={isRevealed ? "normal" : "normal"}
-                  />
-                  {isRevealed && (
-                    <InputRightElement>
-                      <IconButton
-                        aria-label="Ocultar contraseña"
-                        icon={<FiEyeOff />}
-                        size="sm"
-                        variant="ghost"
-                        onClick={handleToggleHide}
-                      />
-                    </InputRightElement>
-                  )}
-                </InputGroup>
+              {/* Botón de Regenerar Contraseña (Comentado para activación futura) */}
+              {/*
+              <VStack align="start" spacing={3}>
+                <Button
+                  leftIcon={<FiRefreshCw />}
+                  colorScheme="teal"
+                  onClick={onOpen}
+                  size="md"
+                >
+                  Regenerar Contraseña
+                </Button>
 
-                {!isRevealed && (
-                  <IconButton
-                    colorScheme="secondary"
-                    aria-label="Revelar contraseña"
-                    icon={<FiEye />}
-                    size="md"
-                    onClick={onOpen}
-                  />
+                {generatedPassword && (
+                  <Box p={3} bg="green.50" border="1px solid" borderColor="green.200" borderRadius="md" w="full" maxW="400px">
+                    <Text fontSize="xs" color="green.800" fontWeight="bold">
+                      NUEVA CONTRASEÑA GENERADA:
+                    </Text>
+                    <Text fontSize="lg" fontFamily="monospace" color="green.900" fontWeight="bold" mt={1}>
+                      {generatedPassword}
+                    </Text>
+                  </Box>
                 )}
-              </HStack>
+              </VStack>
+              */}
             </Box>
           </VStack>
         </Box>
       </Box>
 
-      {/* Sección Información (Se renderiza únicamente si al menos un valor no está vacío) */}
+      {/* Sección Información */}
       {hasExtraInfo && (
         <>
           <Divider />
@@ -227,19 +226,20 @@ export default function UsuarioGrupoDetalle({ usuario }: { usuario: UserDetailBa
         </>
       )}
 
-      {/* Modal flotante de verificación de contraseña del Administrador */}
+      {/* Modal flotante de autenticación para regenerar contraseña */}
+      {/*
       <Modal isOpen={isOpen} onClose={onClose} isCentered size="md">
         <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(4px)" />
-        <ModalContent as="form" onSubmit={handleConfirmPassword}>
+        <ModalContent as="form" onSubmit={handleRegeneratePassword}>
           <ModalHeader display="flex" alignItems="center" gap={2}>
             <Icon as={FiLock} color="primary" />
             Confirmar Identidad
           </ModalHeader>
           <ModalCloseButton />
-          
+
           <ModalBody py={4}>
             <Text fontSize="sm" color="gray.600" mb={4}>
-              Ingresa la contraseña de tu cuenta para revelar la clave del usuario.
+              Ingresa la contraseña de tu cuenta para autorizar la regeneración de credenciales para esta cuenta de grupo.
             </Text>
             <Input
               type="password"
@@ -256,12 +256,13 @@ export default function UsuarioGrupoDetalle({ usuario }: { usuario: UserDetailBa
             <SecondaryButton variant="ghost" onClick={onClose} size="sm">
               Cancelar
             </SecondaryButton>
-            <PrimaryButton type="submit" size="sm">
-              Enviar
+            <PrimaryButton type="submit" size="sm" isLoading={isRegenerating}>
+              Confirmar y Regenerar
             </PrimaryButton>
           </ModalFooter>
         </ModalContent>
       </Modal>
+      */}
     </VStack>
   );
 }
