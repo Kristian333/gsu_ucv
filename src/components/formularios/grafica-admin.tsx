@@ -251,7 +251,7 @@ export default function DashboardAdmin() {
           </Badge>
         </Flex>
         <Text fontSize="lg" color="gray.500" mb={8}>
-          Visualizando métricas consolidadas de todos los grupos, áreas y sedes universitarias a nivel nacional.
+          Visualizando métricas consolidadas de todos los grupos.
         </Text>
       </Box>
 

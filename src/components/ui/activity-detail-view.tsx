@@ -77,7 +77,6 @@ export function ActivityDetailView({ initialActivity, userRole = 'admin' }: Acti
     }
   }, [isHydrated, user, userRole, activity, router, toast]);
 
-  // Si no se ha hidratado o no tiene autorización para admingroup, mostrar un loader o pantalla limpia
   if (!isHydrated || !isAuthorized) {
     return (
       <Center h="50vh">
@@ -89,12 +88,10 @@ export function ActivityDetailView({ initialActivity, userRole = 'admin' }: Acti
   const dateRangeStr = formatActivityDateRange(activity.fecha_inicio, activity.fecha_fin)
   const statusInfo = getActivityStatus(activity)
 
-  // Condición para evaluar si la actividad ya finalizó
   const esFutura = statusInfo.label === 'Actividad Futura'
   const enCurso = statusInfo.label === 'Actividad En Curso'
   const esFinalizada = !esFutura && !enCurso
 
-  // Condición para mostrar el botón de acción del reporte (Solo Administrador)
   const canToggleReportStatus =
     userRole === 'admin' &&
     (statusInfo.label === 'Reporte Pendiente de Revisión' ||
@@ -187,7 +184,6 @@ export function ActivityDetailView({ initialActivity, userRole = 'admin' }: Acti
     }
   }
 
-  // Regresar de manera segura a la pantalla anterior
   const handleGoBack = () => {
     if (window.history.length > 2) {
       router.back()
@@ -196,12 +192,11 @@ export function ActivityDetailView({ initialActivity, userRole = 'admin' }: Acti
     }
   }
 
-  // Helper para renderizar el botón de acción de estado (reutilizado arriba y abajo)
   const renderToggleButton = (size: 'sm' | 'md' = 'sm') => {
     if (!canToggleReportStatus) return null
 
     return (
-        <Button
+      <Button
         leftIcon={<CheckCircleIcon />}
         bg={activity.reporte_revisado ? 'warning' : 'success'}
         color="white"
@@ -211,11 +206,27 @@ export function ActivityDetailView({ initialActivity, userRole = 'admin' }: Acti
         size={size}
         isLoading={isUpdating}
         onClick={handleToggleReportCheck}
-        >
+      >
         {activity.reporte_revisado ? 'Marcar como Pendiente' : 'Marcar como Revisado'}
-        </Button>
+      </Button>
     )
   }
+
+  const hasParticipantesGrupo = activity.participantes_grupo != null && activity.participantes_grupo > 0
+  const hasParticipantesEstimados = activity.participantes_estimados != null && activity.participantes_estimados > 0
+  const hasParticipantesReales = activity.participantes_reales != null && activity.participantes_reales > 0
+
+  const hasParticipantesSection =
+    hasParticipantesGrupo || hasParticipantesEstimados || hasParticipantesReales
+
+  const hasEvidenciasSection = Boolean(activity.galeria_url || activity.lista_participantes)
+
+  const hasUbicacion = Boolean(activity.ubicacion)
+  const hasArea = Boolean(areaDisplay)
+  const hasAliados = Boolean(activity.aliados)
+  const hasFinanciamiento = Boolean(activity.financiamiento)
+
+  const hasDetallesSection = hasUbicacion || hasArea || hasAliados || hasFinanciamiento
 
   return (
     <Stack spacing={6}>
@@ -335,51 +346,60 @@ export function ActivityDetailView({ initialActivity, userRole = 'admin' }: Acti
               {/* Cubierta de la actividad */}
               <Box flexShrink={0} maxW={{ base: 'full', md: '240px' }}>
                 <Image
-                src={activity.cubierta}
-                alt={activity.nombre}
-                borderRadius="lg"
-                objectFit="cover"
-                maxH="160px"
-                w="full"
-                fallbackSrc="/imagen-no-disponible.jpg"
+                  src={activity.cubierta}
+                  alt={activity.nombre}
+                  borderRadius="lg"
+                  objectFit="cover"
+                  maxH="160px"
+                  w="full"
+                  fallbackSrc="/imagen-no-disponible.jpg"
                 />
               </Box>
             </Flex>
 
-            <Divider />
-
-            {/* Métrica de Asistencia y Participantes */}
-            <Box>
-              <Text fontSize="xs" fontWeight="bold" color="gray.500" textTransform="uppercase" mb={3}>
-                Participantes y Asistencia
-              </Text>
-              <SimpleGrid columns={{ base: 1, sm: 3 }} spacing={4}>
-                <Box p={4} bg="gray.50" borderRadius="lg" borderLeft="4px solid" borderColor="primary.500">
-                  <Text fontSize="xs" color="gray.600">
-                    Miembros del Grupo
+            {/* Participantes y Asistencia */}
+            {hasParticipantesSection && (
+              <>
+                <Divider />
+                <Box>
+                  <Text fontSize="xs" fontWeight="bold" color="gray.500" textTransform="uppercase" mb={3}>
+                    Participantes y Asistencia
                   </Text>
-                  <Text fontSize="2xl" fontWeight="bold" color="gray.800">
-                    {activity.participantes_grupo ?? 0}
-                  </Text>
+                  <SimpleGrid columns={{ base: 1, sm: 3 }} spacing={4}>
+                    {hasParticipantesGrupo && (
+                      <Box p={4} bg="gray.50" borderRadius="lg" borderLeft="4px solid" borderColor="primary.500">
+                        <Text fontSize="xs" color="gray.600">
+                          Miembros del Grupo
+                        </Text>
+                        <Text fontSize="2xl" fontWeight="bold" color="gray.800">
+                          {activity.participantes_grupo}
+                        </Text>
+                      </Box>
+                    )}
+                    {hasParticipantesEstimados && (
+                      <Box p={4} bg="gray.50" borderRadius="lg" borderLeft="4px solid" borderColor="secondary.500">
+                        <Text fontSize="xs" color="gray.600">
+                          Beneficiados Estimados
+                        </Text>
+                        <Text fontSize="2xl" fontWeight="bold" color="gray.800">
+                          {activity.participantes_estimados}
+                        </Text>
+                      </Box>
+                    )}
+                    {hasParticipantesReales && (
+                      <Box p={4} bg="gray.50" borderRadius="lg" borderLeft="4px solid" borderColor="success">
+                        <Text fontSize="xs" color="gray.600">
+                          Beneficiados Reales
+                        </Text>
+                        <Text fontSize="2xl" fontWeight="bold" color="primary.700">
+                          {activity.participantes_reales}
+                        </Text>
+                      </Box>
+                    )}
+                  </SimpleGrid>
                 </Box>
-                <Box p={4} bg="gray.50" borderRadius="lg" borderLeft="4px solid" borderColor="secondary.500">
-                  <Text fontSize="xs" color="gray.600">
-                    Beneficiados Estimados
-                  </Text>
-                  <Text fontSize="2xl" fontWeight="bold" color="gray.800">
-                    {activity.participantes_estimados ?? 0}
-                  </Text>
-                </Box>
-                <Box p={4} bg="gray.50" borderRadius="lg" borderLeft="4px solid" borderColor="success">
-                  <Text fontSize="xs" color="gray.600">
-                    Beneficiados Reales
-                  </Text>
-                  <Text fontSize="2xl" fontWeight="bold" color="primary.700">
-                    {activity.participantes_reales ?? 0}
-                  </Text>
-                </Box>
-              </SimpleGrid>
-            </Box>
+              </>
+            )}
 
             <Divider />
 
@@ -428,14 +448,16 @@ export function ActivityDetailView({ initialActivity, userRole = 'admin' }: Acti
                 </Text>
               </Box>
 
-              <Box>
-                <Text fontSize="xs" fontWeight="bold" color="gray.500" textTransform="uppercase" mb={1}>
-                  Aliados Estratégicos
-                </Text>
-                <Text color="gray.800" fontWeight="medium">
-                  {activity.aliados || 'Sin aliados registrados'}
-                </Text>
-              </Box>
+              {hasParticipantesGrupo && (
+                <Box>
+                  <Text fontSize="xs" fontWeight="bold" color="gray.500" textTransform="uppercase" mb={1}>
+                    Aliados Estratégicos
+                  </Text>
+                  <Text color="gray.800" fontWeight="medium">
+                    {activity.aliados || 'Sin aliados registrados'}
+                  </Text>
+                </Box>
+              )}
 
               <Box>
                 <Text fontSize="xs" fontWeight="bold" color="gray.500" textTransform="uppercase" mb={1}>
@@ -447,65 +469,68 @@ export function ActivityDetailView({ initialActivity, userRole = 'admin' }: Acti
               </Box>
             </SimpleGrid>
 
-            <Divider />
+            {/* Evidencias y Documentación */}
+            {hasEvidenciasSection && (
+              <>
+                <Divider />
+                <Box>
+                  <Text fontSize="xs" fontWeight="bold" color="gray.500" textTransform="uppercase" mb={4}>
+                    Evidencias y Documentación
+                  </Text>
 
-            {/* Archivos y Evidencias */}
-            <Box>
-              <Text fontSize="xs" fontWeight="bold" color="gray.500" textTransform="uppercase" mb={4}>
-                Evidencias y Documentación
-              </Text>
+                  <Flex wrap="wrap" gap={4} align="center" justify="space-between">
+                    <HStack wrap="wrap" spacing={4}>
+                      {/* Botón Google Drive para Galería */}
+                      {activity.galeria_url ? (
+                        <Button
+                          as="a"
+                          href={activity.galeria_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          leftIcon={
+                            <Image
+                              src="/google_drive_icon.webp"
+                              alt="Google Drive"
+                              boxSize="18px"
+                              objectFit="contain"
+                            />
+                          }
+                          colorScheme="gray"
+                          variant="outline"
+                          borderColor="gray.300"
+                          _hover={{ bg: 'gray.100' }}
+                        >
+                          Ver Galería en Drive
+                        </Button>
+                      ) : (
+                        <Button
+                          leftIcon={<SiGoogledrive size="18px" />}
+                          isDisabled
+                          variant="outline"
+                        >
+                          Ver Galería en Drive (No disponible)
+                        </Button>
+                      )}
 
-              <Flex wrap="wrap" gap={4} align="center" justify="space-between">
-                <HStack wrap="wrap" spacing={4}>
-                    {/* Botón Google Drive para Galería */}
-                    {activity.galeria_url ? (
-                    <Button
-                        as="a"
-                        href={activity.galeria_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        leftIcon={
-                        <Image
-                            src="/google_drive_icon.webp"
-                            alt="Google Drive"
-                            boxSize="18px"
-                            objectFit="contain"
-                        />
-                        }
-                        colorScheme="gray"
-                        variant="outline"
-                        borderColor="gray.300"
-                        _hover={{ bg: 'gray.100' }}
-                    >
-                        Ver Galería en Drive
-                    </Button>
-                    ) : (
-                    <Button
-                        leftIcon={<SiGoogledrive size="18px" />}
-                        isDisabled
-                        variant="outline"
-                    >
-                        Ver Galería en Drive (No disponible)
-                    </Button>
-                    )}
-
-                    {/* Lista de Participantes */}
-                    {activity.lista_participantes && (
-                    <Button
-                        as="a"
-                        href={activity.lista_participantes}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        leftIcon={<ExternalLinkIcon />}
-                        colorScheme="primary"
-                        variant="outline"
-                    >
-                        Ver Lista de Participantes
-                    </Button>
-                    )}
-                </HStack>
-              </Flex>
-            </Box>
+                      {/* Lista de Participantes */}
+                      {activity.lista_participantes && (
+                        <Button
+                          as="a"
+                          href={activity.lista_participantes}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          leftIcon={<ExternalLinkIcon />}
+                          colorScheme="primary"
+                          variant="outline"
+                        >
+                          Ver Lista de Participantes
+                        </Button>
+                      )}
+                    </HStack>
+                  </Flex>
+                </Box>
+              </>
+            )}
           </Stack>
         </CardBody>
       </Card>

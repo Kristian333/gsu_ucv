@@ -62,8 +62,8 @@ export function DeuDashboardClient() {
       {/* Tarjetas de Métricas Principales */}
       <SimpleGrid columns={{ base: 1, md: 2 }} spacing={8} mt={8}>
         <DashboardCard
-          title="Solicitudes Pendientes DEU"
-          description="Revisiones de creación/actualización de grupos bajo la gestión directiva."
+          title="Solicitudes de Registro Pendientes"
+          description="Revisiones de creación de grupos bajo la gestión directiva."
           tags={[
             {
               count: stats?.solicitudes_pendientes_deu ?? 0,
@@ -109,17 +109,17 @@ export function DeuDashboardClient() {
           <Flex align="center" justify="space-between">
             <Box>
               <Heading size="md" color="gray.700">
-                Solicitudes de Recursos Pendientes
+                Solicitudes de Contancias, Recursos y Permisos Pendientes
               </Heading>
               <Text fontSize="sm" color="gray.500" mt={1}>
-                Desglose de requerimientos pendientes por parte de las distintas facultades.
+                Desglose de solicitudes pendientes agrupadas por las facultades a las que pertenencen los grupos solicitantes.
               </Text>
             </Box>
 
             <NextLink href="/admin/solicitudes?tab=resources&page=1" passHref legacyBehavior>
               <ChakraLink color="secondary.500" fontWeight="bold" fontSize="sm" _hover={{ textDecoration: "underline" }}>
                 <Flex align="center">
-                  Ver solicitudes de recursos
+                  Ver solicitudes
                   <Icon as={FaArrowRight} ml={2} />
                 </Flex>
               </ChakraLink>
@@ -146,6 +146,7 @@ export function DeuDashboardClient() {
                       >
                         <ChakraLink color="secondary.600" _hover={{ textDecoration: "underline" }}>
                           {item.facultad}
+                          <Icon as={FaArrowRight} ml={2} />
                         </ChakraLink>
                       </NextLink>
                     </Td>

@@ -13,7 +13,7 @@ export function AdminNavbar() {
   const hoverBg = useColorModeValue('gray.50', 'gray.700');
 
   const mainLinks = [
-    { name: 'Dashboard', href: '/admin/dashboard' },
+    { name: 'Inicio', href: '/admin/dashboard' },
     { name: 'Solicitudes', href: '/admin/solicitudes' },
     { name: 'Grupos', href: '/admin/grupos' },
     { name: 'Reportes de Actividad', href: '/admin/reportes' },

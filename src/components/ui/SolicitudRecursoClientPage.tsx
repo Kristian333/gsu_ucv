@@ -4,11 +4,11 @@ import { useState, useEffect, useCallback } from "react";
 import {
   Box, Flex, VStack, HStack, Heading, FormControl, FormLabel, FormErrorMessage,
   Button, Text, useToast, useDisclosure, IconButton, Select, Modal, ModalOverlay,
-  ModalContent, ModalHeader, ModalBody, ModalFooter, ModalCloseButton,
-  Spinner, Code, Input, InputGroup, InputLeftAddon, Textarea
+  ModalContent, ModalHeader, ModalBody, ModalFooter, ModalCloseButton, Icon,
+  Spinner, Code, Input, InputGroup, InputLeftAddon, Textarea, FormHelperText
 } from "@chakra-ui/react";
 import {
-  FileText, Eye, CheckCircle, XCircle, ArrowLeft
+  FileText, Eye, CheckCircle, XCircle, ArrowLeft, Info
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/auth-context";
@@ -105,18 +105,44 @@ export default function SolicitudRecursoClientPage({ requestId, generalData }: S
 
   // Prepara el modal en modo "approve"
   const handleOpenApproveModal = () => {
+    if (!codigoFormato.trim()) {
+      toast({
+        title: "Código de formato requerido",
+        description: "Debes ingresar el código de formato asignado a esta solicitud antes de aprobarla.",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+      return;
+    }
+
     setPreviewMode("approve");
     previewDisclosure.onOpen();
   };
 
   // Aprobación de solicitud
   const handleConfirmApprove = async () => {
+    if (!codigoFormato.trim()) {
+      toast({
+        title: "Código de formato requerido",
+        description: "El código de formato no puede estar vacío al aprobar la solicitud.",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+      return;
+    }
+
     setSubmitting(true);
     try {
       await apiRequest(`/admin/group-resource-requests/${requestId}/approve`, {
         method: "POST",
         headers: token ? { Authorization: `Bearer ${token}` } : {},
-        body: JSON.stringify({ razon: razon.trim() }),
+        body: JSON.stringify({ 
+          razon: razon.trim(),
+          codigo_formato: codigoFormato.trim(),
+          contenido: contenido
+        }),
       });
 
       toast({
@@ -282,6 +308,21 @@ export default function SolicitudRecursoClientPage({ requestId, generalData }: S
         </HStack>
       </Flex>
 
+      {/* NOTA EXPLICATIVA SOBRE EDICIÓN DE CONTENIDO */}
+      <Box bg="blue.50" border="1px solid" borderColor="blue.200" borderRadius="xl" p={4} mb={6}>
+        <HStack spacing={3} align="flex-start">
+          <Icon as={Info} color="blue.600" boxSize={5} mt={0.5} />
+          <Box fontSize="sm" color="blue.900">
+            <Text fontWeight="bold" mb={0.5}>
+              Edición de contenido disponible
+            </Text>
+            <Text color="blue.800">
+              Puedes realizar correcciones menores al texto de la solicitud directamente desde el editor de abajo antes de aprobarla. Esto evita tener que rechazar la solicitud y requerir que el grupo vuelva a enviarla desde cero.
+            </Text>
+          </Box>
+        </HStack>
+      </Box>
+
       {/* PANEL DE SELECCIÓN DE FIRMANTE */}
       <Box bg="white" p={4} borderRadius="xl" shadow="sm" mb={6}>
         <Heading size="xs" textTransform="uppercase" color="gray.500" mb={3}>
@@ -310,7 +351,7 @@ export default function SolicitudRecursoClientPage({ requestId, generalData }: S
         <VStack spacing={4} align="stretch">
           
           {/* CAMPO CÓDIGO DE FORMATO */}
-          <FormControl maxW="380px">
+          <FormControl maxW="420px">
             <FormLabel fontSize="xs" fontWeight="bold">
               Código del Formato
             </FormLabel>
@@ -326,6 +367,9 @@ export default function SolicitudRecursoClientPage({ requestId, generalData }: S
                 isDisabled={!isUnderReview}
               />
             </InputGroup>
+            <FormHelperText fontSize="xs" color="gray.500">
+              Ingresa el código asignado para esta solicitud (requerido para aprobar).
+            </FormHelperText>
           </FormControl>
 
           {/* EDITOR DE TEXTO */}

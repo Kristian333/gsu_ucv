@@ -10,6 +10,7 @@ import {
   TabPanel,
   FormControl,
   FormLabel,
+  FormHelperText,
   Input,
   Textarea,
   Button,
@@ -33,6 +34,9 @@ import {
   Card,
   CardBody,
   Divider,
+  Alert,
+  AlertIcon,
+  AlertDescription,
 } from '@chakra-ui/react'
 import { CheckCircleIcon, WarningIcon } from '@chakra-ui/icons'
 import { GeneralData, ModificacionDetectada } from '@/types/general-info'
@@ -223,8 +227,8 @@ export function InfoGeneralEditor({ initialData, onSave }: InfoGeneralEditorProp
       const success = await onSave(formData)
       setIsSaving(false)
       if (success) {
-        setFormData({ ...formData }) 
-        
+        setFormData({ ...formData })
+
         toast({
           title: 'Información actualizada correctamente',
           status: 'success',
@@ -243,11 +247,20 @@ export function InfoGeneralEditor({ initialData, onSave }: InfoGeneralEditorProp
     }
   }
 
+  const CargoGenderNotice = () => (
+    <Alert status="info" variant="subtle" borderRadius="xl" mb={6}>
+      <AlertIcon />
+      <AlertDescription fontSize="sm" color="blue.800">
+        <Text as="span" fontWeight="bold">Nota:</Text> Los campos de cargo/título son editables para permitir la adaptación según el género de la autoridad asignada (ejemplo: <i>Director / Directora</i>, <i>Coordinador / Coordinadora</i>).
+      </AlertDescription>
+    </Alert>
+  )
+
   return (
     <Box bg="white" p={{ base: 4, md: 8 }} borderRadius="2xl" shadow="sm" border="1px" borderColor="gray.100">
       <Tabs variant="enclosed" colorScheme="teal">
         <TabList mb={6}>
-          <Tab fontWeight="bold">Info DEU</Tab>
+          <Tab fontWeight="bold">DEU</Tab>
           <Tab fontWeight="bold">Facultades</Tab>
           <Tab fontWeight="bold">Formatos</Tab>
         </TabList>
@@ -255,6 +268,7 @@ export function InfoGeneralEditor({ initialData, onSave }: InfoGeneralEditorProp
         <TabPanels>
           {/* TAB 1: INFO DEU */}
           <TabPanel px={0}>
+            <CargoGenderNotice />
             <VStack spacing={6} align="stretch">
               <Card variant="outline" borderRadius="xl">
                 <CardBody>
@@ -262,7 +276,7 @@ export function InfoGeneralEditor({ initialData, onSave }: InfoGeneralEditorProp
                     Autoridades Directivas
                   </Heading>
                   <VStack spacing={4}>
-                    <HStack w="full" spacing={4} align="flex-end">
+                    <HStack w="full" spacing={4} align="flex-start">
                       <FormControl maxW="280px">
                         <FormLabel fontSize="sm" fontWeight="semibold">
                           Cargo / Título Director(a)
@@ -271,6 +285,9 @@ export function InfoGeneralEditor({ initialData, onSave }: InfoGeneralEditorProp
                           value={director?.cargo || ''}
                           onChange={(e) => handleDirectorChange('cargo', e.target.value)}
                         />
+                        <FormHelperText fontSize="xs">
+                          Editable para ajustar el género (ej. Director / Directora).
+                        </FormHelperText>
                       </FormControl>
                       <FormControl flex={1}>
                         <FormLabel fontSize="sm" fontWeight="semibold">
@@ -337,6 +354,7 @@ export function InfoGeneralEditor({ initialData, onSave }: InfoGeneralEditorProp
 
           {/* TAB 2: FACULTADES */}
           <TabPanel px={0}>
+            <CargoGenderNotice />
             <Card variant="outline" borderRadius="xl">
               <CardBody>
                 <Heading size="md" mb={4} color="gray.700">
@@ -364,7 +382,7 @@ export function InfoGeneralEditor({ initialData, onSave }: InfoGeneralEditorProp
 
                   {facultadSeleccionada && (
                     <VStack spacing={4} align="stretch">
-                      <HStack spacing={4} align="flex-end">
+                      <HStack spacing={4} align="flex-start">
                         <FormControl maxW="240px">
                           <FormLabel fontSize="sm" fontWeight="semibold">
                             Título / Cargo
@@ -379,6 +397,9 @@ export function InfoGeneralEditor({ initialData, onSave }: InfoGeneralEditorProp
                               )
                             }
                           />
+                          <FormHelperText fontSize="xs">
+                            Editable para ajustar el género (ej. Coordinador / Coordinadora).
+                          </FormHelperText>
                         </FormControl>
                         <FormControl flex={1}>
                           <FormLabel fontSize="sm" fontWeight="semibold">

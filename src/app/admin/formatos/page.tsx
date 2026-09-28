@@ -34,7 +34,7 @@ export default async function AdminFormatosPage() {
         Administrador de Formatos
       </Heading>
       <Text fontSize="lg" color="gray.500" mb={8}>
-        Edición estructural de los formatos para las solicitudes de recursos de los Grupos de Extensión.
+        Edición estructural de los formatos para las solicitudes de los Grupos de Extensión.
       </Text>
 
     <FormatosClientPage 

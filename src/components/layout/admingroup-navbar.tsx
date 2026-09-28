@@ -40,6 +40,7 @@ export const AdminGroupNavbar = () => {
     { label: "Nuestras Actividades", href: "/admingroup/nuestras_actividades" },
     { label: "Solicitudes", href: "/admingroup/solicitudes" },
     { label: "Estadísticas", href: "/admingroup/estadisticas" },
+    { label: "Información del Grupo", href: "/admingroup/mi_grupo" },
   ];
 
   const invitadoNavItems = [

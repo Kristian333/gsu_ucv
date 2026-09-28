@@ -34,7 +34,7 @@ import { FACULTADES_FILTRO } from '@/constants/facultades';
 
 const ESTADOS = [
   { label: 'Todos los estados', value: '' },
-  { label: 'En Revisión', value: 'under_review' },
+  { label: 'Pendiente', value: 'under_review' },
   { label: 'Aprobada', value: 'approved' },
   { label: 'Rechazada', value: 'rejected' },
 ];
@@ -88,7 +88,7 @@ const getBadgeColorScheme = (estado: string) => {
 const formatEstado = (estado: string) => {
   if (!estado) return '';
   const map: Record<string, string> = {
-    under_review: 'En Revisión',
+    under_review: 'Pendiente',
     approved: 'Aprobada',
     pending: 'Pendiente',
     rejected: 'Rechazada',
@@ -239,7 +239,7 @@ export function SolicitudesTable({ mode = 'admin', defaultFaculty, groupId }: So
             _hover={{ bg: activeTab === 'groups' ? 'primary.700' : 'primary.50' }}
             onClick={() => handleTabChange('groups')}
           >
-            Solicitudes de Grupos
+            Solicitudes de Registro de Grupos
           </Button>
           <Button
             bg={activeTab === 'resources' ? 'primary.600' : 'transparent'}
@@ -249,7 +249,7 @@ export function SolicitudesTable({ mode = 'admin', defaultFaculty, groupId }: So
             _hover={{ bg: activeTab === 'resources' ? 'primary.700' : 'primary.50' }}
             onClick={() => handleTabChange('resources')}
           >
-            Solicitudes de Recursos
+            Solicitudes de Constancias, Recursos y Permisos
           </Button>
         </ButtonGroup>
       )}
@@ -319,62 +319,73 @@ export function SolicitudesTable({ mode = 'admin', defaultFaculty, groupId }: So
                 </Td>
               </Tr>
             ) : data.length > 0 ? (
-              data.map((item) => (
-                <Tr
-                  key={item.id}
-                  onClick={() => handleRowClick(item.id)}
-                  _hover={mode !== 'group' ? { bg: 'gray.100', cursor: 'pointer' } : undefined}
-                  transition="background 0.15s ease-in-out"
-                >
-                  {mode !== 'group' && <Td fontWeight="medium">{item.grupo_nombre || item.grupo_id}</Td>}
-                  {mode !== 'group' && <Td>{item.facultad || (activeTab === 'groups' && mode === 'admin' ? 'DEU' : facultad)}</Td>}
+              data.map((item) => {
+                const estadoLower = item.estado?.toLowerCase();
+                const isPending = estadoLower === 'under_review' || estadoLower === 'pending' || estadoLower === 'pendiente';
 
-                  {(activeTab === 'resources' || mode === 'group') && (
+                return (
+                  <Tr
+                    key={item.id}
+                    onClick={() => handleRowClick(item.id)}
+                    _hover={mode !== 'group' ? { bg: 'gray.100', cursor: 'pointer' } : undefined}
+                    transition="background 0.15s ease-in-out"
+                  >
+                    {mode !== 'group' && <Td fontWeight="medium">{item.grupo_nombre || item.grupo_id}</Td>}
+                    {mode !== 'group' && <Td>{item.facultad || (activeTab === 'groups' && mode === 'admin' ? 'DEU' : facultad)}</Td>}
+
+                    {(activeTab === 'resources' || mode === 'group') && (
+                      <Td>
+                        <Badge colorScheme="secondary">{item.tipo}</Badge>
+                      </Td>
+                    )}
+
                     <Td>
-                      <Badge colorScheme="secondary">{item.tipo}</Badge>
+                      {new Date(item.creado_en).toLocaleDateString()}
                     </Td>
-                  )}
-
-                  <Td>
-                    {new Date(item.creado_en).toLocaleDateString()}
-                  </Td>
-                  <Td>
-                    <Badge colorScheme={getBadgeColorScheme(item.estado)}>
-                      {formatEstado(item.estado)}
-                    </Badge>
-                  </Td>
-
-                  {isGroupMode && (
-                    <Td onClick={(e) => e.stopPropagation()}>
-                      <Popover placement="left" isLazy>
-                        <PopoverTrigger>
-                          <Button
-                            size="sm"
-                            leftIcon={<MessageSquareText size={14} />}
-                            variant="outline"
-                            colorScheme="primary"
-                          >
-                            Ver Razón
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent maxW="280px">
-                          <PopoverArrow />
-                          <PopoverCloseButton />
-                          <PopoverBody fontSize="sm" whiteSpace="pre-line">
-                            {item.razon && item.razon.trim() !== "" ? (
-                              item.razon
-                            ) : (
-                              <Text as="span" color="gray.400" fontStyle="italic">
-                                Sin razón establecida
-                              </Text>
-                            )}
-                          </PopoverBody>
-                        </PopoverContent>
-                      </Popover>
+                    <Td>
+                      <Badge colorScheme={getBadgeColorScheme(item.estado)}>
+                        {formatEstado(item.estado)}
+                      </Badge>
                     </Td>
-                  )}
-                </Tr>
-              ))
+
+                    {isGroupMode && (
+                      <Td onClick={(e) => e.stopPropagation()}>
+                        {!isPending ? (
+                          <Popover placement="left" isLazy>
+                            <PopoverTrigger>
+                              <Button
+                                size="sm"
+                                leftIcon={<MessageSquareText size={14} />}
+                                variant="outline"
+                                colorScheme="primary"
+                              >
+                                Ver Razón
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent maxW="280px">
+                              <PopoverArrow />
+                              <PopoverCloseButton />
+                              <PopoverBody fontSize="sm" whiteSpace="pre-line">
+                                {item.razon && item.razon.trim() !== "" ? (
+                                  item.razon
+                                ) : (
+                                  <Text as="span" color="gray.400" fontStyle="italic">
+                                    Sin razón establecida
+                                  </Text>
+                                )}
+                              </PopoverBody>
+                            </PopoverContent>
+                          </Popover>
+                        ) : (
+                          <Text color="gray.400" fontSize="sm">
+                            —
+                          </Text>
+                        )}
+                      </Td>
+                    )}
+                  </Tr>
+                );
+              })
             ) : (
               <Tr>
                 <Td colSpan={currentColSpan} textAlign="center" py={10}>

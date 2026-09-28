@@ -156,9 +156,9 @@ export default function TablaNuestrasActividades({
                     <Link
                       as={NextLink}
                       href={`/admingroup/actividad/${act.id}`}
-                      color="teal.600"
+                      color="priamry.600"
                       fontWeight="bold"
-                      _hover={{ textDecoration: "underline", color: "teal.800" }}
+                      _hover={{ textDecoration: "underline", color: "primary.800" }}
                     >
                       {nombreActividad}
                     </Link>
@@ -213,7 +213,7 @@ export default function TablaNuestrasActividades({
                           icon={<FiEdit />}
                           size="md"
                           variant="ghost"
-                          colorScheme="teal"
+                          colorScheme="primary"
                         />
                       </Tooltip>
                     )}
@@ -255,7 +255,7 @@ export default function TablaNuestrasActividades({
                           icon={<FiInfo />}
                           size="md"
                           variant="ghost"
-                          colorScheme="teal"
+                          colorScheme="primary"
                         />
                       </Tooltip>
                     )}

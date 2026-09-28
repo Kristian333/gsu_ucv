@@ -69,7 +69,7 @@ export function FacultyDashboardClient() {
       {/* Tarjetas de Métricas Principales */}
       <SimpleGrid columns={{ base: 1, md: 2 }} spacing={8}>
         <DashboardCard
-          title="Solicitudes Pendientes"
+          title="Solicitudes de Registro Pendientes"
           description="Revisiones de grupos de extensión pendientes por evaluación de la facultad."
           tags={[
             {

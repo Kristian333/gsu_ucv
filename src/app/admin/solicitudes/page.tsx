@@ -22,7 +22,7 @@ export default async function SolicitudesAdminPage() {
     <Box maxW="container.xl" mx="auto" py={10} px={6}>
       <Heading as="h1" size="xl" mb={2}>Gestión de Solicitudes</Heading>
       <Text fontSize="lg" color="gray.500" mb={8}>
-        Administra las solicitudes de registro y peticiones de recursos de los Grupos de Extensión.
+        Administra las solicitudes de registro y peticiones de los Grupos de Extensión.
       </Text>
       
       {/* Componente cliente con la lógica dinámica */}

@@ -134,9 +134,11 @@ export default function UsuarioGrupoDetalle({ usuario }: { usuario: UserDetailBa
             <Divider />
 
             <Box w="full">
+              {/*
               <Text fontSize="md" fontWeight="bold" textTransform="uppercase" mb={2}>
                 Contraseña de la Cuenta
               </Text>
+              */}
 
               {/* Botón de Regenerar Contraseña (Comentado para activación futura) */}
               {/*

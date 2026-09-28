@@ -39,7 +39,7 @@ export default async function InfoGeneralPage() {
         Información General de la DEU
       </Heading>
       <Text fontSize="lg" color="gray.500" mb={8}>
-        Administra la información directiva, los datos de los coordinadores por facultad y las plantillas de formatos.
+        Administra la información directiva, los datos de los coordinadores por facultad e información para los formatos.
       </Text>
 
       <InfoGeneralEditor initialData={initialData} onSave={saveGeneralData} />

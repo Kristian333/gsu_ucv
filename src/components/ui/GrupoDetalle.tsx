@@ -30,7 +30,7 @@ import {
   Center,
   Icon,
 } from "@chakra-ui/react";
-import { FiFileText } from "react-icons/fi";
+import { FiFileText, FiFolder } from "react-icons/fi";
 import { GroupDetailBackend, GroupMember, Award } from "@/types/group";
 import { formatListToString } from "@/utils/common";
 
@@ -61,6 +61,14 @@ export default function GrupoDetalle({ grupo }: { grupo: GroupDetailBackend | nu
 
     setSelectedDocUrl(fileUrl);
     setSelectedDocName(`Documento de ${member.nombre}`);
+    onOpen();
+  };
+
+  const handleOpenProjectDocument = () => {
+    const fileUrl = grupo.proyecto_url || "";
+
+    setSelectedDocUrl(fileUrl);
+    setSelectedDocName(`Documento del Proyecto - ${grupo.nombre}`);
     onOpen();
   };
 
@@ -110,14 +118,45 @@ export default function GrupoDetalle({ grupo }: { grupo: GroupDetailBackend | nu
         </VStack>
       </SimpleGrid>
 
+      {/* Proyecto del Grupo */}
+      <Divider />
+      <Box>
+        <Heading size="md" mb={4}>Proyecto del Grupo</Heading>
+        <Box bg="gray.50" p={5} borderRadius="lg" borderWidth="1px">
+          <HStack justify="space-between" align="center" wrap="wrap" gap={4}>
+            <HStack spacing={3}>
+              <Icon as={FiFolder} boxSize={6} color="primary.500" />
+              <Box>
+                <Text fontWeight="bold" fontSize="md">
+                  Documento del Proyecto
+                </Text>
+                <Text fontSize="xs" color="gray.500">
+                  {grupo.proyecto_url ? "Archivo cargado en el sistema" : "Sin archivo del proyecto adjunto"}
+                </Text>
+              </Box>
+            </HStack>
+
+            <Button
+              leftIcon={<FiFileText />}
+              colorScheme="primary"
+              isDisabled={!grupo.proyecto_url}
+              onClick={handleOpenProjectDocument}
+              size="sm"
+            >
+              Ver Proyecto
+            </Button>
+          </HStack>
+        </Box>
+      </Box>
+
       {/* Reconocimientos */}
       {hasAwards && (
         <>
-        <Divider />
+          <Divider />
 
-        {/* Premios */}
-        <Box>
-          <Heading size="md" mb={4}>Reconocimientos</Heading>
+          {/* Premios */}
+          <Box>
+            <Heading size="md" mb={4}>Reconocimientos</Heading>
             <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
               {(grupo.reconocimientos as Award[]).map((award, index) => (
                 <Box
@@ -188,6 +227,7 @@ export default function GrupoDetalle({ grupo }: { grupo: GroupDetailBackend | nu
                         size="sm"
                         colorScheme="primary"
                         onClick={() => handleOpenDocument(miembro)}
+                        isDisabled={!miembro.documento_url}
                       >
                         Ver Documento
                       </Button>

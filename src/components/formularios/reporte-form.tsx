@@ -61,6 +61,7 @@ export default function ReporteClientPage({ id }: ReporteFormProps) {
   const [observations, setObservations] = useState<string>("");
 
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
 
   const isDriveUrlValid = (url: string) => {
@@ -82,7 +83,7 @@ export default function ReporteClientPage({ id }: ReporteFormProps) {
     actualBeneficiaries: submitted && (actualBeneficiaries === "" || Number(actualBeneficiaries) < 0),
     galleryUrl: submitted && (!galleryUrl.trim() || !isDriveUrlValid(galleryUrl)),
     attendeeFile: submitted && !attendeeFile,
-    imageFile: submitted && !imageFile && !previewImage,
+    imageFile: submitted && !imageFile && !existingImageUrl,
   };
 
   useEffect(() => {
@@ -152,7 +153,9 @@ export default function ReporteClientPage({ id }: ReporteFormProps) {
             group_id: String(grupoActividad),
           });
 
-          setPreviewImage(data.reporte_url || data.reporte || data.cubierta || null);
+          const imagenPrev = data.cubierta || data.reporte_url || data.reporte || null;
+          setExistingImageUrl(imagenPrev);
+          setPreviewImage(imagenPrev);
 
           setNumMembers(data.participantes_grupo ?? "");
           setAllies(data.aliados || "");
@@ -222,7 +225,7 @@ export default function ReporteClientPage({ id }: ReporteFormProps) {
 
     const camposFaltantes: string[] = [];
 
-    if (!imageFile && !previewImage) {
+    if (!imageFile && !existingImageUrl) {
       camposFaltantes.push("• Imagen de la Actividad");
     }
     if (numMembers === "" || Number(numMembers) < 0) {
@@ -313,7 +316,10 @@ export default function ReporteClientPage({ id }: ReporteFormProps) {
 
     if (imageFile) {
       formData.append("cubierta", imageFile);
+    } else if (existingImageUrl) {
+      formData.append("cubierta", existingImageUrl);
     }
+
     if (attendeeFile) {
       formData.append("lista_participantes", attendeeFile);
     }
@@ -380,10 +386,12 @@ export default function ReporteClientPage({ id }: ReporteFormProps) {
 
       <form onSubmit={handleSubmit}>
         <VStack spacing={5} align="stretch">
-          <FormControl isRequired isInvalid={errors.imageFile}>
+          <FormControl isRequired={!existingImageUrl} isInvalid={errors.imageFile}>
             <FormLabel mb={1}>Imagen de la Actividad</FormLabel>
             <FormHelperText mb={3}>
-              Sube la imagen representativa del evento ejecutado para actualizar el registro visual.
+              {existingImageUrl
+                ? "Puedes mantener la imagen actual registrada o seleccionar un archivo para cambiarla."
+                : "Sube la imagen representativa del evento ejecutado para actualizar el registro visual."}
             </FormHelperText>
             {previewImage && (
               <Image
