@@ -334,9 +334,9 @@ export default function DashboardAdmin() {
               <Heading size="lg" mb={8} color="gray.700">
                 {configActual?.titulo}
               </Heading>
-              <Box w="100%" h="450px">
+              <Box w="100%" minH="450px" h="auto">
                 {loadingBackend ? (
-                  <Center h="100%">
+                  <Center h="450px">
                     <Spinner size="xl" color="red.500" />
                   </Center>
                 ) : (

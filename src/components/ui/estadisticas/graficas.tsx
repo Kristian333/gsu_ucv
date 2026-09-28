@@ -138,7 +138,7 @@ export const SimpleBarChartsHorizontal: React.FC<ChartProps> = ({ datos, valorx,
   const alturaCalculada = datos && datos.length > 0 ? (datos.length * 55) + 100 : 450;
 
   return (
-    <div style={{ width: '100%', height: `${alturaCalculada}px`, minHeight: '400px' }}>
+    <div style={{ width: '100%', height: `${alturaCalculada}px` }}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={datos} layout="vertical" margin={{ top: 10, right: 30, left: 110, bottom: 5 }}>
           <CartesianGrid strokeDasharray="4 1 2" />
