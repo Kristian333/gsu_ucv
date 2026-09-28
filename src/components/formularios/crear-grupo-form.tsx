@@ -62,6 +62,9 @@ type MiembroStringField =
 
 const OPCION_NINGUNA_FACULTAD = "No pertenecemos a ninguna facultad";
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const isValidEmail = (email: string) => EMAIL_REGEX.test(email.trim());
+
 export default function CrearGrupoForm() {
   const router = useRouter();
   const toast = useToast();
@@ -110,7 +113,7 @@ export default function CrearGrupoForm() {
 
   const errors = {
     nombre: submitted && !form.nombre.trim(),
-    correo: submitted && !form.correo.trim(),
+    correo: submitted && (!form.correo.trim() || !isValidEmail(form.correo)),
     telefono: submitted && !form.telefono.trim(),
     facultad:
       submitted &&
@@ -330,13 +333,14 @@ export default function CrearGrupoForm() {
         !m.cedula.trim() ||
         !m.telefono.trim() ||
         !m.correo.trim() ||
+        !isValidEmail(m.correo) ||
         !m.coordinacion.trim() ||
         !m.anio.trim() ||
         !m.facultad ||
         !m.escuela ||
         !m.documento
       ) {
-        return `El miembro #${i + 1} tiene campos incompletos.`;
+        return `El miembro #${i + 1} tiene campos incompletos o una dirección de correo inválida.`;
       }
     }
 
@@ -350,7 +354,9 @@ export default function CrearGrupoForm() {
     const camposFaltantes: string[] = [];
 
     if (!form.nombre.trim()) camposFaltantes.push("• Nombre del Grupo");
-    if (!form.correo.trim()) camposFaltantes.push("• Correo Electrónico");
+    if (!form.correo.trim() || !isValidEmail(form.correo)) {
+      camposFaltantes.push("• Correo Electrónico (Debe ser un correo válido)");
+    }
     if (!form.telefono.trim()) camposFaltantes.push("• Teléfono de Contacto");
     if (!logoFile) camposFaltantes.push("• Logo del Grupo");
 
@@ -379,10 +385,10 @@ export default function CrearGrupoForm() {
 
     if (camposFaltantes.length > 0) {
       return toast({
-        title: "Campos faltantes",
+        title: "Campos faltantes o con errores",
         description: (
           <Box mt={2}>
-            <Text mb={1}>Por favor complete los siguientes campos obligatorios:</Text>
+            <Text mb={1}>Por favor complete o corrija los siguientes campos obligatorios:</Text>
             {camposFaltantes.map((campo, idx) => (
               <Text key={idx} fontSize="sm">
                 {campo}
@@ -519,7 +525,7 @@ export default function CrearGrupoForm() {
               placeholder="ejemplo@gmail.com"
             />
             {errors.correo && (
-              <FormErrorMessage>Ingrese un correo válido.</FormErrorMessage>
+              <FormErrorMessage>Ingrese una dirección de correo válida (ejemplo@dominio.com).</FormErrorMessage>
             )}
           </FormControl>
 
@@ -869,7 +875,7 @@ export default function CrearGrupoForm() {
                           />
 
                           <Input
-                            isInvalid={submitted && !miembro.correo.trim()}
+                            isInvalid={submitted && (!miembro.correo.trim() || !isValidEmail(miembro.correo))}
                             placeholder="Correo"
                             type="email"
                             value={miembro.correo}
@@ -994,10 +1000,10 @@ export default function CrearGrupoForm() {
                   const error = validarMiembros();
                   if (error) {
                     toast({
-                      title: "Datos incompletos",
+                      title: "Datos incompletos o inválidos",
                       description: error,
                       status: "error",
-                      duration: 2500,
+                      duration: 3000,
                     });
                     return;
                   }

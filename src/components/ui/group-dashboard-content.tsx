@@ -98,7 +98,7 @@ export function GroupDashboardContent() {
             ¡Realiza una solicitud para crear tu Grupo de Extensión en el sistema!
           </Text>
           <NextLink href="/admingroup/crear_grupo" passHref>
-            <Button background="priamry.500" color="white" size="lg" _hover={{ bg: "primary.600" }}>
+            <Button background="primary.500" color="white" size="lg" _hover={{ bg: "primary.600" }}>
               ¡Crea tu grupo de extensión!
             </Button>
           </NextLink>
