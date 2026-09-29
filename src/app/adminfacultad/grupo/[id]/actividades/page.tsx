@@ -1,4 +1,4 @@
-// /app/admin/grupo/[id]/actividades/page.tsx
+// /app/adminfacultad/grupo/[id]/actividades/page.tsx
 import { Box, Heading, Text } from '@chakra-ui/react'
 import { Metadata } from 'next'
 import { ActivitiesReportsTable } from '@/components/ui/activities-admin-table'

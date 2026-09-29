@@ -1,4 +1,4 @@
-// /app/admin/actividad/[id]/page.tsx
+// /app/adminfacultad/actividad/[id]/page.tsx
 import { Box } from '@chakra-ui/react'
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
@@ -42,7 +42,7 @@ export default async function AdminActivityPage({ params }: ActivityPageProps) {
 
   return (
     <Box maxW="container.xl" mx="auto" py={8} px={6}>
-      <ActivityDetailView initialActivity={activity} />
+      <ActivityDetailView initialActivity={activity} userRole="admin" />
     </Box>
   )
 }

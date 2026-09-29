@@ -29,6 +29,7 @@ interface ActivitiesReportsTableProps {
   currentPage: number
   totalPages: number
   mode?: 'reports' | 'group_activities'
+  basePath?: string
 }
 
 export function ActivitiesReportsTable({
@@ -38,6 +39,7 @@ export function ActivitiesReportsTable({
   currentPage,
   totalPages,
   mode = 'reports',
+  basePath,
 }: ActivitiesReportsTableProps) {
   const router = useRouter()
   const pathname = usePathname()
@@ -57,7 +59,8 @@ export function ActivitiesReportsTable({
   }
 
   const handleRowClick = (activityId: number | string) => {
-    const targetUrl = `/admin/actividad/${activityId}`
+    const resolvedBasePath = basePath || (pathname.startsWith('/adminfacultad') ? '/adminfacultad' : '/admin')
+    const targetUrl = `${resolvedBasePath}/actividad/${activityId}`
     const fromState = mode === 'reports' ? 'reportes' : 'grupo_actividades'
 
     // Seteamos el estado en la History API nativa antes de hacer la navegación con el router de Next.js

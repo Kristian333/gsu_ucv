@@ -42,7 +42,7 @@ export default async function AdminActivityPage({ params }: ActivityPageProps) {
 
   return (
     <Box maxW="container.xl" mx="auto" py={8} px={6}>
-      <ActivityDetailView initialActivity={activity} />
+      <ActivityDetailView initialActivity={activity} userRole="admin" />
     </Box>
   )
 }
