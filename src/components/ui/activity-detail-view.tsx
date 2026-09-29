@@ -2,7 +2,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useAuth } from '@/app/context/auth-context'
+import { useAuth, UserRole } from '@/app/context/auth-context'
 import { validateGroupAccess } from '@/utils/auth-guards'
 import {
   Box,
@@ -38,33 +38,35 @@ const pulseDots = keyframes`
   100% { opacity: 0.2; }
 `
 
-export type UserRole = 'admin' | 'admingroup' | 'adminfacultad'
-
 interface ActivityDetailViewProps {
   initialActivity: ActivityBackend
   userRole?: UserRole
 }
 
-export function ActivityDetailView({ initialActivity, userRole = 'admin' }: ActivityDetailViewProps) {
+export function ActivityDetailView({ initialActivity, userRole = 'deu_admin' }: ActivityDetailViewProps) {
   const router = useRouter()
   const toast = useToast()
   const { user, isHydrated } = useAuth()
 
+  const isGlobalAdmin = userRole === 'root' || userRole === 'deu_admin'
+  const isFacultyAdmin = userRole === 'faculty_admin'
+  const isGroupAdmin = userRole === 'group_admin' || userRole === 'group_helper'
+
   const [activity, setActivity] = useState<ActivityBackend>(initialActivity)
   const [isUpdating, setIsUpdating] = useState<boolean>(false)
-  const [isAuthorized, setIsAuthorized] = useState<boolean>(userRole === 'admin' || userRole === 'adminfacultad')
+  const [isAuthorized, setIsAuthorized] = useState<boolean>(isGlobalAdmin || isFacultyAdmin)
   const areaDisplay = formatListToString(activity.area_conocimiento)
 
   // Validación de acceso
   useEffect(() => {
     if (!isHydrated) return
 
-    if (userRole === 'admin' || userRole === 'adminfacultad') {
+    if (isGlobalAdmin || isFacultyAdmin) {
       setIsAuthorized(true)
       return
     }
 
-    if (userRole === 'admingroup') {
+    if (isGroupAdmin) {
       const { hasAccess, reason } = validateGroupAccess(activity, user)
 
       if (!hasAccess) {
@@ -81,7 +83,7 @@ export function ActivityDetailView({ initialActivity, userRole = 'admin' }: Acti
         setIsAuthorized(true)
       }
     }
-  }, [isHydrated, user, userRole, activity, router, toast])
+  }, [isHydrated, user, userRole, activity, router, toast, isGlobalAdmin, isFacultyAdmin, isGroupAdmin])
 
   if (!isHydrated || !isAuthorized) {
     return (
@@ -99,7 +101,7 @@ export function ActivityDetailView({ initialActivity, userRole = 'admin' }: Acti
   const esFinalizada = !esFutura && !enCurso
 
   const canToggleReportStatus =
-    userRole === 'admin' &&
+    isGlobalAdmin &&
     (statusInfo.label === 'Reporte Pendiente de Revisión' ||
       statusInfo.label === 'Reporte Revisado')
 
@@ -193,7 +195,7 @@ export function ActivityDetailView({ initialActivity, userRole = 'admin' }: Acti
     if (window.history.length > 2) {
       const fromState = window.history.state?.from
 
-      if (fromState === 'reportes' && userRole === 'admin') {
+      if (fromState === 'reportes' && isGlobalAdmin) {
         router.push('/admin/reportes')
         return
       }
@@ -201,7 +203,7 @@ export function ActivityDetailView({ initialActivity, userRole = 'admin' }: Acti
       if (fromState === 'grupo_actividades') {
         const groupId = activity.group_id || (activity as any).group_id
         if (groupId) {
-          const basePath = userRole === 'adminfacultad' ? '/adminfacultad' : '/admin'
+          const basePath = isFacultyAdmin ? '/adminfacultad' : '/admin'
           router.push(`${basePath}/grupo/${groupId}/actividades`)
           return
         }
@@ -210,16 +212,16 @@ export function ActivityDetailView({ initialActivity, userRole = 'admin' }: Acti
       return
     }
 
-    if (userRole === 'admingroup') {
+    if (isGroupAdmin) {
       router.push('/admingroup/nuestras_actividades')
     } else {
       const groupId = activity.group_id || (activity as any).group_id
-      const basePath = userRole === 'adminfacultad' ? '/adminfacultad' : '/admin'
+      const basePath = isFacultyAdmin ? '/adminfacultad' : '/admin'
 
       if (groupId) {
         router.push(`${basePath}/grupo/${groupId}/actividades`)
       } else {
-        router.push(userRole === 'admin' ? '/admin/reportes' : '/adminfacultad/grupos')
+        router.push(isGlobalAdmin ? '/admin/reportes' : '/adminfacultad/grupos')
       }
     }
   }
@@ -280,7 +282,7 @@ export function ActivityDetailView({ initialActivity, userRole = 'admin' }: Acti
           </Button>
 
           {/* Botón de Estrella para Destacar (Solo Admin Group) */}
-          {userRole === 'admingroup' && (
+          {isGroupAdmin && (
             <Tooltip
               label={
                 !esFinalizada
@@ -360,7 +362,7 @@ export function ActivityDetailView({ initialActivity, userRole = 'admin' }: Acti
                   </Heading>
 
                   {/* Nombre del Grupo de pertenencia */}
-                  {userRole !== 'admingroup' && activity.nombre_grupo && (
+                  {!isGroupAdmin && activity.nombre_grupo && (
                     <Text fontSize="sm" fontWeight="semibold" color="gray.600">
                       Grupo:{' '}
                       <Text as="span" color="primary.600" fontWeight="bold">
