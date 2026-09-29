@@ -1,3 +1,4 @@
+// /components/formularios/modificar-actividad-form.tsx
 "use client";
 
 import React, { useState, useEffect, ChangeEvent } from "react";
@@ -28,6 +29,7 @@ import { useAuth } from "@/app/context/auth-context";
 import { validateGroupAccess } from "@/utils/auth-guards";
 import { TIPOS_ACTIVIDAD } from "@/constants/types";
 import { getActivityErrorMessage } from "@/utils/errorMapper";
+import { capitalizeLocation } from "@/utils/common";
 
 interface ModificarActividadFormProps {
   id: string;
@@ -168,13 +170,13 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
           if (data.ubicacion && data.ubicacion.includes(",")) {
             const partes = data.ubicacion.split(",").map((p: string) => p.trim());
             setLocationParts({
-              pais: partes[0] || "",
-              estado: partes[1] || "",
-              municipio: partes[2] || "",
-              detalle: partes.slice(3).join(", ") || "",
+              pais: capitalizeLocation(partes[0] || ""),
+              estado: capitalizeLocation(partes[1] || ""),
+              municipio: capitalizeLocation(partes[2] || ""),
+              detalle: capitalizeLocation(partes.slice(3).join(", ") || ""),
             });
           } else if (data.ubicacion) {
-            setLocationParts((prev) => ({ ...prev, detalle: data.ubicacion }));
+            setLocationParts((prev) => ({ ...prev, detalle: capitalizeLocation(data.ubicacion) }));
           }
 
           setPermisoConcedido(true);
@@ -351,8 +353,14 @@ export default function ModificarActividadForm({ id }: ModificarActividadFormPro
     formData.append("descripcion", form.descripcion.trim());
     formData.append("fecha_inicio", form.fecha_inicio); 
     formData.append("fecha_fin", esMultidia ? form.fecha_fin : form.fecha_inicio);
+
     const { pais, estado, municipio, detalle } = locationParts;
-    const direccionCompleta = `${pais.trim()}, ${estado.trim()}, ${municipio.trim()}, ${detalle.trim()}`;
+    const paisClean = capitalizeLocation(pais);
+    const estadoClean = capitalizeLocation(estado);
+    const municipioClean = capitalizeLocation(municipio);
+    const detalleClean = capitalizeLocation(detalle);
+    
+    const direccionCompleta = `${paisClean}, ${estadoClean}, ${municipioClean}, ${detalleClean}`;
     formData.append("ubicacion", direccionCompleta);
 
     form.area_conocimiento.forEach((area) => {

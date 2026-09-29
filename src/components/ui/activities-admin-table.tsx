@@ -56,6 +56,15 @@ export function ActivitiesReportsTable({
     router.push(`${pathname}?${params.toString()}`)
   }
 
+  const handleRowClick = (activityId: number | string) => {
+    const targetUrl = `/admin/actividad/${activityId}`
+    const fromState = mode === 'reports' ? 'reportes' : 'grupo_actividades'
+
+    // Seteamos el estado en la History API nativa antes de hacer la navegación con el router de Next.js
+    window.history.pushState({ from: fromState }, '', targetUrl)
+    router.push(targetUrl)
+  }
+
   const queryParamsForPagination: Record<string, string> = {}
   if (currentReportCheckedFilter) {
     queryParamsForPagination.report_checked = currentReportCheckedFilter
@@ -148,7 +157,7 @@ export function ActivitiesReportsTable({
                     _hover={{ bg: 'gray.50' }}
                     transition="background-color 0.2s"
                     cursor="pointer"
-                    onClick={() => router.push(`/admin/actividad/${act.id}`)}
+                    onClick={() => handleRowClick(act.id)}
                   >
                     {/* Actividad */}
                     <Td maxW="180px">

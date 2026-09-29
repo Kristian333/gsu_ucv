@@ -18,18 +18,7 @@ import { useAuth } from "@/app/context/auth-context";
 import TablaNuestrasActividades from "@/components/ui/tabla-nuestras-actividades";
 import { Pagination } from "@/components/ui/pagination";
 import { getActivityStatus } from "@/utils/common";
-
-export interface Actividad {
-  id: number | string;
-  nombre?: string;
-  ubicacion?: string; 
-  fecha_inicio?: string; 
-  fecha_fin?: string;    
-  descripcion?: string;
-  participantes_reales?: number | string | null;
-  destacado?: boolean;
-  is_featured?: boolean;
-}
+import { ActivityBackend } from "@/types/activity";
 
 interface FormProps {
   searchParams?: { [key: string]: string | string[] | undefined };
@@ -47,7 +36,7 @@ export default function VistaNuestrasActividadesForm({ searchParams = {} }: Form
   const yearFilter = (searchParams.year as string) || "";
   const featuredFilter = (searchParams.is_featured as string) || "";
 
-  const [actividades, setActividades] = useState<Actividad[]>([]);
+  const [actividades, setActividades] = useState<ActivityBackend[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -104,7 +93,7 @@ export default function VistaNuestrasActividadesForm({ searchParams = {} }: Form
       });
 
       if (response && !response.error) {
-        const rawList: Actividad[] = response.actividades || (Array.isArray(response) ? response : []);
+        const rawList: ActivityBackend[] = response.actividades || (Array.isArray(response) ? response : []);
 
         const procesadas = rawList.map((act) => ({
           ...act,
@@ -123,14 +112,14 @@ export default function VistaNuestrasActividadesForm({ searchParams = {} }: Form
 
       // Procesar Contadores
       if (allResponse && !allResponse.error) {
-        const totalList: Actividad[] = allResponse.actividades || (Array.isArray(allResponse) ? allResponse : []);
+        const totalList: ActivityBackend[] = allResponse.actividades || (Array.isArray(allResponse) ? allResponse : []);
         
         let proximamente = 0;
         let enCurso = 0;
         let esperanReporte = 0;
 
         totalList.forEach((a) => {
-          const numPart = a.participantes_reales !== null && a.participantes_reales !== undefined && a.participantes_reales !== ""
+          const numPart = a.participantes_reales !== null && a.participantes_reales !== undefined 
             ? Number(a.participantes_reales)
             : null;
 
@@ -167,7 +156,7 @@ export default function VistaNuestrasActividadesForm({ searchParams = {} }: Form
 
   // Filtrado local en cliente (Estado y Año)
   const actividadesFiltradas = actividades.filter((act) => {
-const numPart = act.participantes_reales !== null && act.participantes_reales !== undefined && act.participantes_reales !== ""
+    const numPart = act.participantes_reales !== null && act.participantes_reales !== undefined 
       ? Number(act.participantes_reales)
       : null;
 
@@ -276,7 +265,7 @@ const numPart = act.participantes_reales !== null && act.participantes_reales !=
         <Center h="300px">
           <Spinner size="lg" color="teal.500" />
         </Center>
-            ) : (
+      ) : (
         <Box>
           <TablaNuestrasActividades 
             actividades={actividadesFiltradas}

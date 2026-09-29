@@ -151,3 +151,43 @@ export function parseFacultiesList(value: string | string[] | null | undefined):
   const list = Array.isArray(value) ? value : [value];
   return list.filter((f) => f && f !== "DEU");
 }
+
+// Lista de conectores, artículos y preposiciones que deben permanecer en minúscula a menos que sean la primera palabra
+const MINOR_WORDS = new Set([
+  "de", "del", "la", "las", "los", "el", "en", "y", "e", "o", "u",
+  "con", "sin", "por", "para", "a", "al", "un", "una", "unos", "unas"
+]);
+
+/**
+ * Normaliza y capitaliza nombres de ubicaciones o entidades siguiendo las reglas de Title Case en español.
+ * Capitaliza la primera letra de cada palabra, salvo conectores y artículos internos.
+ * Ejemplo: "LIBERTADOR" -> "Libertador", "PARQUE DE LA ROCA" -> "Parque de la Roca"
+ */
+export function capitalizeLocation(text: string | null | undefined): string {
+  if (!text) return "";
+
+  const trimmed = text.trim();
+  if (!trimmed) return "";
+
+  const words = trimmed.toLowerCase().split(/\s+/);
+
+  const capitalizedWords = words.map((word, index) => {
+    // Si la palabra está vacía (por espacios extra)
+    if (!word) return "";
+
+    // La primera palabra SIEMPRE lleva la inicial en mayúscula (ej: "El Hatillo")
+    if (index === 0) {
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    }
+
+    // Si es un conector o artículo menor, se mantiene en minúscula
+    if (MINOR_WORDS.has(word)) {
+      return word;
+    }
+
+    // Para cualquier otra palabra, capitalizar la primera letra
+    return word.charAt(0).toUpperCase() + word.slice(1);
+  });
+
+  return capitalizedWords.join(" ");
+}

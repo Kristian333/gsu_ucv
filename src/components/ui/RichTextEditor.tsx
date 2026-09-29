@@ -13,7 +13,9 @@ import OrderedList from "@tiptap/extension-ordered-list";
 import BulletList from "@tiptap/extension-bullet-list";
 import ListItem from "@tiptap/extension-list-item";
 import { TextStyle } from "@tiptap/extension-text-style";
-import { Mark, mergeAttributes } from "@tiptap/core";
+import { Mark, mergeAttributes, Extension } from "@tiptap/core";
+import { Plugin, PluginKey } from "@tiptap/pm/state";
+import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import {
   Box, HStack, Button, Divider, Menu, MenuButton, MenuList, MenuItem,
   IconButton, useToast
@@ -45,6 +47,40 @@ export const FontSize = Mark.create({
       setFontSize: (size: string) => ({ chain }) => chain().setMark(this.name, { size }).run(),
       unsetFontSize: () => ({ chain }) => chain().unsetMark(this.name).run(),
     };
+  },
+});
+
+// Extensión que resalta visualmente las variables {{campo}} sin modificar el HTML guardado.
+// Usa "decorations" de ProseMirror: son overlays de solo lectura, no marks reales,
+// por lo que nunca chocan con negrita/itálica que el usuario ya haya aplicado al texto.
+const VARIABLE_REGEX = /\{\{[^{}]+\}\}/g;
+
+export const VariableHighlight = Extension.create({
+  name: "variableHighlight",
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        key: new PluginKey("variableHighlight"),
+        props: {
+          decorations(state) {
+            const decorations: Decoration[] = [];
+            state.doc.descendants((node, pos) => {
+              if (!node.isText || !node.text) return;
+              VARIABLE_REGEX.lastIndex = 0;
+              let match;
+              while ((match = VARIABLE_REGEX.exec(node.text)) !== null) {
+                const start = pos + match.index;
+                const end = start + match[0].length;
+                decorations.push(
+                  Decoration.inline(start, end, { class: "variable-highlight" })
+                );
+              }
+            });
+            return DecorationSet.create(state.doc, decorations);
+          },
+        },
+      }),
+    ];
   },
 });
 
@@ -84,6 +120,7 @@ export default function RichTextEditor({
       TableCell,
       TextStyle,
       FontSize,
+      VariableHighlight,
     ],
     content: value,
     onUpdate: ({ editor }) => {
@@ -281,6 +318,7 @@ export default function RichTextEditor({
         ".ProseMirror th, .ProseMirror td": { border: "1px solid #cbd5e0", padding: "6px", minWidth: "50px", position: "relative" },
         ".ProseMirror th": { backgroundColor: "#edf2f7", fontWeight: "bold" },
         ".ProseMirror .selectedCellAfter": { backgroundColor: "rgba(200, 200, 255, 0.4)" },
+        ".ProseMirror .variable-highlight": { backgroundColor: "#FFF59D", borderRadius: "2px" },
         
         /* Reglas de Listas No Numeradas (Bullets multinivel) */
         ".ProseMirror ul": { paddingLeft: "24px", listStyleType: "disc", marginBottom: "8px" },

@@ -1,8 +1,17 @@
 // src/utils/apiServer.ts
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 // Si estamos en el servidor, usamos INTERNAL_API_URL (http://backend:8081 en prod, o http://localhost:8081 en local)
 const API_BASE_URL = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
+
+const AUTH_EXPIRED_ERRORS = new Set([
+  "http_401",
+  "invalid or expired authorization token",
+  "token is expired",
+  "invalid authorization token",
+  "unauthorized",
+]);
 
 export async function apiServerRequest(endpoint: string, options: RequestInit = {}) {
   const url = `${API_BASE_URL.replace(/\/$/, '')}/${endpoint.replace(/^\//, '')}`;
@@ -52,6 +61,13 @@ export async function apiServerRequest(endpoint: string, options: RequestInit = 
       data.message ||
       data.mensaje ||
       `HTTP_${response.status}`;
+
+    const normalizedError = String(errorMessage).toLowerCase();
+
+    // Si ocurre un error 401 en el servidor, redirigimos directamente
+    if (response.status === 401 || AUTH_EXPIRED_ERRORS.has(normalizedError)) {
+      redirect("/login?expired=true");
+    }
 
     throw new Error(errorMessage);
   }

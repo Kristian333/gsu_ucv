@@ -17,30 +17,10 @@ import {
 } from "@chakra-ui/react";
 import NextLink from "next/link";
 import { StarIcon } from "@chakra-ui/icons";
-import { formatActivityDateRange } from "@/utils/common";
+import { formatActivityDateRange, formatListToString } from "@/utils/common";
 import { useAuth } from "@/app/context/auth-context";
 import { apiRequest } from "@/components/formularios/api";
-
-interface ActivityBackend {
-  id: string;
-  group_id: string;
-  nombre_grupo?: string;
-  nombre: string;
-  descripcion: string;
-  fecha_inicio?: string;
-  fecha_fin?: string;
-  ubicacion?: string;
-  area_conocimiento: string;
-  aliados?: string;
-  participantes_grupo?: number;
-  participantes_estimados?: number;
-  participantes_reales?: number;
-  financiamiento?: string;
-  observaciones?: string;
-  cubierta?: string;
-  gallery_url?: string;
-  destacado?: boolean;
-}
+import { ActivityBackend } from "@/types/activity";
 
 interface Props {
   activityId: string;
@@ -76,11 +56,12 @@ export default function ActivityClientPage({ activityId, activity }: Props) {
     const newFeaturedState = !isFeatured;
 
     try {
-      await apiRequest("/activities/feature", {
+      await apiRequest("activities/feature", {
         method: "PATCH",
         body: JSON.stringify({
           id: activity.id,
-          is_featured: newFeaturedState,
+          activity_id: activity.id,
+          destacado: newFeaturedState,
         }),
       });
 
@@ -118,8 +99,10 @@ export default function ActivityClientPage({ activityId, activity }: Props) {
   const rawEnd = activity.fecha_fin || activity.fecha_inicio || "";
   const fechaFormateada = formatActivityDateRange(rawStart, rawEnd);
 
+  const areaConocimientoFormateada = formatListToString(activity.area_conocimiento);
+
   // Lógica para la galería
-  const showDriveGallery = Boolean(activity.gallery_url && activity.gallery_url.trim() !== "");
+  const showDriveGallery = Boolean(activity.galeria_url && activity.galeria_url.trim() !== "");
 
   {/* Pagina del Actividad */}
   return (
@@ -173,18 +156,18 @@ export default function ActivityClientPage({ activityId, activity }: Props) {
             </Heading>
 
             {/* Enlace o Nombre del Grupo */}
-              <Text fontSize="xl" color="gray.600">
-                <strong>Grupo:</strong>{" "}
-                {activity.group_id ? (
-                  <ChakraLink
-                    as={NextLink}
-                    href={`/grupo/${activity.group_id}`}
-                    color="primary"
-                    _hover={{ textDecoration: "underline", color: "primary.600" }}
-                  >
-                    {activity.nombre_grupo || `Grupo #${activity.group_id}`}
-                  </ChakraLink>
-                ) : (
+            <Text fontSize="xl" color="gray.600">
+              <strong>Grupo:</strong>{" "}
+              {activity.group_id ? (
+                <ChakraLink
+                  as={NextLink}
+                  href={`/grupo/${activity.group_id}`}
+                  color="primary"
+                  _hover={{ textDecoration: "underline", color: "primary.600" }}
+                >
+                  {activity.nombre_grupo || `Grupo #${activity.group_id}`}
+                </ChakraLink>
+              ) : (
                 <Text as="span" color="red.400" fontStyle="italic">
                   (Grupo no disponible temporalmente)
                 </Text>
@@ -206,9 +189,9 @@ export default function ActivityClientPage({ activityId, activity }: Props) {
             )}
 
             {/* Área de Conocimiento */}
-            {activity.area_conocimiento && (
+            {areaConocimientoFormateada && areaConocimientoFormateada !== "N/A" && (
               <Text fontSize="lg" color="gray.500">
-                📚 <strong>Área:</strong> {activity.area_conocimiento}
+                📚 <strong>Área:</strong> {areaConocimientoFormateada}
               </Text>
             )}
 

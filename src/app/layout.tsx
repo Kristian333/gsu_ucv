@@ -3,6 +3,7 @@ import { Inter, Montserrat } from 'next/font/google'
 import { Providers } from "./providers"
 import '@/styles/globals.css'
 import { Navbar } from "../components/layout/navbar"
+import SessionExpiredModal from "@/components/modals/SessionExpiredModal";
 
 // Declaramos 'variable' en ambas fuentes
 const inter = Inter({ 
@@ -38,6 +39,7 @@ export default function RootLayout({
         <Providers>
           <Navbar />
           {children}
+          <SessionExpiredModal />
           </Providers>
       </body>
     </html>

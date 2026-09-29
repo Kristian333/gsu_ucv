@@ -11,6 +11,7 @@ import {
   Th,
   Td,
   IconButton,
+  Button,
   Tooltip,
   Link,
   Text,
@@ -21,20 +22,10 @@ import { FiEdit, FiEye, FiInfo } from "react-icons/fi";
 import { FaRegFileAlt } from "react-icons/fa";
 import { apiRequest } from "@/components/formularios/api";
 import { formatActivityDateRange, getActivityStatus } from "@/utils/common";
-
-export interface Actividad {
-  id: number | string;
-  nombre?: string;
-  ubicacion?: string;
-  fecha_inicio?: string;
-  fecha_fin?: string;
-  reporte_revisado?: boolean;
-  destacado?: boolean;
-  participantes_reales?: number | string | null;
-}
+import { ActivityBackend } from "@/types/activity";
 
 interface TablaProps {
-  actividades: Actividad[];
+  actividades: ActivityBackend[];
   onRefresh?: () => void;      
 }
 
@@ -45,7 +36,7 @@ export default function TablaNuestrasActividades({
   const toast = useToast();
   const [loadingId, setLoadingId] = useState<string | number | null>(null);
 
-  const handleToggleDestacada = async (act: Actividad) => {
+  const handleToggleDestacada = async (act: ActivityBackend) => {
     const isCurrentlyFeatured = !!act.destacado;
     const newFeaturedState = !isCurrentlyFeatured;
     const totalDestacadasActuales = (actividades || []).filter(a => a.destacado).length;
@@ -112,7 +103,7 @@ export default function TablaNuestrasActividades({
             <Th fontSize="sm" py={3}>Lugar</Th>
             <Th fontSize="sm" py={3}>Fecha</Th>
             <Th fontSize="sm" py={3} textAlign="center">Destacada</Th>
-            <Th fontSize="sm" py={3} isNumeric>Acciones</Th>
+            <Th fontSize="sm" py={3} textAlign="center">Acciones</Th>
           </Tr>
         </Thead>
 
@@ -125,7 +116,6 @@ export default function TablaNuestrasActividades({
             </Tr>
           ) : (
             actividades.map((act) => {
-              // Parseo numérico para participantes_reales antes de evaluar status
               const numParticipants = act.participantes_reales !== null && act.participantes_reales !== undefined
                 ? Number(act.participantes_reales)
                 : null;
@@ -151,12 +141,12 @@ export default function TablaNuestrasActividades({
 
               return (
                 <Tr key={act.id}>
-                    {/* Nombre */}
+                  {/* Nombre */}
                   <Td fontWeight="medium" fontSize="md">
                     <Link
                       as={NextLink}
                       href={`/admingroup/actividad/${act.id}`}
-                      color="priamry.600"
+                      color="primary.600"
                       fontWeight="bold"
                       _hover={{ textDecoration: "underline", color: "primary.800" }}
                     >
@@ -202,62 +192,61 @@ export default function TablaNuestrasActividades({
                   </Td>
 
                   {/* Acciones */}
-                  <Td isNumeric>
+                  <Td textAlign="center">
                     {/* Actividad Futura: Permite Editar */}
                     {esFutura && (
-                      <Tooltip label="Editar actividad planificada">
-                        <IconButton
-                          as={NextLink}
-                          href={`/admingroup/modificar_actividad/${act.id}`}
-                          aria-label="Editar"
-                          icon={<FiEdit />}
-                          size="md"
-                          variant="ghost"
-                          colorScheme="primary"
-                        />
-                      </Tooltip>
+                      <Button
+                        as={NextLink}
+                        href={`/admingroup/modificar_actividad/${act.id}`}
+                        leftIcon={<FiEdit />}
+                        size="sm"
+                        variant="outline"
+                        colorScheme="primary"
+                      >
+                        Editar
+                      </Button>
                     )}
+
                     {/* Actividad En Curso: Ver actividad */}
                     {enCurso && (
-                      <Tooltip label="Ver actividad en curso">
-                        <IconButton
-                          as={NextLink}
-                          href={`/actividad/${act.id}`}
-                          aria-label="Ver Actividad"
-                          icon={<FiEye />}
-                          size="md"
-                          variant="ghost"
-                          colorScheme="blue"
-                        />
-                      </Tooltip>
+                      <Button
+                        as={NextLink}
+                        href={`/actividad/${act.id}`}
+                        leftIcon={<FiEye />}
+                        size="sm"
+                        variant="outline"
+                        colorScheme="primary"
+                      >
+                        Ver
+                      </Button>
                     )}
+
                     {/* Finalizada sin reporte: Llenar reporte */}
                     {esperaReporte && (
-                      <Tooltip label="Hacer reporte final">
-                        <IconButton
-                          as={NextLink}
-                          href={`/admingroup/reporte/${act.id}`}
-                          aria-label="Reporte"
-                          icon={<FaRegFileAlt />}
-                          size="md"
-                          variant="ghost"
-                          colorScheme="orange"
-                        />
-                      </Tooltip>
+                      <Button
+                        as={NextLink}
+                        href={`/admingroup/reporte/${act.id}`}
+                        leftIcon={<FaRegFileAlt />}
+                        size="sm"
+                        variant="outline"
+                        colorScheme="primary"
+                      >
+                        Llenar Reporte
+                      </Button>
                     )}
+
                     {/* Finalizada con reporte completado: Ver información completa */}
                     {!esFutura && !enCurso && !esperaReporte && (
-                      <Tooltip label="Ver Información Completa">
-                        <IconButton
-                          as={NextLink}
-                          href={`/admingroup/actividad/${act.id}`}
-                          aria-label="Ver Información Completa"
-                          icon={<FiInfo />}
-                          size="md"
-                          variant="ghost"
-                          colorScheme="primary"
-                        />
-                      </Tooltip>
+                      <Button
+                        as={NextLink}
+                        href={`/admingroup/actividad/${act.id}`}
+                        leftIcon={<FiInfo />}
+                        size="sm"
+                        variant="outline"
+                        colorScheme="primary"
+                      >
+                        Información
+                      </Button>
                     )}
                   </Td>
                 </Tr>

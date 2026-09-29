@@ -7,9 +7,10 @@ export const metadata: Metadata = {
 };
 
 interface PageProps {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-export default function NuestrasActividadesPage({ searchParams }: PageProps) {
-  return <VistaNuestrasActividadesForm searchParams={searchParams} />;
+export default async function NuestrasActividadesPage({ searchParams }: PageProps) {
+  const resolvedSearchParams = await searchParams;
+  return <VistaNuestrasActividadesForm searchParams={resolvedSearchParams} />;
 }

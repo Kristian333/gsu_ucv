@@ -1,4 +1,15 @@
+// api.ts
+import { authEvents } from "@/utils/authEvents";
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api/proxy';
+
+const AUTH_EXPIRED_ERRORS = new Set([
+  "http_401",
+  "invalid or expired authorization token",
+  "token is expired",
+  "invalid authorization token",
+  "unauthorized",
+]);
 
 export async function apiRequest(
   endpoint: string, 
@@ -49,6 +60,13 @@ export async function apiRequest(
       data.message ||
       data.mensaje ||
       `HTTP_${response.status}`;
+
+    const normalizedError = String(errorMessage).toLowerCase();
+
+    // Si detectamos 401 o token expirado, emitimos el evento global
+    if (response.status === 401 || AUTH_EXPIRED_ERRORS.has(normalizedError)) {
+      authEvents.emitSessionExpired();
+    }
 
     throw new Error(errorMessage);
   }

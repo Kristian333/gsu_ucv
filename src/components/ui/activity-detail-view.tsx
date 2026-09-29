@@ -32,14 +32,13 @@ import { ActivityBackend } from '@/types/activity'
 import { formatActivityDateRange, getActivityStatus, formatListToString } from '@/utils/common'
 import { apiRequest } from '@/components/formularios/api'
 
-// Keyframe para animación de los puntos suspensivos (opacity pulse)
 const pulseDots = keyframes`
   0% { opacity: 0.2; }
   50% { opacity: 1; }
   100% { opacity: 0.2; }
 `
 
-export type UserRole = 'admin' | 'admingroup'
+export type UserRole = 'admin' | 'admingroup' | 'adminfacultad'
 
 interface ActivityDetailViewProps {
   initialActivity: ActivityBackend
@@ -53,29 +52,36 @@ export function ActivityDetailView({ initialActivity, userRole = 'admin' }: Acti
 
   const [activity, setActivity] = useState<ActivityBackend>(initialActivity)
   const [isUpdating, setIsUpdating] = useState<boolean>(false)
-  const [isAuthorized, setIsAuthorized] = useState<boolean>(userRole !== 'admingroup')
+  const [isAuthorized, setIsAuthorized] = useState<boolean>(userRole === 'admin' || userRole === 'adminfacultad')
   const areaDisplay = formatListToString(activity.area_conocimiento)
 
-  // Validación de acceso por grupo (Client Side Guard)
+  // Validación de acceso
   useEffect(() => {
-    if (!isHydrated || userRole !== 'admingroup') return;
+    if (!isHydrated) return
 
-    const { hasAccess, reason } = validateGroupAccess(activity, user);
-
-    if (!hasAccess) {
-      toast({
-        title: 'Acceso Denegado',
-        description: reason || 'No tienes permisos para ver esta actividad.',
-        status: 'error',
-        duration: 4000,
-        isClosable: true,
-        position: 'top',
-      });
-      router.push('/admingroup/nuestras_actividades');
-    } else {
-      setIsAuthorized(true);
+    if (userRole === 'admin' || userRole === 'adminfacultad') {
+      setIsAuthorized(true)
+      return
     }
-  }, [isHydrated, user, userRole, activity, router, toast]);
+
+    if (userRole === 'admingroup') {
+      const { hasAccess, reason } = validateGroupAccess(activity, user)
+
+      if (!hasAccess) {
+        toast({
+          title: 'Acceso Denegado',
+          description: reason || 'No tienes permisos para ver esta actividad.',
+          status: 'error',
+          duration: 4000,
+          isClosable: true,
+          position: 'top',
+        })
+        router.push('/admingroup/nuestras_actividades')
+      } else {
+        setIsAuthorized(true)
+      }
+    }
+  }, [isHydrated, user, userRole, activity, router, toast])
 
   if (!isHydrated || !isAuthorized) {
     return (
@@ -95,7 +101,7 @@ export function ActivityDetailView({ initialActivity, userRole = 'admin' }: Acti
   const canToggleReportStatus =
     userRole === 'admin' &&
     (statusInfo.label === 'Reporte Pendiente de Revisión' ||
-    statusInfo.label === 'Reporte Revisado')
+      statusInfo.label === 'Reporte Revisado')
 
   // Manejar el toggle de revisión del reporte (ADMIN)
   const handleToggleReportCheck = async () => {
@@ -135,7 +141,6 @@ export function ActivityDetailView({ initialActivity, userRole = 'admin' }: Acti
     }
   }
 
-  // Manejar el toggle para destacar actividad (ADMIN GROUP)
   const handleToggleFeatured = async () => {
     setIsUpdating(true)
     const nextFeaturedState = !activity.destacado
@@ -149,7 +154,7 @@ export function ActivityDetailView({ initialActivity, userRole = 'admin' }: Acti
         body: JSON.stringify({
           id: idString,
           activity_id: idString,
-          is_featured: nextFeaturedState,
+          destacado: nextFeaturedState,
         }),
         headers: {
           'Content-Type': 'application/json',
@@ -186,9 +191,36 @@ export function ActivityDetailView({ initialActivity, userRole = 'admin' }: Acti
 
   const handleGoBack = () => {
     if (window.history.length > 2) {
+      const fromState = window.history.state?.from
+
+      if (fromState === 'reportes' && userRole === 'admin') {
+        router.push('/admin/reportes')
+        return
+      }
+
+      if (fromState === 'grupo_actividades') {
+        const groupId = activity.group_id || (activity as any).group_id
+        if (groupId) {
+          const basePath = userRole === 'adminfacultad' ? '/adminfacultad' : '/admin'
+          router.push(`${basePath}/grupo/${groupId}/actividades`)
+          return
+        }
+      }
       router.back()
+      return
+    }
+
+    if (userRole === 'admingroup') {
+      router.push('/admingroup/nuestras_actividades')
     } else {
-      router.push(userRole === 'admin' ? '/admin/reportes' : '/admingroup/actividades')
+      const groupId = activity.group_id || (activity as any).group_id
+      const basePath = userRole === 'adminfacultad' ? '/adminfacultad' : '/admin'
+
+      if (groupId) {
+        router.push(`${basePath}/grupo/${groupId}/actividades`)
+      } else {
+        router.push(userRole === 'admin' ? '/admin/reportes' : '/adminfacultad/grupos')
+      }
     }
   }
 
@@ -220,13 +252,6 @@ export function ActivityDetailView({ initialActivity, userRole = 'admin' }: Acti
     hasParticipantesGrupo || hasParticipantesEstimados || hasParticipantesReales
 
   const hasEvidenciasSection = Boolean(activity.galeria_url || activity.lista_participantes)
-
-  const hasUbicacion = Boolean(activity.ubicacion)
-  const hasArea = Boolean(areaDisplay)
-  const hasAliados = Boolean(activity.aliados)
-  const hasFinanciamiento = Boolean(activity.financiamiento)
-
-  const hasDetallesSection = hasUbicacion || hasArea || hasAliados || hasFinanciamiento
 
   return (
     <Stack spacing={6}>
@@ -297,7 +322,7 @@ export function ActivityDetailView({ initialActivity, userRole = 'admin' }: Acti
         <CardBody p={6}>
           <Stack spacing={6}>
             {/* Título, Grupo, Estado e Imagen */}
-            <Flex direction={{ base: 'column', md: 'row' }} gap={6} justify="space-between">
+            <Flex direction={{ base: 'column', md: 'row' }} gap={6} justify="space-between" align={{ md: 'flex-start' }}>
               <Stack spacing={3} flex={1}>
                 {/* Badges de Estado y Categorización */}
                 <HStack wrap="wrap" spacing={2}>
@@ -327,16 +352,23 @@ export function ActivityDetailView({ initialActivity, userRole = 'admin' }: Acti
                       ★ Destacada por el Grupo
                     </Badge>
                   )}
-                  {userRole !== 'admingroup' && activity.nombre_grupo && (
-                    <Badge colorScheme="primary" variant="subtle" px={2.5} py={0.5}>
-                      {activity.nombre_grupo}
-                    </Badge>
-                  )}
                 </HStack>
 
-                <Heading as="h1" size="lg" color="gray.800">
-                  {activity.nombre || 'Sin nombre especificado'}
-                </Heading>
+                <Box>
+                  <Heading as="h1" size="lg" color="gray.800" mb={1}>
+                    {activity.nombre || 'Sin nombre especificado'}
+                  </Heading>
+
+                  {/* Nombre del Grupo de pertenencia */}
+                  {userRole !== 'admingroup' && activity.nombre_grupo && (
+                    <Text fontSize="sm" fontWeight="semibold" color="gray.600">
+                      Grupo:{' '}
+                      <Text as="span" color="primary.600" fontWeight="bold">
+                        {activity.nombre_grupo}
+                      </Text>
+                    </Text>
+                  )}
+                </Box>
 
                 <Text fontSize="md" color="gray.600" fontWeight="medium">
                   📅 {dateRangeStr || 'Fecha no registrada'}
@@ -344,13 +376,13 @@ export function ActivityDetailView({ initialActivity, userRole = 'admin' }: Acti
               </Stack>
 
               {/* Cubierta de la actividad */}
-              <Box flexShrink={0} maxW={{ base: 'full', md: '240px' }}>
+              <Box flexShrink={0} maxW={{ base: 'full', md: '340px' }} w="full">
                 <Image
                   src={activity.cubierta}
                   alt={activity.nombre}
                   borderRadius="lg"
                   objectFit="cover"
-                  maxH="160px"
+                  maxH="220px"
                   w="full"
                   fallbackSrc="/imagen-no-disponible.jpg"
                 />

@@ -25,6 +25,7 @@ import { apiRequest } from "@/components/formularios/api";
 import { useAuth } from "@/app/context/auth-context";
 import { TIPOS_ACTIVIDAD } from "@/constants/types";
 import { getActivityErrorMessage } from "@/utils/errorMapper";
+import { capitalizeLocation } from "@/utils/common";
 
 export default function CrearActividadForm() {
   const router = useRouter();
@@ -207,8 +208,11 @@ export default function CrearActividadForm() {
       esMultidia ? form.fecha_fin : form.fecha_inicio
     );
     
-    const { pais, estado, municipio, detalle } = locationParts;
-    const direccionCompleta = `${pais.trim()}, ${estado.trim()}, ${municipio.trim()}, ${detalle.trim()}`;
+    const paisClean = capitalizeLocation(locationParts.pais);
+    const estadoClean = capitalizeLocation(locationParts.estado);
+    const municipioClean = capitalizeLocation(locationParts.municipio);
+    const detalleClean = capitalizeLocation(locationParts.detalle);
+    const direccionCompleta = `${paisClean}, ${estadoClean}, ${municipioClean}, ${detalleClean}`;
     formData.append("ubicacion", direccionCompleta);
 
     form.area_conocimiento.forEach((area) => {
