@@ -97,15 +97,15 @@ const computeGroupEstadoDisplay = (item: any, user: any, isGroupTab: boolean) =>
   const aprobaciones: Array<any> = item.aprobaciones || [];
 
   if (aprobaciones.length > 0) {
-    const isDeu = user?.roles?.includes('deu_admin') || user?.roles?.includes('root');
+    const isDeu = user?.roles?.includes('deu_admin') || user?.roles?.includes('root') || user?.roles?.includes('admin');
     const userFaculty = user?.facultad;
 
-    let myAprob = aprobaciones.find((ap) => {
+    const myAprob = aprobaciones.find((ap) => {
       const f = ap.facultad?.toLowerCase();
       return isDeu ? f === 'deu' : (userFaculty && f === userFaculty.toLowerCase());
     });
 
-    let otherAprob = aprobaciones.find((ap) => ap.id !== myAprob?.id);
+    const otherAprob = aprobaciones.find((ap) => ap.id !== myAprob?.id);
 
     const myStatus = myAprob?.estado?.toLowerCase();
     const otherStatus = otherAprob?.estado?.toLowerCase();
@@ -116,13 +116,19 @@ const computeGroupEstadoDisplay = (item: any, user: any, isGroupTab: boolean) =>
     }
 
     // Si ambos aprobaron
-    if (myStatus === 'approved' && otherStatus === 'approved') {
-      return { label: 'Aprobada', color: 'green' };
-    }
-
-    // Si de mi lado fue aprobado pero el otro está pendiente
-    if (myStatus === 'approved' && (otherStatus === 'under_review' || otherStatus === 'pending' || !otherStatus)) {
-      return { label: 'Pendiente', color: 'blue' };
+    if (aprobaciones.length === 2) {
+      if (myStatus === 'approved' && otherStatus === 'approved') {
+        return { label: 'Aprobada', color: 'green' };
+      }
+      // El badge azul SOLO aplica si hay 2 solicitudes y mi parte ya aprobó
+      if (myStatus === 'approved' && (otherStatus === 'under_review' || otherStatus === 'pending' || !otherStatus)) {
+        return { label: 'Pendiente', color: 'blue' };
+      }
+    } else {
+      // Si solo hay 1 solicitud (solo DEU)
+      if (myStatus === 'approved') {
+        return { label: 'Aprobada', color: 'green' };
+      }
     }
   }
 

@@ -66,25 +66,23 @@ export function BackButton({
 
     // Caso específico para detalle de solicitudes (/admin/solicitudes/[id] o /adminfacultad/solicitudes/[id])
     if (context === 'request-detail') {
+      const targetDefaultUrl =
+        userRole === 'adminfacultad'
+          ? '/adminfacultad/solicitudes'
+          : '/admin/solicitudes?tab=groups'
+
       if (typeof window !== 'undefined') {
         const referrer = document.referrer
-        if (referrer && referrer.includes('/solicitudes')) {
+        const expectedPath = userRole === 'adminfacultad' ? '/adminfacultad/solicitudes' : '/admin/solicitudes'
+
+        // Verifica que venga de la ruta de solicitudes correspondiente a su rol
+        if (referrer && referrer.includes(expectedPath)) {
           router.back()
           return
         }
       }
 
-      if (fallbackUrl) {
-        router.push(fallbackUrl)
-        return
-      }
-
-      const defaultUrl =
-        userRole === 'adminfacultad'
-          ? '/adminfacultad/solicitudes'
-          : '/admin/solicitudes?tab=groups'
-
-      router.push(defaultUrl)
+      router.push(fallbackUrl || targetDefaultUrl)
       return
     }
 

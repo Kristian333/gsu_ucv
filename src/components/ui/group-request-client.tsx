@@ -181,40 +181,41 @@ export default function GroupRequestReviewClient({ requestId }: Props) {
     }
 
     // Identificar el lado actual según el rol/usuario
-    const isDeu = user?.roles?.includes("deu_admin") || user?.roles?.includes("root");
+    const isDeu =
+      user?.roles?.includes("deu_admin") ||
+      user?.roles?.includes("root") ||
+      user?.roles?.includes("admin");
     const userFaculty = user?.facultad;
 
-    let myAprob = aprobaciones.find((ap) => {
+    const myAprob = aprobaciones.find((ap) => {
       const f = ap.facultad?.toLowerCase();
       return isDeu ? f === "deu" : (userFaculty && f === userFaculty.toLowerCase());
     });
 
-    let otherAprob = aprobaciones.find((ap) => ap.id !== myAprob?.id);
-
-    // Si no hay contexto de partes separadas
-    if (!myAprob && !otherAprob) {
-      const lower = data.estado?.toLowerCase();
-      if (lower === "approved") return { key: "approved", label: "Aprobada", color: "green" };
-      if (lower === "rejected") return { key: "rejected", label: "Rechazada", color: "red" };
-      return { key: "under_review", label: "Pendiente", color: "orange" };
-    }
+    const otherAprob = aprobaciones.find((ap) => ap.id !== myAprob?.id);
 
     const myStatus = myAprob?.estado?.toLowerCase();
     const otherStatus = otherAprob?.estado?.toLowerCase();
 
-    // Regla 1: Si una de las dos partes rechaza
+    // 1. Si cualquiera de las partes de la solicitud rechaza
     if (myStatus === "rejected" || otherStatus === "rejected") {
       return { key: "rejected", label: "Rechazada", color: "red" };
     }
 
-    // Regla 2: Si ambas partes aprobaron
-    if (myStatus === "approved" && otherStatus === "approved") {
-      return { key: "approved", label: "Aprobada", color: "green" };
-    }
-
-    // Regla 3: Si de mi lado ya aprobé, pero del otro está pendiente
-    if (myStatus === "approved" && (otherStatus === "under_review" || otherStatus === "pending" || !otherStatus)) {
-      return { key: "approved_pending_other", label: "Pendiente (Aprobado localmente)", color: "blue" };
+    // 2. Si hay 2 solicitudes en total (solicitudes vinculadas)
+    if (aprobaciones.length === 2) {
+      if (myStatus === "approved" && otherStatus === "approved") {
+        return { key: "approved", label: "Aprobada", color: "green" };
+      }
+      // Únicamente cuando existen 2 solicitudes y la local se aprobó
+      if (myStatus === "approved" && (otherStatus === "under_review" || otherStatus === "pending" || !otherStatus)) {
+        return { key: "approved_pending_other", label: "Pendiente (Aprobado localmente)", color: "blue" };
+      }
+    } else {
+      // Caso de solicitud única (solo DEU)
+      if (myStatus === "approved") {
+        return { key: "approved", label: "Aprobada", color: "green" };
+      }
     }
 
     return { key: "under_review", label: "Pendiente", color: "orange" };
