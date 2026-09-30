@@ -40,6 +40,7 @@ import { apiRequest } from "@/components/formularios/api";
 import { useAuth } from "@/app/context/auth-context";
 import { formatDateToClient, formatListToString } from "@/utils/common";
 import ConfirmationModal from "./ConfirmationModal";
+import { BackButton } from "@/components/common/back-button";
 
 interface Props {
   requestId: string;
@@ -48,7 +49,7 @@ interface Props {
 export default function GroupRequestReviewClient({ requestId }: Props) {
   const router = useRouter();
   const toast = useToast();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
 
   const [data, setData] = useState<GroupRequestDetails | null>(null);
   const [fetching, setFetching] = useState(true);
@@ -62,6 +63,11 @@ export default function GroupRequestReviewClient({ requestId }: Props) {
   const { isOpen: isDocOpen, onOpen: onDocOpen, onClose: onDocClose } = useDisclosure();
   const [activeDocUrl, setActiveDocUrl] = useState<string | null>(null);
   const [activeDocTitle, setActiveDocTitle] = useState<string>("");
+
+  const isFacultyAdmin =
+    user?.roles?.includes("adminfacultad") ||
+    user?.roles?.includes("facultad_admin");
+  const currentRole = isFacultyAdmin ? "adminfacultad" : "admin";
 
   const handleOpenDoc = (url: string, title: string) => {
     setActiveDocUrl(url);
@@ -162,6 +168,66 @@ export default function GroupRequestReviewClient({ requestId }: Props) {
     }
   };
 
+  // Función helper para calcular el estado dinámico global de la solicitud
+  const computeEffectiveStatus = () => {
+    if (!data) return { key: "under_review", label: "Pendiente", color: "orange" };
+
+    const aprobaciones = data.aprobaciones || [];
+    if (aprobaciones.length === 0) {
+      const lower = data.estado?.toLowerCase();
+      if (lower === "approved") return { key: "approved", label: "Aprobada", color: "green" };
+      if (lower === "rejected") return { key: "rejected", label: "Rechazada", color: "red" };
+      return { key: "under_review", label: "Pendiente", color: "orange" };
+    }
+
+    // Identificar el lado actual según el rol/usuario
+    const isDeu = user?.roles?.includes("deu_admin") || user?.roles?.includes("root");
+    const userFaculty = user?.facultad;
+
+    let myAprob = aprobaciones.find((ap) => {
+      const f = ap.facultad?.toLowerCase();
+      return isDeu ? f === "deu" : (userFaculty && f === userFaculty.toLowerCase());
+    });
+
+    let otherAprob = aprobaciones.find((ap) => ap.id !== myAprob?.id);
+
+    // Si no hay contexto de partes separadas
+    if (!myAprob && !otherAprob) {
+      const lower = data.estado?.toLowerCase();
+      if (lower === "approved") return { key: "approved", label: "Aprobada", color: "green" };
+      if (lower === "rejected") return { key: "rejected", label: "Rechazada", color: "red" };
+      return { key: "under_review", label: "Pendiente", color: "orange" };
+    }
+
+    const myStatus = myAprob?.estado?.toLowerCase();
+    const otherStatus = otherAprob?.estado?.toLowerCase();
+
+    // Regla 1: Si una de las dos partes rechaza
+    if (myStatus === "rejected" || otherStatus === "rejected") {
+      return { key: "rejected", label: "Rechazada", color: "red" };
+    }
+
+    // Regla 2: Si ambas partes aprobaron
+    if (myStatus === "approved" && otherStatus === "approved") {
+      return { key: "approved", label: "Aprobada", color: "green" };
+    }
+
+    // Regla 3: Si de mi lado ya aprobé, pero del otro está pendiente
+    if (myStatus === "approved" && (otherStatus === "under_review" || otherStatus === "pending" || !otherStatus)) {
+      return { key: "approved_pending_other", label: "Pendiente (Aprobado localmente)", color: "blue" };
+    }
+
+    return { key: "under_review", label: "Pendiente", color: "orange" };
+  };
+
+  const effectiveStatus = computeEffectiveStatus();
+
+  const renderBadge = (statusInfo: { label: string; color: string }) => (
+    <Badge colorScheme={statusInfo.color} fontSize="0.8em" px={3} py={1} borderRadius="full">
+      {statusInfo.label}
+    </Badge>
+  );
+
   const getStatusBadge = (status: string) => {
     const normalized = status?.toLowerCase();
     switch (normalized) {
@@ -195,22 +261,32 @@ export default function GroupRequestReviewClient({ requestId }: Props) {
 
   const grupo = data.grupo_detalle;
   const isUnderReview = data.estado?.toLowerCase() === "under_review";
+  const propietario = grupo?.propietario;
+
+  const nombrePropietario = propietario
+    ? `${propietario.nombres || ""} ${propietario.apellidos || ""}`.trim()
+    : "";
 
   return (
     <Box maxW="1200px" mx="auto" mt={10} p={8} borderRadius="lg" bg="white" shadow="md">
       <VStack spacing={8} align="stretch">
 
+        {/* Botón Volver Superior */}
+        <Box>
+          <BackButton context="request-detail" userRole={currentRole} />
+        </Box>
+
         {/* Encabezado */}
         <Flex justify="space-between" align="center" pb={4} borderBottom="1px solid" borderColor="gray.200">
-            <Box>
-                <Heading size="lg" mb={1}>
-                Revisión de Solicitud de Grupo: {data.grupo_nombre}
-                </Heading>
-                <Text fontSize="sm" color="gray.500">
-                ID Solicitud: {data.id}
-                </Text>
-            </Box>
-            {getStatusBadge(data.estado)}
+          <Box>
+            <Heading size="lg" mb={1}>
+              Revisión de Solicitud de Grupo: {data.grupo_nombre}
+            </Heading>
+            <Text fontSize="sm" color="gray.500">
+              ID Solicitud: {data.id}
+            </Text>
+          </Box>
+          {renderBadge(effectiveStatus)}
         </Flex>
 
         {errorMsg && (
@@ -282,7 +358,7 @@ export default function GroupRequestReviewClient({ requestId }: Props) {
               )}
             </Grid>
 
-            {/* Logo de la agrupación alineado a la derecha */}
+            {/* Logo de la agrupación */}
             {grupo?.imagen_url && (
               <Flex direction="column" align="center" justify="flex-start" minW="140px">
                 <Text fontWeight="bold" fontSize="xs" color="gray.500" mb={2}>
@@ -370,6 +446,35 @@ export default function GroupRequestReviewClient({ requestId }: Props) {
           </Box>
         )}
 
+        {/* Datos del Solicitante (Sólo se muestra si el grupo aún NO está activo) */}
+        {!grupo?.activo && (
+          <Box p={6} borderWidth="1px" borderRadius="lg" bg="white">
+            <Heading size="md" mb={4} pb={2} borderBottom="1px solid" borderColor="gray.200">
+              Datos del Solicitante
+            </Heading>
+            {propietario ? (
+              <Grid templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }} gap={4} fontSize="sm">
+                <GridItem>
+                  <Text fontWeight="bold">Nombre y Apellido</Text>
+                  <Text color="gray.800">{nombrePropietario || "Data no encontrada"}</Text>
+                </GridItem>
+                <GridItem>
+                  <Text fontWeight="bold">Cédula</Text>
+                  <Text color="gray.800">{propietario.cedula || "Data no encontrada"}</Text>
+                </GridItem>
+                <GridItem>
+                  <Text fontWeight="bold">Correo Electrónico</Text>
+                  <Text color="gray.800">{propietario.email || "Data no encontrada"}</Text>
+                </GridItem>
+              </Grid>
+            ) : (
+              <Text fontSize="sm" color="gray.500">
+                Data no encontrada
+              </Text>
+            )}
+          </Box>
+        )}
+
         {/* Historial de Aprobaciones */}
         {data.aprobaciones && data.aprobaciones.length > 0 && (
           <Box p={6} borderWidth="1px" borderRadius="lg" bg="white">
@@ -452,6 +557,12 @@ export default function GroupRequestReviewClient({ requestId }: Props) {
             </Flex>
           </>
         )}
+
+        {/* Botón Volver Inferior */}
+        <Divider pt={4} />
+        <Flex justify="flex-start" pt={2}>
+          <BackButton context="request-detail" userRole={currentRole} />
+        </Flex>
 
         {/* Modal de Confirmación */}
         {modalType && (

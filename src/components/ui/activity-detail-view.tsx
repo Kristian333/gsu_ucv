@@ -25,12 +25,13 @@ import {
 } from '@chakra-ui/react'
 import { keyframes } from '@emotion/react'
 import { SiGoogledrive } from 'react-icons/si'
-import { ArrowBackIcon, CheckCircleIcon, ExternalLinkIcon, StarIcon } from '@chakra-ui/icons'
+import { CheckCircleIcon, ExternalLinkIcon, StarIcon } from '@chakra-ui/icons'
 import { useRouter } from 'next/navigation'
 import NextLink from 'next/link'
 import { ActivityBackend } from '@/types/activity'
 import { formatActivityDateRange, getActivityStatus, formatListToString } from '@/utils/common'
 import { apiRequest } from '@/components/formularios/api'
+import { BackButton } from '@/components/common/back-button'
 
 const pulseDots = keyframes`
   0% { opacity: 0.2; }
@@ -189,41 +190,6 @@ export function ActivityDetailView({ initialActivity, userRole = 'admin' }: Acti
     }
   }
 
-  const handleGoBack = () => {
-    if (window.history.length > 2) {
-      const fromState = window.history.state?.from
-
-      if (fromState === 'reportes' && userRole === 'admin') {
-        router.push('/admin/reportes')
-        return
-      }
-
-      if (fromState === 'grupo_actividades') {
-        const groupId = activity.group_id || (activity as any).group_id
-        if (groupId) {
-          const basePath = userRole === 'adminfacultad' ? '/adminfacultad' : '/admin'
-          router.push(`${basePath}/grupo/${groupId}/actividades`)
-          return
-        }
-      }
-      router.back()
-      return
-    }
-
-    if (userRole === 'admingroup') {
-      router.push('/admingroup/nuestras_actividades')
-    } else {
-      const groupId = activity.group_id || (activity as any).group_id
-      const basePath = userRole === 'adminfacultad' ? '/adminfacultad' : '/admin'
-
-      if (groupId) {
-        router.push(`${basePath}/grupo/${groupId}/actividades`)
-      } else {
-        router.push(userRole === 'admin' ? '/admin/reportes' : '/adminfacultad/grupos')
-      }
-    }
-  }
-
   const renderToggleButton = (size: 'sm' | 'md' = 'sm') => {
     if (!canToggleReportStatus) return null
 
@@ -252,19 +218,17 @@ export function ActivityDetailView({ initialActivity, userRole = 'admin' }: Acti
     hasParticipantesGrupo || hasParticipantesEstimados || hasParticipantesReales
 
   const hasEvidenciasSection = Boolean(activity.galeria_url || activity.lista_participantes)
+  const currentGroupId = activity.group_id || (activity as any).group_id
 
   return (
     <Stack spacing={6}>
       {/* Barra de Acciones / Cabecera */}
       <Flex justify="space-between" align="center" wrap="wrap" gap={4}>
-        <Button
-          leftIcon={<ArrowBackIcon />}
-          variant="outline"
-          size="sm"
-          onClick={handleGoBack}
-        >
-          Volver
-        </Button>
+        <BackButton
+          context="activity-detail"
+          userRole={userRole}
+          groupId={currentGroupId}
+        />
 
         <HStack spacing={3}>
           {/* Botón Ver en Sitio Público */}

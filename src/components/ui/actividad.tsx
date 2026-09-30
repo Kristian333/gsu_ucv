@@ -21,6 +21,7 @@ import { formatActivityDateRange, formatListToString } from "@/utils/common";
 import { useAuth } from "@/app/context/auth-context";
 import { apiRequest } from "@/components/formularios/api";
 import { ActivityBackend } from "@/types/activity";
+import { BackButton } from "@/components/common/back-button"; // Ajusta la ruta del componente
 
 interface Props {
   activityId: string;
@@ -39,6 +40,9 @@ export default function ActivityClientPage({ activityId, activity }: Props) {
   if (!activity) {
     return (
       <Box maxW="4xl" mx="auto" p={10} textAlign="center">
+        <Box display="flex" justifyContent="flex-start" mb={4}>
+          <BackButton context="public-activity-detail" fallbackUrl="/actividades" />
+        </Box>
         <Heading size="lg">Actividad no encontrada</Heading>
         <Text mt={4}>No existe una actividad con el ID {activityId}.</Text>
       </Box>
@@ -107,6 +111,11 @@ export default function ActivityClientPage({ activityId, activity }: Props) {
   {/* Pagina del Actividad */}
   return (
     <Box maxW="6xl" mx="auto" p={8} my={8} bg="white" rounded="lg" shadow="xl">
+      {/* Botón Volver */}
+      <Box mb={6}>
+        <BackButton context="public-activity-detail" fallbackUrl="/actividades" />
+      </Box>
+
       <VStack spacing={12} align="stretch">
 
         {/* Imagen + Info */}

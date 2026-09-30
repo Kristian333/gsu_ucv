@@ -60,7 +60,7 @@ type MiembroStringField =
   | "facultad"
   | "escuela";
 
-const OPCION_NINGUNA_FACULTAD = "No pertenecemos a ninguna facultad";
+const OPCION_ASOCIACION_DEU = "Grupo asociado directamente a la Dirección de Extensión Universitaria (DEU)";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const isValidEmail = (email: string) => EMAIL_REGEX.test(email.trim());
@@ -73,6 +73,8 @@ export default function CrearGrupoForm() {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const [submitted, setSubmitted] = useState(false);
+
+  const hoyStr = new Date().toISOString().split("T")[0];
 
   // ESTADOS DEL FORMULARIO
   const [form, setForm] = useState({
@@ -119,7 +121,7 @@ export default function CrearGrupoForm() {
       submitted &&
       (!form.esMultidisciplinario
         ? form.facultad.length === 0 || !form.facultad[0]
-        : !form.facultad.includes(OPCION_NINGUNA_FACULTAD) &&
+        : !form.facultad.includes(OPCION_ASOCIACION_DEU) &&
           form.facultad.length < 2),
     fechaFundacion: submitted && !form.fechaFundacion,
     objetivo: submitted && !form.objetivo.trim(),
@@ -173,20 +175,36 @@ export default function CrearGrupoForm() {
   };
 
   const handleCheckboxFacultadChange = (selectedValues: string[]) => {
-    const teniaNinguna = form.facultad.includes(OPCION_NINGUNA_FACULTAD);
-    const tieneNingunaAhora = selectedValues.includes(OPCION_NINGUNA_FACULTAD);
+    const teniaDEU = form.facultad.includes(OPCION_ASOCIACION_DEU);
+    const tieneDEUAhora = selectedValues.includes(OPCION_ASOCIACION_DEU);
 
-    if (!teniaNinguna && tieneNingunaAhora) {
-      setForm({ ...form, facultad: [OPCION_NINGUNA_FACULTAD] });
-    } else if (teniaNinguna && selectedValues.length > 1) {
-      setForm({ ...form, facultad: selectedValues.filter((v) => v !== OPCION_NINGUNA_FACULTAD) });
+    if (!teniaDEU && tieneDEUAhora) {
+      setForm({ ...form, facultad: [OPCION_ASOCIACION_DEU] });
+    } else if (teniaDEU && selectedValues.length > 1) {
+      setForm({ ...form, facultad: selectedValues.filter((v) => v !== OPCION_ASOCIACION_DEU) });
     } else {
       setForm({ ...form, facultad: selectedValues });
     }
   };
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    if (name === "fechaFundacion" && value) {
+      if (value > hoyStr) {
+        toast({
+          title: "Fecha inválida",
+          description: "La fecha de fundación no puede ser posterior al día de hoy.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        setForm({ ...form, fechaFundacion: "" });
+        return;
+      }
+    }
+
+    setForm({ ...form, [name]: value });
   };
 
   const handleLogo = (e: ChangeEvent<HTMLInputElement>) => {
@@ -200,6 +218,22 @@ export default function CrearGrupoForm() {
   const handleProyecto = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+
+    if (!isPdf) {
+      toast({
+        title: "Formato no permitido",
+        description: "Solo se admiten documentos en formato PDF para el proyecto.",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+      e.target.value = "";
+      setPdfProyecto(null);
+      return;
+    }
+
     setPdfProyecto(file);
   };
 
@@ -365,9 +399,9 @@ export default function CrearGrupoForm() {
         camposFaltantes.push("• Facultad");
       }
     } else {
-      const esNinguna = form.facultad.includes(OPCION_NINGUNA_FACULTAD);
-      if (!esNinguna && form.facultad.length < 2) {
-        camposFaltantes.push("• Facultad(es) (seleccionar al menos 2 o indicar 'ninguna')");
+      const esDEU = form.facultad.includes(OPCION_ASOCIACION_DEU);
+      if (!esDEU && form.facultad.length < 2) {
+        camposFaltantes.push("• Facultad(es) (seleccionar al menos 2 o la opción de asociación directa con la DEU)");
       }
     }
 
@@ -417,7 +451,7 @@ export default function CrearGrupoForm() {
 
     let facultadesFinales: string[] = [];
     if (form.esMultidisciplinario) {
-      if (form.facultad.includes(OPCION_NINGUNA_FACULTAD)) {
+      if (form.facultad.includes(OPCION_ASOCIACION_DEU)) {
         facultadesFinales = ["DEU"];
       } else {
         facultadesFinales = form.facultad;
@@ -575,7 +609,7 @@ export default function CrearGrupoForm() {
             onChange={(e) => handleMultidisciplinarioChange(e.target.checked)}
             colorScheme="primary"
           >
-            Sí, el grupo involucra múltiples facultades o no está asociada a ninguna.
+            Sí, el grupo involucra múltiples facultades o su asociación es unicamente directa con la DEU.
           </Checkbox>
         </FormControl>
 
@@ -607,11 +641,11 @@ export default function CrearGrupoForm() {
               onChange={(val) => handleCheckboxFacultadChange(val as string[])}
             >
               <VStack align="stretch" bg="white" p={3} borderRadius="md" border="1px" borderColor={errors.facultad ? "red.500" : "gray.200"}>
-                <Checkbox value={OPCION_NINGUNA_FACULTAD} colorScheme="primary">
-                  <b>{OPCION_NINGUNA_FACULTAD}</b>
+                <Checkbox value={OPCION_ASOCIACION_DEU} colorScheme="primary">
+                  <b>{OPCION_ASOCIACION_DEU}</b>
                 </Checkbox>
                 {FACULTADES.map((f) => (
-                  <Checkbox key={f} value={f} isDisabled={form.facultad.includes(OPCION_NINGUNA_FACULTAD)}>
+                  <Checkbox key={f} value={f} isDisabled={form.facultad.includes(OPCION_ASOCIACION_DEU)}>
                     {f}
                   </Checkbox>
                 ))}
@@ -619,7 +653,7 @@ export default function CrearGrupoForm() {
             </CheckboxGroup>
             {errors.facultad && (
               <FormErrorMessage>
-                Seleccione al menos 2 facultades o la opción de no pertenecer a ninguna.
+                Seleccione al menos 2 facultades o la opción de asociación directa con la DEU.
               </FormErrorMessage>
             )}
           </FormControl>
@@ -628,7 +662,7 @@ export default function CrearGrupoForm() {
         {/* Fecha fundación */}
         <FormControl isRequired isInvalid={errors.fechaFundacion}>
           <FormLabel>Fecha de Fundación</FormLabel>
-          <Input type="date" name="fechaFundacion" value={form.fechaFundacion} onChange={handleChange} />
+          <Input type="date" name="fechaFundacion" max={hoyStr} value={form.fechaFundacion} onChange={handleChange} />
           {errors.fechaFundacion && (
             <FormErrorMessage>
               Seleccione la fecha de fundación.
@@ -694,7 +728,7 @@ export default function CrearGrupoForm() {
         {/* Proyecto PDF */}
         <FormControl isRequired isInvalid={errors.pdfProyecto}>
           <FormLabel>Proyecto del Grupo (PDF)</FormLabel>
-          <Input type="file" accept="application/pdf" onChange={handleProyecto} />
+          <Input type="file" accept="application/pdf,.pdf" onChange={handleProyecto} />
           {errors.pdfProyecto && (
             <FormErrorMessage>
               Debe adjuntar el proyecto en formato PDF.

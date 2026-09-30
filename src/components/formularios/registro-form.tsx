@@ -14,7 +14,11 @@ import {
   Text,
   useToast,
   Select,
+  InputGroup,
+  InputRightElement,
+  IconButton,
 } from "@chakra-ui/react";
+import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 import { useAuth } from "@/app/context/auth-context";
 import { useRouter } from "next/navigation";
 import { apiRequest } from "@/components/formularios/api";
@@ -34,6 +38,9 @@ export const RegisterForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
@@ -220,7 +227,7 @@ export const RegisterForm = () => {
       shadow="md"
       w="full"
       maxW="sm"
-      mx="500px"
+      mx="auto"
     >
       <Heading as="h1" size="xl" textAlign="center" mb={6}>
         Crear Cuenta
@@ -370,29 +377,51 @@ export const RegisterForm = () => {
 
               <FormControl id="password" isInvalid={!!fieldErrors.password}>
                 <FormLabel>Contraseña</FormLabel>
-                <Input
-                  type="password"
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    clearFieldError("password");
-                  }}
-                  borderColor={inputBorderColor}
-                />
+                <InputGroup>
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      clearFieldError("password");
+                    }}
+                    borderColor={inputBorderColor}
+                  />
+                  <InputRightElement h="full">
+                    <IconButton
+                      aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                      icon={showPassword ? <ViewOffIcon /> : <ViewIcon />}
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowPassword(!showPassword)}
+                    />
+                  </InputRightElement>
+                </InputGroup>
                 <FormErrorMessage>{fieldErrors.password}</FormErrorMessage>
               </FormControl>
 
               <FormControl id="confirmPassword" isInvalid={!!fieldErrors.confirmPassword}>
                 <FormLabel>Confirmar Contraseña</FormLabel>
-                <Input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => {
-                    setConfirmPassword(e.target.value);
-                    clearFieldError("confirmPassword");
-                  }}
-                  borderColor={inputBorderColor}
-                />
+                <InputGroup>
+                  <Input
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => {
+                      setConfirmPassword(e.target.value);
+                      clearFieldError("confirmPassword");
+                    }}
+                    borderColor={inputBorderColor}
+                  />
+                  <InputRightElement h="full">
+                    <IconButton
+                      aria-label={showConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                      icon={showConfirmPassword ? <ViewOffIcon /> : <ViewIcon />}
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    />
+                  </InputRightElement>
+                </InputGroup>
                 <FormErrorMessage>{fieldErrors.confirmPassword}</FormErrorMessage>
               </FormControl>
 

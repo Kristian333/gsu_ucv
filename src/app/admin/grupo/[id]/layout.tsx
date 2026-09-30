@@ -6,6 +6,7 @@ import { Box, Flex, VStack, Icon, Text, Container } from "@chakra-ui/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { FiInfo, FiUser, FiActivity, FiBarChart2, FiExternalLink } from "react-icons/fi";
+import { BackButton } from "@/components/common/back-button";
 
 export default function GrupoAdminLayout({
   children,
@@ -27,6 +28,10 @@ export default function GrupoAdminLayout({
 
   return (
     <Container maxW="full" px={{ base: 4, md: 8 }} py={6}>
+      <Box mb={4}>
+        <BackButton context="group-detail" userRole="admin" />
+      </Box>
+
       <Flex gap={6} direction={{ base: "column", md: "row" }}>
         {/* Sidebar Compacto */}
         <Box

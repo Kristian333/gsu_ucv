@@ -5,6 +5,7 @@ import { Box, Flex, Heading, Text, Image, VStack, Divider, Button } from "@chakr
 import NextLink from "next/link";
 import React, { useState } from "react";
 import { formatListToString } from "@/utils/common";
+import { BackButton } from "@/components/common/back-button"; // Ajusta la ruta si es necesario
 
 export interface GroupItem {
   id: string;
@@ -43,6 +44,11 @@ export default function GroupClientPage({ groupId, group, activities }: Props) {
   {/* Pagina del Grupo */}
   return (
     <Box maxW="6xl" mx="auto" p={8} my={8} bg="white" rounded="lg" shadow="xl">
+      {/* Botón Volver */}
+      <Box mb={6}>
+        <BackButton context="public-group-detail" fallbackUrl="/grupos" />
+      </Box>
+
       <VStack spacing={12} align="stretch">
 
         {/* Imagen + Info */}

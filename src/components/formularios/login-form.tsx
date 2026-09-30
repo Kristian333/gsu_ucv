@@ -4,8 +4,10 @@
 import React, { useState, useEffect } from "react";
 import { 
   VStack, Input, Button, FormControl, FormLabel, 
-  Heading, useToast, Box, Text, Link 
+  Heading, useToast, Box, Text, Link,
+  InputGroup, InputRightElement, IconButton
 } from "@chakra-ui/react";
+import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 import { useRouter } from "next/navigation";
 import { useAuth, AuthUser } from "@/app/context/auth-context";
 import { apiRequest } from "@/components/formularios/api";
@@ -16,6 +18,7 @@ import { getLoginErrorMessage } from "@/utils/errorMapper";
 export function LoginForm() {
   const [nombreUsuario, setNombreUsuario] = useState(""); 
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { user, login } = useAuth();
   const router = useRouter();
@@ -59,7 +62,6 @@ export function LoginForm() {
 
       let userAvatar = infoUsuario.avatar || "";
 
-      // Asignación de avatar según rol:
       if (esAdminGlobal) {
         userAvatar = "/logo.png";
       } else if (esFacultad) {
@@ -80,7 +82,6 @@ export function LoginForm() {
             groupActive = groupDetail.activo;
             groupUpdatedAt = groupDetail.actualizado_en;
 
-            // Si el grupo tiene logo personalizado, se utiliza como avatar
             if (groupDetail.imagen_url) {
               userAvatar = groupDetail.imagen_url;
             }
@@ -125,7 +126,6 @@ export function LoginForm() {
     }
   };
 
-  // Si ya hay un usuario logueado, podemos evitar renderizar el formulario mientras redirige
   if (user) {
     return null; 
   }
@@ -149,10 +149,25 @@ export function LoginForm() {
 
           <FormControl isRequired>
             <FormLabel fontWeight="medium" color="gray.600">Contraseña</FormLabel>
-            <Input 
-              type="password" placeholder="••••••••" variant="outline" focusBorderColor="primary.500"
-              value={password} onChange={(e) => setPassword(e.target.value)} 
-            />
+            <InputGroup>
+              <Input 
+                type={showPassword ? "text" : "password"} 
+                placeholder="••••••••" 
+                variant="outline" 
+                focusBorderColor="primary.500"
+                value={password} 
+                onChange={(e) => setPassword(e.target.value)} 
+              />
+              <InputRightElement h="full">
+                <IconButton
+                  aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  icon={showPassword ? <ViewOffIcon /> : <ViewIcon />}
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowPassword(!showPassword)}
+                />
+              </InputRightElement>
+            </InputGroup>
           </FormControl>
 
           <Button 

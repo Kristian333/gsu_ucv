@@ -48,6 +48,12 @@ interface SolicitudGrupo {
   estado: string;
   facultad: string;
   creado_en: string;
+  aprobaciones?: Array<{
+    id: string;
+    facultad: string;
+    estado: string;
+    razon?: string;
+  }>;
 }
 
 interface SolicitudRecurso {
@@ -69,31 +75,62 @@ interface SolicitudesTableProps {
   groupId?: string;
 }
 
-const getBadgeColorScheme = (estado: string) => {
-  switch (estado?.toLowerCase()) {
-    case 'under_review':
-    case 'pendiente':
-      return 'orange';
-    case 'approved':
-    case 'aprobada':
-      return 'green';
-    case 'rejected':
-    case 'rechazada':
-      return 'red';
-    default:
-      return 'gray';
+const computeGroupEstadoDisplay = (item: any, user: any, isGroupTab: boolean) => {
+  // Las solicitudes de recursos no se ven afectadas
+  if (!isGroupTab) {
+    const estadoLower = item.estado?.toLowerCase();
+    let color = 'gray';
+    let label = item.estado;
+    if (estadoLower === 'under_review' || estadoLower === 'pendiente' || estadoLower === 'pending') {
+      color = 'orange';
+      label = 'Pendiente';
+    } else if (estadoLower === 'approved' || estadoLower === 'aprobada') {
+      color = 'green';
+      label = 'Aprobada';
+    } else if (estadoLower === 'rejected' || estadoLower === 'rechazada') {
+      color = 'red';
+      label = 'Rechazada';
+    }
+    return { label, color };
   }
-};
 
-const formatEstado = (estado: string) => {
-  if (!estado) return '';
-  const map: Record<string, string> = {
-    under_review: 'Pendiente',
-    approved: 'Aprobada',
-    pending: 'Pendiente',
-    rejected: 'Rechazada',
-  };
-  return map[estado.toLowerCase()] || estado;
+  const aprobaciones: Array<any> = item.aprobaciones || [];
+
+  if (aprobaciones.length > 0) {
+    const isDeu = user?.roles?.includes('deu_admin') || user?.roles?.includes('root');
+    const userFaculty = user?.facultad;
+
+    let myAprob = aprobaciones.find((ap) => {
+      const f = ap.facultad?.toLowerCase();
+      return isDeu ? f === 'deu' : (userFaculty && f === userFaculty.toLowerCase());
+    });
+
+    let otherAprob = aprobaciones.find((ap) => ap.id !== myAprob?.id);
+
+    const myStatus = myAprob?.estado?.toLowerCase();
+    const otherStatus = otherAprob?.estado?.toLowerCase();
+
+    // Si cualquiera rechazó
+    if (myStatus === 'rejected' || otherStatus === 'rejected') {
+      return { label: 'Rechazada', color: 'red' };
+    }
+
+    // Si ambos aprobaron
+    if (myStatus === 'approved' && otherStatus === 'approved') {
+      return { label: 'Aprobada', color: 'green' };
+    }
+
+    // Si de mi lado fue aprobado pero el otro está pendiente
+    if (myStatus === 'approved' && (otherStatus === 'under_review' || otherStatus === 'pending' || !otherStatus)) {
+      return { label: 'Pendiente', color: 'blue' };
+    }
+  }
+
+  // Comportamiento fallback si no hay aprobaciones detalladas
+  const rawEstado = item.estado?.toLowerCase();
+  if (rawEstado === 'approved' || rawEstado === 'aprobada') return { label: 'Aprobada', color: 'green' };
+  if (rawEstado === 'rejected' || rawEstado === 'rechazada') return { label: 'Rechazada', color: 'red' };
+  return { label: 'Pendiente', color: 'orange' };
 };
 
 export function SolicitudesTable({ mode = 'admin', defaultFaculty, groupId }: SolicitudesTableProps) {
@@ -320,8 +357,9 @@ export function SolicitudesTable({ mode = 'admin', defaultFaculty, groupId }: So
               </Tr>
             ) : data.length > 0 ? (
               data.map((item) => {
-                const estadoLower = item.estado?.toLowerCase();
-                const isPending = estadoLower === 'under_review' || estadoLower === 'pending' || estadoLower === 'pendiente';
+                const isGroupTab = activeTab === 'groups' && mode !== 'group';
+                const statusDisplay = computeGroupEstadoDisplay(item, user, isGroupTab);
+                const isPending = statusDisplay.color === 'orange' || statusDisplay.color === 'blue';
 
                 return (
                   <Tr
@@ -343,8 +381,8 @@ export function SolicitudesTable({ mode = 'admin', defaultFaculty, groupId }: So
                       {new Date(item.creado_en).toLocaleDateString()}
                     </Td>
                     <Td>
-                      <Badge colorScheme={getBadgeColorScheme(item.estado)}>
-                        {formatEstado(item.estado)}
+                      <Badge colorScheme={statusDisplay.color}>
+                        {statusDisplay.label}
                       </Badge>
                     </Td>
 
