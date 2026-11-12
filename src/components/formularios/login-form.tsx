@@ -8,6 +8,7 @@ import {
   InputGroup, InputRightElement, IconButton
 } from "@chakra-ui/react";
 import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
+import NextLink from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth, AuthUser } from "@/app/context/auth-context";
 import { apiRequest } from "@/components/formularios/api";
@@ -168,6 +169,9 @@ export function LoginForm() {
                 />
               </InputRightElement>
             </InputGroup>
+            <Text textAlign="right" mt={2} fontSize="sm">
+              <Link as={NextLink} href="/recuperar-contrasena" color="secondary.500">¿Olvidaste tu contraseña?</Link>
+            </Text>
           </FormControl>
 
           <Button 

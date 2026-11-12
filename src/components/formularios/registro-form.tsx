@@ -24,6 +24,7 @@ import { useRouter } from "next/navigation";
 import { apiRequest } from "@/components/formularios/api";
 import { getDashboardRouteByRoles } from "@/utils/redirectByRole";
 import { getRegisterErrorMessage } from "@/utils/errorMapper";
+import { educationOptions, genderOptions } from "@/constants/user-options";
 
 export const RegisterForm = () => {
   const [step, setStep] = useState(1);
@@ -327,9 +328,9 @@ export const RegisterForm = () => {
                   onChange={(e) => setGenero(e.target.value)}
                   borderColor={inputBorderColor}
                 >
-                  <option value="masculino">Masculino</option>
-                  <option value="femenino">Femenino</option>
-                  <option value="otro">Otro</option>
+                  {genderOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
                 </Select>
               </FormControl>
 
@@ -340,10 +341,9 @@ export const RegisterForm = () => {
                   onChange={(e) => setNivelEducativo(e.target.value)}
                   borderColor={inputBorderColor}
                 >
-                  <option value="universitaria_incompleta">Universitaria Incompleta</option>
-                  <option value="universitaria_completa">Universitaria Completa</option>
-                  <option value="secundaria">Secundaria</option>
-                  <option value="primaria">Primaria</option>
+                  {educationOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
                 </Select>
               </FormControl>
 

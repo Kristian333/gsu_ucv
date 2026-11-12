@@ -135,6 +135,12 @@ export const Navbar = () => {
                                         Panel de Facultad
                                     </MenuItem>
                                 )}
+                                <MenuItem as={NextLink} href="/perfil">
+                                    Mi Perfil
+                                </MenuItem>
+                                <MenuItem as={NextLink} href="/perfil/contrasena">
+                                    Cambiar Contraseña
+                                </MenuItem>
                                 <MenuItem onClick={handleLogout} fontWeight="bold" color="danger">
                                     Cerrar Sesión
                                 </MenuItem>
@@ -207,6 +213,16 @@ export const Navbar = () => {
                                             </Text>
                                         </NextLink>
                                     )}
+                                    <NextLink href="/perfil" passHref>
+                                        <Text fontSize="md" onClick={onClose}>
+                                            Mi Perfil
+                                        </Text>
+                                    </NextLink>
+                                    <NextLink href="/perfil/contrasena" passHref>
+                                        <Text fontSize="md" onClick={onClose}>
+                                            Cambiar Contraseña
+                                        </Text>
+                                    </NextLink>
                                     <Text
                                         fontSize="md"
                                         fontWeight="bold"
