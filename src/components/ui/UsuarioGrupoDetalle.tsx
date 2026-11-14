@@ -27,7 +27,9 @@ import {
   useToast,
   Button,
 } from "@chakra-ui/react";
-import { FiLock, FiRefreshCw, FiUserCheck, FiInfo } from "react-icons/fi";
+import NextLink from "next/link";
+import { usePathname } from "next/navigation";
+import { FiLock, FiRefreshCw, FiUserCheck, FiInfo, FiEdit2 } from "react-icons/fi";
 import { PrimaryButton, SecondaryButton } from "./buttons";
 import { UserDetailBackend } from "@/types/user";
 // import { apiRequest } from "@/components/formularios/api";
@@ -35,6 +37,7 @@ import { UserDetailBackend } from "@/types/user";
 export default function UsuarioGrupoDetalle({ usuario }: { usuario: UserDetailBackend | null }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
+  const pathname = usePathname();
 
   /* Lógica de regeneración de contraseña (Deshabilitada temporalmente hasta que haya endpoint)
 
@@ -130,6 +133,10 @@ export default function UsuarioGrupoDetalle({ usuario }: { usuario: UserDetailBa
                 {usuario.nombres} {usuario.apellidos} ({usuario.email})
               </Text>
             </Box>
+
+            <Button as={NextLink} href={`${pathname}/editar`} leftIcon={<FiEdit2 />} colorScheme="teal" size="md">
+              Editar usuario
+            </Button>
 
             <Divider />
 

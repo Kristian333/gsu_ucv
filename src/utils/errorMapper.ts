@@ -66,11 +66,30 @@ const USER_ERRORS: Record<string, string> = {
   "validation failed": "Los datos ingresados no son válidos. Por favor, revisa los campos.",
   "fecha_de_nacimiento debe estar en formato dd-mm-yyyy": "La fecha de nacimiento debe tener el formato DD-MM-AAAA.",
 
+  // Edición de perfil (PUT /users/:id)
+  "email or cedula already in use": "Este correo o cédula ya está registrado por otro usuario.",
+  "not allowed to modify this user": "No tienes permiso para editar este usuario.",
+  "no fields to update": "No hay cambios para guardar.",
+  "cedula debe ser un número positivo": "La cédula debe ser un número positivo.",
+  "email no es válido": "El correo electrónico no es válido.",
+
   // Códigos HTTP de respaldo
   "http_400": "Los datos del usuario son incorrectos o están incompletos.",
   "http_403": "No tienes permisos para consultar o modificar esta información de usuario.",
   "http_404": "El usuario solicitado no fue encontrado.",
   "http_500": "Ocurrió un error interno en el servidor al procesar la información del usuario.",
+};
+
+// Diccionario de errores de contraseñas (cambio y recuperación)
+const PASSWORD_ERRORS: Record<string, string> = {
+  "contraseña actual incorrecta": "La contraseña actual no es correcta.",
+  "validation failed": "Revisa los datos: la nueva contraseña debe tener al menos 8 caracteres y el correo debe ser válido.",
+  "invalid request body": "El formato de los datos enviados no es válido.",
+  "authentication required": "Tu sesión ha expirado. Por favor inicia sesión de nuevo.",
+
+  // Códigos HTTP de respaldo
+  "http_400": "Los datos enviados son incorrectos o están incompletos.",
+  "http_500": "Ocurrió un error en el servidor. Inténtalo más tarde.",
 };
 
 // Diccionario de errores del módulo de Actividades
@@ -293,11 +312,41 @@ export const getUserErrorMessage = (rawError: string): string => {
     return "La fecha de nacimiento ingresada no es válida. Revisa el formato DD-MM-AAAA.";
   }
 
+  if (normalizedError.includes("no puede estar vacío")) {
+    return "Nombres, apellidos, cédula y correo no pueden quedar vacíos.";
+  }
+
+  if (normalizedError.startsWith("nivel_educativo debe ser uno de")) {
+    return "El nivel educativo seleccionado no es válido.";
+  }
+
   if (normalizedError.includes("petición") || normalizedError.includes("failed to fetch")) {
     return "No se pudo conectar con el servidor backend. Verifica tu conexión a internet.";
   }
 
   return "Ocurrió un error al procesar la información del usuario. Inténtalo de nuevo. Si el problema persiste, contacta a la DEU.";
+};
+
+export const getPasswordErrorMessage = (rawError: string): string => {
+  if (!rawError) {
+    return "Ocurrió un error inesperado con la contraseña. Inténtalo de nuevo.";
+  }
+
+  const normalizedError = rawError.trim().toLowerCase();
+
+  if (PASSWORD_ERRORS[normalizedError]) {
+    return PASSWORD_ERRORS[normalizedError];
+  }
+
+  if (GLOBAL_ERRORS[normalizedError]) {
+    return GLOBAL_ERRORS[normalizedError];
+  }
+
+  if (normalizedError.includes("petición") || normalizedError.includes("failed to fetch")) {
+    return "No se pudo conectar con el servidor backend. Verifica tu conexión a internet.";
+  }
+
+  return "Ocurrió un error al procesar la contraseña. Inténtalo de nuevo. Si el problema persiste, contacta a la DEU.";
 };
 
 export const getActivityErrorMessage = (rawError: string): string => {
